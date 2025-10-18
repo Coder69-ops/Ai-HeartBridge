@@ -90,7 +90,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({ user, partner, onComple
     return (
         <div className="max-w-4xl mx-auto p-6 space-y-6">
             {/* Progress Indicator */}
-            <Card variant="calm" className="sticky top-4 z-10 backdrop-blur-sm">
+            <Card variant="calm" className="sticky top-0 z-10 backdrop-blur-sm border-b-2 border-therapy-calm/20">
                 <CardContent className="py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">

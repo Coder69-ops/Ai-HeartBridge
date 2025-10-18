@@ -108,18 +108,18 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
             >
               <Card className="border-2 border-emerald-200 bg-gradient-to-r from-emerald-50 to-cyan-50">
                 <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-white rounded-full shadow-lg">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="p-3 bg-white rounded-full shadow-lg flex-shrink-0">
                       <HeartHandshake className="w-8 h-8 text-emerald-600" />
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg text-gray-900">Connected with Partner</h3>
-                      <p className="text-gray-600">{partner.email}</p>
+                      <p className="text-gray-600 truncate">{partner.email}</p>
                     </div>
                     <Button
                       variant="therapy"
                       onClick={() => onNavigate('partner-chat')}
-                      className="hidden sm:flex"
+                      className="w-full sm:w-auto flex-shrink-0"
                     >
                       Chat with Partner
                     </Button>
@@ -177,7 +177,15 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                             placeholder="ABC123"
                             className="flex-1 px-4 py-2 text-center text-lg font-mono font-bold border-2 border-purple-200 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200"
                           />
-                          <Button variant="therapy" disabled={pairingCode.length < 6}>
+                          <Button 
+                            variant="therapy" 
+                            disabled={pairingCode.length < 6}
+                            onClick={() => {
+                              // TODO: Implement partner pairing logic here
+                              console.log('Connecting with code:', pairingCode);
+                              // After success: setPairingCode('');
+                            }}
+                          >
                             Connect
                           </Button>
                         </div>
@@ -191,7 +199,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
         </AnimatePresence>
 
         {/* Quick Stats Grid - Mobile Responsive */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
