@@ -264,177 +264,198 @@ const MasterProfileView: React.FC<MasterProfileViewProps> = ({ onBack }) => {
                 )}
               </AnimatePresence>
 
-              {/* Stats */}
-              {!isEditing && (
-                <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-emerald-600">12</div>
-                    <div className="text-sm text-gray-600">Check-ins</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">8</div>
-                    <div className="text-sm text-gray-600">Exercises</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">24</div>
-                    <div className="text-sm text-gray-600">Days Active</div>
-                  </div>
-                </div>
-              )}
+              {/* User Stats Section */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="grid grid-cols-3 gap-4 mb-6"
+              >
+                <Card className="text-center">
+                  <CardContent className="p-4">
+                    <div className="text-3xl font-bold text-emerald-600 mb-1">12</div>
+                    <div className="text-xs text-gray-600 font-medium">Check-ins</div>
+                  </CardContent>
+                </Card>
+                <Card className="text-center">
+                  <CardContent className="p-4">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">8</div>
+                    <div className="text-xs text-gray-600 font-medium">Exercises</div>
+                  </CardContent>
+                </Card>
+                <Card className="text-center">
+                  <CardContent className="p-4">
+                    <div className="text-3xl font-bold text-purple-600 mb-1">24</div>
+                    <div className="text-xs text-gray-600 font-medium">Days Active</div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Settings Sections */}
+              <div className="space-y-4">
+                {sections.map((section, index) => (
+                  <motion.button
+                    key={section.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + index * 0.05 }}
+                    onClick={() => setActiveSection(section.id)}
+                    className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-300 flex items-center gap-3 ${
+                      activeSection === section.id
+                        ? `bg-gradient-to-r ${section.color} text-white border-transparent shadow-lg`
+                        : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg ${activeSection === section.id ? 'bg-white/20' : 'bg-gray-100'}`}>
+                      {section.icon}
+                    </div>
+                    <span className="font-medium flex-1">{section.label}</span>
+                    <ChevronRight className={`w-5 h-5 transition-transform ${activeSection === section.id ? 'rotate-90' : ''}`} />
+                  </motion.button>
+                ))}
+              </div>
+
+              {/* Section Content */}
+              <AnimatePresence mode="wait">
+                {activeSection === 'profile' && (
+                  <motion.div
+                    key="profile"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="mt-6 p-6 bg-white rounded-2xl border-2 border-gray-200"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Account Information</h3>
+                    <div className="space-y-3">
+                      <p className="text-gray-700"><strong>Name:</strong> {user?.name}</p>
+                      <p className="text-gray-700"><strong>Email:</strong> {user?.email}</p>
+                      <Button onClick={() => setIsEditing(true)} className="mt-4">
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeSection === 'notifications' && (
+                  <motion.div
+                    key="notifications"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="mt-6 p-6 bg-white rounded-2xl border-2 border-gray-200 space-y-4"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-800">Notification Settings</h3>
+                    {[
+                      { label: 'Partner Messages', enabled: true },
+                      { label: 'Check-in Reminders', enabled: true },
+                      { label: 'Exercise Suggestions', enabled: false },
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700">{item.label}</span>
+                        <input type="checkbox" checked={item.enabled} readOnly className="w-5 h-5" />
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+
+                {activeSection === 'privacy' && (
+                  <motion.div
+                    key="privacy"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="mt-6 p-6 bg-white rounded-2xl border-2 border-gray-200 space-y-3"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Privacy & Security</h3>
+                    {[
+                      { label: 'Change Password', icon: '🔐' },
+                      { label: 'Two-Factor Authentication', icon: '🛡️' },
+                      { label: 'Data & Privacy', icon: '🌐' },
+                    ].map((item, idx) => (
+                      <button key={idx} className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg">{item.icon}</span>
+                          <span className="text-gray-700 font-medium">{item.label}</span>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+
+                {activeSection === 'appearance' && (
+                  <motion.div
+                    key="appearance"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="mt-6 p-6 bg-white rounded-2xl border-2 border-gray-200 space-y-4"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-800">Appearance</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700">Dark Mode</span>
+                        <input type="checkbox" readOnly className="w-5 h-5" />
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700">Compact View</span>
+                        <input type="checkbox" readOnly className="w-5 h-5" />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Settings Sections */}
-        <div className="space-y-4">
-          {/* Notifications */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center text-white">
-                    <Bell className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">Notifications</h3>
-                    <p className="text-sm text-gray-600">Manage your notification preferences</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {[
-                    { label: 'Partner Messages', enabled: true },
-                    { label: 'Check-in Reminders', enabled: true },
-                    { label: 'Exercise Suggestions', enabled: false },
-                    { label: 'Weekly Progress Reports', enabled: true },
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-center justify-between py-2">
-                      <span className="text-gray-700">{item.label}</span>
-                      <button
-                        className={`w-12 h-6 rounded-full transition-colors ${
-                          item.enabled ? 'bg-emerald-500' : 'bg-gray-300'
-                        }`}
-                      >
-                        <div
-                          className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-                            item.enabled ? 'translate-x-6' : 'translate-x-0.5'
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Privacy & Security */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white">
-                    <Shield className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">Privacy & Security</h3>
-                    <p className="text-sm text-gray-600">Keep your data safe and secure</p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  {[
-                    { label: 'Change Password', icon: <Shield className="w-4 h-4" /> },
-                    { label: 'Two-Factor Authentication', icon: <Shield className="w-4 h-4" /> },
-                    { label: 'Data & Privacy', icon: <Globe className="w-4 h-4" /> },
-                  ].map((item, index) => (
-                    <button
-                      key={index}
-                      className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="text-gray-400">{item.icon}</div>
-                        <span className="text-gray-700">{item.label}</span>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Logout */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Button
-              variant="outline"
-              className="w-full text-red-600 border-red-300 hover:bg-red-50"
-              onClick={() => setShowLogoutConfirm(true)}
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Log Out
-            </Button>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Logout Confirmation Modal */}
-      <AnimatePresence>
-        {showLogoutConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            onClick={() => setShowLogoutConfirm(false)}
-          >
+        {/* Logout Confirmation Modal */}
+        <AnimatePresence>
+          {showLogoutConfirm && (
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+              onClick={() => setShowLogoutConfirm(false)}
             >
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-6 h-6 text-red-600" />
-              </div>
-              <h3 className="text-xl font-bold text-center text-gray-800 mb-2">
-                Log out?
-              </h3>
-              <p className="text-center text-gray-600 mb-6">
-                Are you sure you want to log out of your account?
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleLogout}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                >
-                  Log Out
-                </Button>
-              </div>
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+              >
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-center text-gray-800 mb-2">
+                  Log out?
+                </h3>
+                <p className="text-center text-gray-600 mb-6">
+                  Are you sure you want to log out of your account?
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowLogoutConfirm(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleLogout}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Log Out
+                  </Button>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

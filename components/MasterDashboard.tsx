@@ -108,7 +108,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
             >
               <Card className="border-2 border-emerald-200 bg-gradient-to-r from-emerald-50 to-cyan-50">
                 <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="p-3 bg-white rounded-full shadow-lg flex-shrink-0">
                       <HeartHandshake className="w-8 h-8 text-emerald-600" />
                     </div>
@@ -119,9 +119,9 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                     <Button
                       variant="therapy"
                       onClick={() => onNavigate('partner-chat')}
-                      className="w-full sm:w-auto flex-shrink-0"
+                      className="sm:flex-shrink-0 whitespace-nowrap px-6 py-2 h-auto"
                     >
-                      Chat with Partner
+                      💬 Chat Now
                     </Button>
                   </div>
                 </CardContent>

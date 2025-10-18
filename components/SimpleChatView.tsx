@@ -103,29 +103,179 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
 
   if (isChatComplete) {
     return (
-      <Card className="max-w-2xl mx-auto">
-        <CardContent className="text-center py-12 space-y-6">
-          <div className="mx-auto w-20 h-20 bg-therapy-growth/10 rounded-full flex items-center justify-center">
-            <Heart className="w-10 h-10 text-therapy-growth" />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="max-w-2xl mx-auto"
+      >
+        <Card className="border-2 border-therapy-growth/30 bg-gradient-to-br from-therapy-safe/20 via-white to-therapy-growth/10 overflow-hidden">
+          {/* Celebration Header */}
+          <div className="bg-gradient-to-r from-therapy-warmth via-therapy-growth to-therapy-calm p-8 text-white text-center relative overflow-hidden">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute -top-4 -right-4 text-6xl opacity-20"
+            >
+              ✨
+            </motion.div>
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              className="absolute -bottom-4 -left-4 text-6xl opacity-20"
+            >
+              💝
+            </motion.div>
+            
+            <div className="relative z-10 space-y-4">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
+                className="text-5xl mb-2"
+              >
+                🎉
+              </motion.div>
+              <h3 className="text-3xl font-bold">
+                Thank You for Sharing!
+              </h3>
+              <p className="text-white/90 text-lg">
+                Your reflection session is complete 💝
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-2xl font-semibold text-therapy-calm mb-2">
-              Thank You for Sharing 💝
-            </h3>
-            <p className="text-neutral-600">
-              You shared <strong>{totalWords} words</strong> from your heart today.
-            </p>
-          </div>
-          <Button 
-            onClick={() => onComplete?.(messages)} 
-            variant="therapy" 
-            size="lg"
-            className="px-8"
-          >
-            Complete Reflection & Continue
-          </Button>
-        </CardContent>
-      </Card>
+
+          {/* Stats Section */}
+          <CardContent className="p-8 space-y-8">
+            {/* Session Summary */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-2xl p-6 border border-therapy-calm/20 space-y-6"
+            >
+              <h4 className="text-xl font-semibold text-gray-900 mb-4">
+                Session Summary
+              </h4>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200"
+                >
+                  <motion.div
+                    className="text-3xl font-bold text-blue-600 mb-1"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4, type: "spring" }}
+                  >
+                    {totalWords}
+                  </motion.div>
+                  <div className="text-xs font-medium text-gray-600">Words Shared</div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 }}
+                  className="text-center p-4 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200"
+                >
+                  <motion.div
+                    className="text-3xl font-bold text-emerald-600 mb-1"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.45, type: "spring" }}
+                  >
+                    {messages.length}
+                  </motion.div>
+                  <div className="text-xs font-medium text-gray-600">Exchanges</div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200"
+                >
+                  <motion.div
+                    className="text-3xl font-bold text-purple-600 mb-1"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.5, type: "spring" }}
+                  >
+                    💙
+                  </motion.div>
+                  <div className="text-xs font-medium text-gray-600">Heart Shared</div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Testimonial */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-gradient-to-r from-therapy-calm/10 to-therapy-growth/10 rounded-2xl p-6 border border-therapy-calm/20"
+            >
+              <div className="flex gap-3">
+                <div className="text-2xl">✨</div>
+                <div>
+                  <p className="text-neutral-700 font-medium mb-1">
+                    "You showed up for your relationship today."
+                  </p>
+                  <p className="text-sm text-neutral-600">
+                    That's what matters most. 💝
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="space-y-3 pt-4"
+            >
+              <Button 
+                onClick={() => onComplete?.(messages)} 
+                variant="therapy" 
+                size="lg"
+                className="w-full text-lg py-6 font-semibold"
+              >
+                ✨ See Your Insights
+              </Button>
+              
+              <Button 
+                variant="outline"
+                size="lg"
+                className="w-full text-lg py-6 font-semibold"
+                onClick={() => {
+                  setIsChatComplete(false);
+                  setMessages([]);
+                  setUserInput('');
+                  inputRef.current?.focus();
+                }}
+              >
+                💬 Continue Reflecting
+              </Button>
+            </motion.div>
+
+            {/* Footer Message */}
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-center text-sm text-neutral-600 pt-4"
+            >
+              Thank you for trusting Bridge with your heart. 
+              <br/>
+              Your partner will value your openness 💝
+            </motion.p>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   }
 

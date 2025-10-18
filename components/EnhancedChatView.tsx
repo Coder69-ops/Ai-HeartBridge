@@ -284,6 +284,12 @@ const EnhancedChatView: React.FC<EnhancedChatViewProps> = ({
     toast.success('Chat reset - ready for a fresh conversation!');
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isBotTyping && !isChatComplete) {
+      handleSendMessage();
+    }
+  };
+
   return (
     <PageTransition>
       <div className="max-w-6xl mx-auto space-y-6 p-4">
@@ -493,69 +499,58 @@ const EnhancedChatView: React.FC<EnhancedChatViewProps> = ({
               </motion.div>
             ) : (
               <div className="space-y-4">
-                {/* Suggested Responses */}
-                <AnimatePresence>
-                  {showSuggestions && currentSuggestions.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="flex flex-wrap gap-2"
-                    >
-                      {currentSuggestions.slice(0, 3).map((suggestion, index) => (
-                        <motion.button
-                          key={suggestion}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: index * 0.1 }}
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-full transition-colors duration-200 flex items-center space-x-1"
-                        >
-                          <Lightbulb className="w-3 h-3" />
-                          <span>{suggestion}</span>
-                        </motion.button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* Suggestion Pills - Enhanced */}
+                {showSuggestions && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="flex flex-wrap gap-2 mb-4"
+                  >
+                    {botPersonality.suggestions.map((suggestion, index) => (
+                      <motion.button
+                        key={index}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-emerald-500 to-cyan-500 text-white hover:shadow-lg transition-all duration-300 active:scale-95"
+                      >
+                        {suggestion}
+                      </motion.button>
+                    ))}
+                  </motion.div>
+                )}
 
-                {/* Input Form */}
-                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="space-y-3">
-                  {/* Word count indicator */}
-                  {userInput.trim() && (
-                    <div className="flex justify-between items-center text-xs text-gray-500">
-                      <span>{wordCount} words</span>
-                      <span className="text-emerald-600 flex items-center space-x-1">
-                        <Heart className="w-3 h-3" />
-                        <span>Every word matters</span>
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-end gap-3">
-                    <div className="flex-1">
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={userInput}
-                        onChange={(e) => setUserInput(e.target.value)}
-                        placeholder={isBotTyping ? `${botPersonality.name} is typing...` : "Share what's on your mind... 💭"}
-                        disabled={isBotTyping}
-                        onFocus={() => setShowSuggestions(false)}
-                        className="w-full px-4 py-3 border-2 border-emerald-200 rounded-2xl focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed bg-white/70 backdrop-blur-sm text-gray-800 placeholder-gray-400"
-                      />
-                    </div>
-                    <AnimatedButton 
-                      type="submit" 
-                      disabled={isBotTyping || !userInput.trim()} 
-                      variant="therapy"
-                      size="lg"
-                      className="rounded-2xl px-6"
-                      ripple
-                    >
-                      <Send className="w-5 h-5" />
-                    </AnimatedButton>
-                  </div>
+                {/* Input Area - Enhanced */}
+                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex gap-3 mt-6">
+                  <motion.div
+                    className="flex-1"
+                    whileFocus={{ scale: 1.02 }}
+                  >
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={userInput}
+                      onChange={(e) => setUserInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      onFocus={() => setShowSuggestions(false)}
+                      placeholder="Type your thoughts here..."
+                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:text-gray-400"
+                      disabled={isBotTyping || isChatComplete}
+                    />
+                  </motion.div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    type="submit"
+                    disabled={isBotTyping || !userInput.trim()}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send className="w-5 h-5" />
+                  </motion.button>
                 </form>
               </div>
             )}
