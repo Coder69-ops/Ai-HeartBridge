@@ -15,9 +15,12 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm hover:shadow-md",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        therapy: "bg-therapy-primary text-white hover:bg-therapy-primary/90 shadow-lg hover:shadow-xl",
-        calm: "bg-therapy-calm text-therapy-calm-foreground hover:bg-therapy-calm/90 shadow-md hover:shadow-lg",
-        focus: "bg-therapy-focus text-therapy-focus-foreground hover:bg-therapy-focus/90 shadow-md hover:shadow-lg"
+        therapy: "bg-gradient-to-r from-emerald-500 to-cyan-500 text-white hover:from-emerald-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all font-semibold",
+        calm: "bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg transition-all",
+        focus: "bg-purple-500 text-white hover:bg-purple-600 shadow-md hover:shadow-lg transition-all",
+        gradient: "bg-gradient-to-r from-emerald-500 to-cyan-500 text-white hover:shadow-lg hover:from-emerald-600 hover:to-cyan-600 transition-all",
+        success: "bg-green-500 text-white hover:bg-green-600 shadow-md hover:shadow-lg",
+        warning: "bg-amber-500 text-white hover:bg-amber-600 shadow-md hover:shadow-lg",
       },
       size: {
         default: "h-10 px-4 py-2",

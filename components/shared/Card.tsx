@@ -12,9 +12,9 @@ const cardVariants = cva(
         elevated: "border-border/50 bg-card shadow-lg hover:shadow-xl",
         outlined: "border-2 border-border bg-card/50 hover:bg-card",
         filled: "border-transparent bg-muted hover:bg-muted/80",
-        therapy: "border-therapy-primary/20 bg-therapy-background hover:border-therapy-primary/30 hover:shadow-lg",
-        calm: "border-therapy-calm/20 bg-therapy-calm/5 hover:border-therapy-calm/30",
-        focus: "border-therapy-focus/20 bg-therapy-focus/5 hover:border-therapy-focus/30",
+        therapy: "border-emerald-200 bg-gradient-to-br from-emerald-50 to-cyan-50 hover:border-emerald-300 hover:shadow-lg",
+        calm: "border-blue-200 bg-blue-50 hover:border-blue-300",
+        focus: "border-purple-200 bg-purple-50 hover:border-purple-300",
         glass: "border-white/20 bg-white/10 backdrop-blur-md hover:bg-white/20"
       },
       padding: {

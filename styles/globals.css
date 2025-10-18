@@ -5,6 +5,49 @@
 /* Import Animations */
 @import './animations.css';
 
+/* New Enhanced Styles */
+@layer components {
+  .btn-glow {
+    @apply transition-all duration-300 relative;
+  }
+
+  .btn-glow:hover {
+    @apply shadow-lg shadow-emerald-500/50;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:scale-[1.02];
+  }
+
+  .input-focus {
+    @apply focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all;
+  }
+
+  .glass-effect {
+    @apply backdrop-blur-md bg-white/10 border border-white/20;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent;
+  }
+
+  .smooth-scroll {
+    @apply scroll-smooth;
+  }
+
+  .fade-in {
+    @apply animate-fade-in;
+  }
+
+  .slide-in-up {
+    @apply animate-slide-in-up;
+  }
+
+  .pulse-soft {
+    @apply animate-pulse;
+  }
+}
+
 /* Custom CSS Variables for Therapy Theme */
 :root {
   /* Therapy-specific colors */

@@ -360,50 +360,38 @@ export const AppContent: React.FC = () => {
     
     return (
         <ToastProvider>
-            <motion.div 
-                className="bg-white min-h-screen font-sans text-slate-800"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-            >
+            <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
+                {isAuthenticated && user && !authLoading && (
+                    <MobileHeader 
+                        user={user} 
+                        onNavigate={handleNavigate}
+                        onShowSafetyModal={() => setShowSafetyModal(true)} 
+                        onLogout={handleLogout}
+                    />
+                )}
+                
+                {/* Page Transition Animations */}
                 <AnimatePresence mode="wait">
-                    {isAuthenticated && user && (
-                        <motion.div
-                            key="header"
-                            initial={{ y: -60, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        >
-                            <MobileHeader 
-                                user={user} 
-                                onNavigate={handleNavigate} 
-                                onShowSafetyModal={() => setShowSafetyModal(true)} 
-                                onLogout={handleLogout} 
-                            />
-                        </motion.div>
-                    )}
+                    <motion.div
+                        key={currentView}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ 
+                            duration: 0.4,
+                            ease: "easeInOut"
+                        }}
+                    >
+                        {renderContent()}
+                    </motion.div>
                 </AnimatePresence>
-                
-                <main className="">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentView}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                        >
-                            {renderContent()}
-                        </motion.div>
-                    </AnimatePresence>
-                </main>
-                
+
                 <AnimatePresence>
                     {showSafetyModal && (
                         <MasterSafetyModal onClose={() => setShowSafetyModal(false)} />
                     )}
                 </AnimatePresence>
-            </motion.div>
+            </div>
         </ToastProvider>
     );
 };

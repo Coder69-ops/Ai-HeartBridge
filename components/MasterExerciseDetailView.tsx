@@ -178,69 +178,69 @@ const MasterExerciseDetailView: React.FC<MasterExerciseDetailViewProps> = ({
           )}
         </AnimatePresence>
 
-        {/* Steps */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-emerald-600" />
-              How to Practice
-            </h2>
+            {/* Steps */}
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-emerald-600" />
+                  How to Practice
+                </h2>
 
-            <div className="space-y-4">
-              {exercise.steps.map((step, index) => {
-                const isCompleted = completedSteps.includes(index);
-                const isNext = !completedSteps.includes(index) && 
-                              (index === 0 || completedSteps.includes(index - 1));
-
-                return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`flex gap-4 p-4 rounded-xl border-2 transition-all ${
-                      isCompleted
-                        ? 'bg-emerald-50 border-emerald-200'
-                        : isNext && isStarted
-                        ? 'bg-cyan-50 border-cyan-300 shadow-md'
-                        : 'bg-white border-gray-200'
-                    }`}
-                  >
-                    {/* Step Number / Check */}
-                    <button
-                      onClick={() => isStarted && toggleStep(index)}
-                      disabled={!isStarted}
-                      className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
-                        isCompleted
-                          ? 'bg-emerald-500 text-white'
-                          : isNext && isStarted
-                          ? 'bg-cyan-500 text-white hover:bg-cyan-600'
-                          : 'bg-gray-200 text-gray-600'
-                      } ${isStarted ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                <div className="space-y-3">
+                  {exercise.steps.map((step, index) => (
+                    <motion.button
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      onClick={() => toggleStep(index)}
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`w-full p-4 rounded-xl border-2 transition-all text-left group ${
+                        completedSteps.includes(index)
+                          ? 'bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-300'
+                          : 'bg-white border-gray-200 hover:border-emerald-300'
+                      }`}
                     >
-                      {isCompleted ? (
-                        <Check className="w-6 h-6" />
-                      ) : (
-                        <span>{index + 1}</span>
-                      )}
-                    </button>
+                      <div className="flex items-start gap-4">
+                        {/* Step Number */}
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                          completedSteps.includes(index)
+                            ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white'
+                            : 'bg-gray-200 text-gray-700 group-hover:bg-gray-300'
+                        }`}>
+                          {completedSteps.includes(index) ? (
+                            <Check className="w-4 h-4" />
+                          ) : (
+                            index + 1
+                          )}
+                        </div>
 
-                    {/* Step Content */}
-                    <div className="flex-1">
-                      <p className={`text-gray-800 ${isCompleted ? 'line-through text-gray-500' : ''}`}>
-                        {step}
-                      </p>
-                      {isNext && isStarted && !isCompleted && (
-                        <p className="text-sm text-cyan-600 font-medium mt-2 flex items-center gap-1">
-                          <ChevronRight className="w-4 h-4" />
-                          Current step
-                        </p>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+                        {/* Step Content */}
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-medium transition-all ${
+                            completedSteps.includes(index)
+                              ? 'text-gray-500 line-through'
+                              : 'text-gray-800'
+                          }`}>
+                            {step}
+                          </p>
+                        </div>
+
+                        {/* Checkmark Icon */}
+                        {completedSteps.includes(index) && (
+                          <motion.div
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            className="flex-shrink-0"
+                          >
+                            <CheckCircle className="w-6 h-6 text-emerald-600" />
+                          </motion.div>
+                        )}
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
 
             {/* Completion Action */}
             <AnimatePresence>

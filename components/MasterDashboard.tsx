@@ -79,7 +79,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen pt-20">
       {/* Mobile-First Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
@@ -108,7 +108,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
             >
               <Card className="border-2 border-emerald-200 bg-gradient-to-r from-emerald-50 to-cyan-50">
                 <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
                     <div className="p-3 bg-white rounded-full shadow-lg flex-shrink-0">
                       <HeartHandshake className="w-8 h-8 text-emerald-600" />
                     </div>
@@ -117,9 +117,8 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                       <p className="text-gray-600 truncate">{partner.email}</p>
                     </div>
                     <Button
-                      variant="therapy"
                       onClick={() => onNavigate('partner-chat')}
-                      className="sm:flex-shrink-0 whitespace-nowrap px-6 py-2 h-auto"
+                      className="px-6 py-3 h-auto flex-shrink-0 whitespace-nowrap bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold hover:from-emerald-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all"
                     >
                       💬 Chat Now
                     </Button>
@@ -178,13 +177,13 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                             className="flex-1 px-4 py-2 text-center text-lg font-mono font-bold border-2 border-purple-200 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200"
                           />
                           <Button 
-                            variant="therapy" 
                             disabled={pairingCode.length < 6}
                             onClick={() => {
                               // TODO: Implement partner pairing logic here
                               console.log('Connecting with code:', pairingCode);
                               // After success: setPairingCode('');
                             }}
+                            className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold hover:from-emerald-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Connect
                           </Button>
