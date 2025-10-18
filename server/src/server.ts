@@ -11,6 +11,7 @@ import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import coupleRoutes from './routes/couples';
 import journalRoutes from './routes/journals';
+import journalSessionRoutes from './routes/journalSessions';
 import chatSessionRoutes from './routes/chatSessions';
 import partnerChatRoutes from './routes/partnerChat';
 import exerciseRoutes from './routes/exercises';
@@ -63,7 +64,8 @@ app.use(cors({
   origin: [
     process.env.CLIENT_URL || 'http://localhost:3000',
     'http://localhost:3000',
-    'http://localhost:3001'
+    'http://localhost:3001',
+    'http://localhost:3002'  // Dev server port
   ],
   credentials: true
 }));
@@ -99,6 +101,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/couples', authenticateToken, coupleRoutes);
 app.use('/api/journals', authenticateToken, journalRoutes);
+app.use('/api/journal-sessions', authenticateToken, journalSessionRoutes);
 app.use('/api/chat-sessions', authenticateToken, chatSessionRoutes);
 app.use('/api/partner-chat', authenticateToken, partnerChatRoutes);
 app.use('/api/exercises', exerciseRoutes); // Public endpoint - no auth required for exercises

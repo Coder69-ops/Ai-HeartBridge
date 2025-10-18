@@ -63,7 +63,7 @@ router.get('/conversation', async (req: AuthRequest, res: Response) => {
       },
       partner: {
         id: partner?._id,
-        name: partner?.firstName || partner?.profile?.firstName || 'Partner',
+        name: partner?.firstName || 'Partner',
         email: partner?.email,
         isOnline: false // TODO: Implement online status
       }
@@ -230,7 +230,7 @@ router.delete('/message/:messageId', async (req: AuthRequest, res: Response) => 
       return res.status(404).json({ error: 'Partner chat not found' });
     }
 
-    const message = partnerChat.messages.id(messageId);
+    const message = partnerChat.messages.find((msg: any) => msg._id.toString() === messageId);
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
     }
@@ -277,7 +277,7 @@ router.put('/message/:messageId', [
       return res.status(404).json({ error: 'Partner chat not found' });
     }
 
-    const message = partnerChat.messages.id(messageId);
+    const message = partnerChat.messages.find((msg: any) => msg._id.toString() === messageId);
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
     }
