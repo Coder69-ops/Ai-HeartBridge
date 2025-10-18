@@ -1,9 +1,9 @@
+/* Import Animations */
+@import './animations.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import Animations */
-@import './animations.css';
 
 /* New Enhanced Styles */
 @layer components {
