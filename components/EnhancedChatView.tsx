@@ -7,7 +7,6 @@ import {
   AnimatedButton, 
   GlassmorphismCard, 
   GlassCardContent,
-  ModernInput,
   InteractiveAnimation,
   PageTransition,
   BreathingAnimation,
@@ -535,14 +534,15 @@ const EnhancedChatView: React.FC<EnhancedChatViewProps> = ({
                   
                   <div className="flex items-end gap-3">
                     <div className="flex-1">
-                      <ModernInput
+                      <input
                         ref={inputRef}
+                        type="text"
                         value={userInput}
                         onChange={(e) => setUserInput(e.target.value)}
                         placeholder={isBotTyping ? `${botPersonality.name} is typing...` : "Share what's on your mind... 💭"}
                         disabled={isBotTyping}
-                        className="rounded-2xl"
                         onFocus={() => setShowSuggestions(false)}
+                        className="w-full px-4 py-3 border-2 border-emerald-200 rounded-2xl focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed bg-white/70 backdrop-blur-sm text-gray-800 placeholder-gray-400"
                       />
                     </div>
                     <AnimatedButton 

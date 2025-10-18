@@ -1,8 +1,8 @@
-# AI HeartBridge - Complete Full-Stack Implementation
+# 💝 AI HeartBridge - Complete Full-Stack Relationship Therapy Platform
 
 ## Overview
 
-AI HeartBridge is now a complete full-stack application with a React frontend and Node.js/Express/MongoDB backend. This implementation includes all the core features outlined in the project plan with real database integration, AI-powered analysis, and comprehensive relationship tracking.
+AI HeartBridge is a professional-grade, full-stack relationship therapy application featuring a modern React frontend and robust Node.js/Express/MongoDB backend. Built with evidence-based therapeutic frameworks (Gottman Method, NVC, EFT), the platform provides couples with AI-powered relationship insights, guided communication exercises, and comprehensive progress tracking—all in a secure, privacy-first environment.
 
 ## 🚀 Quick Start
 
@@ -87,12 +87,16 @@ npm run dev     # Start frontend on port 5173
 - **JWT token management** with automatic refresh
 - **Safety detection** for crisis intervention
 
-### ✅ Frontend Enhancements
-- **Real API Integration** replacing localStorage mock
-- **Error Handling** and loading states
-- **Responsive Design** with Tailwind CSS
-- **Interactive Charts** with Recharts
-- **Type-safe** TypeScript implementation
+### ✅ Frontend Excellence
+- **Modern React 19** with TypeScript 5.8
+- **Zustand State Management** for efficient global state
+- **React Query** for server state and caching
+- **Real API Integration** with comprehensive error handling
+- **Responsive Design** with Tailwind CSS and Framer Motion
+- **Interactive Analytics** with Recharts visualization
+- **PWA Ready** with offline support and service workers
+- **Accessibility First** with WCAG 2.1 AA+ compliance
+- **Glassmorphism UI** for professional modern design
 
 ## 🏗️ Architecture
 
@@ -105,11 +109,15 @@ npm run dev     # Start frontend on port 5173
 - **Winston** for logging
 
 ### Frontend Stack
-- **React 19** with TypeScript
-- **Vite** for build tooling
-- **Axios** for API communication
-- **Recharts** for data visualization
-- **Tailwind CSS** for styling
+- **React 19.2.0** with TypeScript 5.8
+- **Vite 6.2** for lightning-fast builds
+- **Zustand 4.4.7** for state management
+- **TanStack Query 5.56** for server state
+- **Framer Motion 11.5** for animations
+- **Axios 1.12** for API communication
+- **Recharts 3.3** for data visualization
+- **Tailwind CSS 3.4** with custom design system
+- **Lucide React** for modern icons
 
 ### Database Schema
 ```
@@ -150,6 +158,22 @@ CheckIns  Exercises  Analytics
 ### Analytics
 - `GET /api/analytics/trends` - Relationship trends
 - `GET /api/analytics/health-score` - Health score
+
+## 💬 Advanced Chat Features
+
+### Private Chat Sessions
+- **Thread-like Storage System** - Persistent conversation threads
+- **Session Management** - Create, edit, close, reopen, and delete sessions
+- **Auto-title Generation** - Smart titles based on conversation content
+- **Conversation Metrics** - Track word count, duration, and engagement
+- **Topic Detection** - Automatic extraction of conversation themes
+- **Context-Aware AI** - Personalized responses based on user profile
+
+### Multiple Chat Modes
+- **Therapy Mode** - Professional therapeutic conversations
+- **Casual Mode** - Relaxed, supportive discussions
+- **Relationship Mode** - Couples-focused dialogues
+- **Support Mode** - Crisis support with safety prioritization
 
 ## 🎨 Key Features Highlights
 
@@ -193,14 +217,76 @@ CheckIns  Exercises  Analytics
 - Scalable architecture
 - API documentation ready
 
-## 🚀 Next Steps for Production
+## 📦 Project Structure
 
-1. **Deploy Backend** - Use Railway, Heroku, or AWS
-2. **Deploy Frontend** - Use Vercel, Netlify, or AWS S3
-3. **Environment Setup** - Configure production environment variables
-4. **SSL Certificates** - Enable HTTPS for security
-5. **Monitoring** - Add logging and error tracking
-6. **Testing** - Add unit and integration tests
+```
+ai-heartbridge/
+├── components/              # React components
+│   ├── Enhanced*           # Modern enhanced components
+│   ├── ChatManager.tsx     # Chat orchestration
+│   ├── ChatSessionsView    # Thread list interface
+│   ├── PersistentChatView  # Session-aware chat
+│   └── shared/             # Reusable UI components
+├── services/               # API client services
+│   ├── apiClient.ts        # Axios instance
+│   ├── authService.ts      # Authentication
+│   ├── chatSessionService  # Chat management
+│   └── geminiService.ts    # AI integration
+├── store/                  # Zustand state stores
+│   ├── authStore.ts        # Auth state
+│   └── appStore.ts         # App state
+├── src/
+│   ├── components/         # Enhanced UI library
+│   │   └── ui/enhanced/    # Modern components
+│   ├── design-system/      # Design tokens
+│   └── utils/              # Utility functions
+├── server/                 # Node.js backend
+│   └── src/
+│       ├── models/         # Mongoose models
+│       ├── routes/         # API routes
+│       ├── services/       # Business logic
+│       └── middleware/     # Express middleware
+└── docs/                   # Development documentation
+```
+
+## 🧹 Recent Code Cleanup
+
+### Removed Duplicates
+- ✅ Removed old component versions (AuthView, ChatView, Dashboard, etc.)
+- ✅ Consolidated to Enhanced components for consistency
+- ✅ Removed unused hooks and utilities
+- ✅ Cleaned up imports and dependencies
+- ✅ Organized documentation into `/docs` folder
+
+### Quality Improvements
+- ✅ Zero linting errors
+- ✅ Full TypeScript strict mode
+- ✅ Optimized bundle sizes
+- ✅ Improved code organization
+- ✅ Better component structure
+
+## 🚀 Deployment Guide
+
+### Environment Variables
+```env
+# Backend (.env in server/)
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+DEEPSEEK_API_KEY=your_ai_api_key
+PORT=3001
+CLIENT_URL=http://localhost:5173
+
+# Frontend (.env in root)
+VITE_API_URL=http://localhost:3001/api
+```
+
+### Production Deployment
+1. **Backend** - Railway, Heroku, AWS EC2, or DigitalOcean
+2. **Frontend** - Vercel, Netlify, or AWS S3 + CloudFront
+3. **Database** - MongoDB Atlas (already configured)
+4. **SSL** - Enable HTTPS for security
+5. **Monitoring** - Add error tracking (Sentry)
+6. **CI/CD** - GitHub Actions for automated deployment
 
 ## 📱 Usage Flow
 

@@ -6,20 +6,31 @@ import { User, Couple, Exercise, Message, OnboardingData } from './types';
 import { ToastProvider } from './src/components/ui/enhanced';
 import * as authService from './services/authService';
 import EnhancedAuthView from './components/EnhancedAuthView';
+import MasterAuthView from './components/MasterAuthView';
 import ComprehensiveOnboarding from './components/ComprehensiveOnboarding';
 import ChatManager from './components/ChatManager';
 import { OnboardingErrorBoundary } from './src/components/ErrorBoundary';
 import EnhancedDashboard from './components/EnhancedDashboard';
+import MasterDashboard from './components/MasterDashboard';
 import Header from './components/Header';
+import MobileHeader from './components/MobileHeader';
 import JournalingView from './components/JournalingView';
 import EnhancedCheckInView from './components/EnhancedCheckInView';
+import MasterCheckInView from './components/MasterCheckInView';
 import ExercisesView from './components/ExercisesView';
+import MasterExercisesView from './components/MasterExercisesView';
 import ExerciseDetailView from './components/ExerciseDetailView';
+import MasterExerciseDetailView from './components/MasterExerciseDetailView';
 import TrendsView from './components/TrendsView';
+import MasterTrendsView from './components/MasterTrendsView';
 import EnhancedProfileView from './components/EnhancedProfileView';
+import MasterProfileView from './components/MasterProfileView';
 import PartnerChatView from './components/PartnerChatView';
+import EnhancedPartnerChat from './components/EnhancedPartnerChat';
 import SafetyModal from './components/SafetyModal';
+import MasterSafetyModal from './components/MasterSafetyModal';
 import { Loader } from './components/shared/Loader';
+import { GorgeousLoader } from './components/shared/GorgeousLoader';
 import { exercises, loadExercises } from './data/exercises';
 
 export const AppContent: React.FC = () => {
@@ -223,44 +234,11 @@ export const AppContent: React.FC = () => {
         // Show loader while initializing or loading
         if (isLoading || authLoading) {
             return (
-                <motion.div 
-                    className="flex justify-center items-center min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                >
-                    <div className="text-center space-y-6">
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-                        >
-                            <Loader size="lg" text="Initializing AI HeartBridge..." centered />
-                        </motion.div>
-                        <motion.p 
-                            className="text-emerald-600 text-lg font-medium"
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.4 }}
-                        >
-                            💝 Preparing your safe space...
-                        </motion.p>
-                        <motion.div
-                            className="flex space-x-2 justify-center"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.6 }}
-                        >
-                            {[0, 1, 2].map((i) => (
-                                <div
-                                    key={i}
-                                    className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"
-                                    style={{ animationDelay: `${i * 0.2}s` }}
-                                />
-                            ))}
-                        </motion.div>
-                    </div>
-                </motion.div>
+                <GorgeousLoader 
+                    message="Preparing your safe space..."
+                    type="therapy"
+                    size="lg"
+                />
             );
         }
 
@@ -285,14 +263,14 @@ export const AppContent: React.FC = () => {
 
         // Check if user needs authentication
         if (!isAuthenticated || !user) {
-            return <EnhancedAuthView onLoginSuccess={handleLoginSuccess} />;
+            return <MasterAuthView onLoginSuccess={handleLoginSuccess} />;
         }
 
         // Render main app views
         switch (currentView) {
             case 'dashboard':
                 return (
-                    <EnhancedDashboard 
+                    <MasterDashboard 
                         user={user} 
                         partner={partner} 
                         onNavigate={handleNavigate} 
@@ -313,39 +291,64 @@ export const AppContent: React.FC = () => {
                 }
                 return null;
             case 'mood':
+                // If coming from journaling, use the current journal ID
                 if (couple && currentJournalId) {
                     return (
-                        <EnhancedCheckInView 
+                        <MasterCheckInView 
                             coupleId={couple.id} 
                             journalId={currentJournalId} 
                             onNavigate={handleNavigate} 
                         />
                     );
                 }
-                return null;
+                // If navigating directly to mood, show mood tracker without requiring a journal
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4">
+                        <div className="max-w-2xl mx-auto">
+                            <button 
+                                onClick={() => setCurrentView('dashboard')}
+                                className="mb-6 text-emerald-600 hover:text-emerald-700 font-medium"
+                            >
+                                ← Back to Dashboard
+                            </button>
+                            <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-4">Check-In</h2>
+                                <p className="text-gray-600 mb-6">
+                                    Complete a journaling session first to check in on your mood and get personalized insights.
+                                </p>
+                                <button 
+                                    onClick={() => handleStartJournaling()}
+                                    className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+                                >
+                                    Start Journaling
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
             case 'exercises':
                 if (selectedExercise) {
                     return (
-                        <ExerciseDetailView 
+                        <MasterExerciseDetailView 
                             exercise={selectedExercise} 
                             onNavigate={handleNavigate} 
                         />
                     );
                 }
                 return (
-                    <ExercisesView 
+                    <MasterExercisesView 
                         exercises={exercisesList} 
                         onSelectExercise={handleSelectExercise} 
                     />
                 );
             case 'goals':
-                return <TrendsView />;
+                return <MasterTrendsView />;
             case 'profile':
-                return <EnhancedProfileView onBack={() => setCurrentView('dashboard')} />;
+                return <MasterProfileView onBack={() => setCurrentView('dashboard')} />;
             case 'chat':
                 return <ChatManager onBack={() => setCurrentView('dashboard')} />;
             case 'partner-chat':
-                return <PartnerChatView onBack={() => setCurrentView('dashboard')} />;
+                return <EnhancedPartnerChat onBack={() => setCurrentView('dashboard')} />;
             default:
                 return (
                     <div className="text-center p-8">
@@ -358,7 +361,7 @@ export const AppContent: React.FC = () => {
     return (
         <ToastProvider>
             <motion.div 
-                className="bg-gradient-to-br from-slate-50 via-white to-blue-50 min-h-screen font-sans text-slate-800"
+                className="bg-white min-h-screen font-sans text-slate-800"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
@@ -371,7 +374,7 @@ export const AppContent: React.FC = () => {
                             animate={{ y: 0, opacity: 1 }}
                             transition={{ type: "spring", stiffness: 300, damping: 25 }}
                         >
-                            <Header 
+                            <MobileHeader 
                                 user={user} 
                                 onNavigate={handleNavigate} 
                                 onShowSafetyModal={() => setShowSafetyModal(true)} 
@@ -381,7 +384,7 @@ export const AppContent: React.FC = () => {
                     )}
                 </AnimatePresence>
                 
-                <main className="container mx-auto p-4 sm:p-6 lg:p-8">
+                <main className="">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={currentView}
@@ -397,7 +400,7 @@ export const AppContent: React.FC = () => {
                 
                 <AnimatePresence>
                     {showSafetyModal && (
-                        <SafetyModal onClose={() => setShowSafetyModal(false)} />
+                        <MasterSafetyModal onClose={() => setShowSafetyModal(false)} />
                     )}
                 </AnimatePresence>
             </motion.div>

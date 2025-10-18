@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Animations */
+@import './animations.css';
+
 /* Custom CSS Variables for Therapy Theme */
 :root {
   /* Therapy-specific colors */

@@ -106,31 +106,6 @@
         min-height: 100dvh; /* Dynamic viewport height for mobile */
       }
       
-      /* Loading screen */
-      .loading-screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #10B981 0%, #6B73FF 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        transition: opacity 0.5s ease-out;
-      }
-      
-      .loading-heart {
-        font-size: 4rem;
-        animation: pulse 1.5s ease-in-out infinite;
-      }
-      
-      @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.1); opacity: 0.8; }
-      }
-      
       /* Safe area for mobile devices */
       .safe-area-top { padding-top: env(safe-area-inset-top); }
       .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
@@ -196,11 +171,6 @@
     <div id="dev-notice" style="display: none; position: fixed; top: 10px; right: 10px; background: #1f2937; color: #10b981; padding: 8px 12px; border-radius: 6px; font-size: 12px; z-index: 10000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
       <span>🛠️ Dev Mode | </span>
       <a href="https://react.dev/link/react-devtools" target="_blank" style="color: #3b82f6; text-decoration: underline;">Install React DevTools</a>
-    </div>
-    
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="loading-screen">
-      <div class="loading-heart">💙</div>
     </div>
     
     <!-- Main App -->
@@ -277,15 +247,7 @@
       
       // Hide loading screen once page is loaded
       window.addEventListener('load', () => {
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-          setTimeout(() => {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-              loadingScreen.remove();
-            }, 500);
-          }, isDev ? 500 : 1000); // Faster in development
-        }
+        // The loading screen is now handled by GorgeousLoader in React
       });
       
       // Register service worker

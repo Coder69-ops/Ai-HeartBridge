@@ -1,7 +1,7 @@
 // Enhanced JournalingView with modern UX and therapy-focused design
 import React, { useState, useEffect } from 'react';
 import { Message, User } from '../types';
-import ChatView from './ChatView';
+import SimpleChatView from './SimpleChatView';
 import { Button } from './shared/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import Icon from './shared/Icon';
@@ -135,7 +135,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({ user, partner, onComple
 
             {/* Chat Interface */}
             <div className="animate-fade-in">
-                <ChatView
+                <SimpleChatView
                     partnerName={currentPartnerName}
                     onComplete={handleComplete}
                     isReturningUser={isReturningUser}
