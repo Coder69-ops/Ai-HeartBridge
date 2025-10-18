@@ -1,0 +1,7 @@
+{
+  "name": "AI HeartBridge",
+  "description": "A paired couples app that actively listens to both partners, analyzes communication patterns using validated relationship frameworks, and generates step-by-step repair plans to build healthier, more resilient relationships.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

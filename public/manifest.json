@@ -1,0 +1,125 @@
+{
+  "name": "AI HeartBridge - Couples Communication Platform",
+  "short_name": "HeartBridge",
+  "description": "AI-powered platform for couples to strengthen their relationship through guided communication, exercises, and insights.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10B981",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "en-US",
+  "categories": ["lifestyle", "health", "education"],
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-dashboard.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard view on mobile"
+    },
+    {
+      "src": "/screenshots/desktop-dashboard.png", 
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard view on desktop"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icons/heart-bridge-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/heart-bridge-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/heart-bridge-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/heart-bridge-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/heart-bridge-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/heart-bridge-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/heart-bridge-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/heart-bridge-512.png",
+      "sizes": "512x512",
+      "type": "image/png", 
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Reflection",
+      "short_name": "Reflect",
+      "description": "Begin a guided reflection session",
+      "url": "/journal",
+      "icons": [
+        {
+          "src": "/icons/journal-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "View Exercises",
+      "short_name": "Exercises", 
+      "description": "Browse relationship exercises",
+      "url": "/exercises",
+      "icons": [
+        {
+          "src": "/icons/exercises-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Check Progress",
+      "short_name": "Progress",
+      "description": "View relationship insights and trends",
+      "url": "/goals",
+      "icons": [
+        {
+          "src": "/icons/progress-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
+}
