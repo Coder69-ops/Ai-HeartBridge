@@ -121,7 +121,9 @@ router.post('/login', [
     console.log('   Origin:', req.headers.origin);
     console.log('   User-Agent:', req.headers['user-agent']);
     console.log('   Content-Type:', req.headers['content-type']);
-    console.log('   Body:', { email: req.body.email, password: '[HIDDEN]' });
+    console.log('   Raw body type:', typeof req.body);
+    console.log('   Raw body:', req.body);
+    console.log('   Parsed body:', { email: req.body.email, password: '[HIDDEN]' });
     
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

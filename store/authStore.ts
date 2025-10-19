@@ -41,10 +41,15 @@ export const useAuthStore = create<AuthState>()(
           console.log('📧 Login attempt for:', email);
           console.log('🌐 Making request to:', `${apiUrl}/auth/login`);
           
+          const requestBody = { email, password };
+          const jsonBody = JSON.stringify(requestBody);
+          console.log('📤 Request body:', requestBody);
+          console.log('📤 JSON string:', jsonBody);
+          
           const response = await fetch(`${apiUrl}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
+            body: jsonBody,
           });
 
           console.log('📡 Response received:');
