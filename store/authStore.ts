@@ -34,6 +34,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true, error: null });
           
+          console.log('🔍 Environment Debug:');
+          console.log('   import.meta.env:', import.meta.env);
+          console.log('   VITE_API_URL:', import.meta.env.VITE_API_URL);
+          console.log('   typeof VITE_API_URL:', typeof import.meta.env.VITE_API_URL);
+          
           const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
           
           console.log('🔗 Frontend-Backend Connection Debug:');
@@ -41,15 +46,10 @@ export const useAuthStore = create<AuthState>()(
           console.log('📧 Login attempt for:', email);
           console.log('🌐 Making request to:', `${apiUrl}/auth/login`);
           
-          const requestBody = { email, password };
-          const jsonBody = JSON.stringify(requestBody);
-          console.log('📤 Request body:', requestBody);
-          console.log('📤 JSON string:', jsonBody);
-          
           const response = await fetch(`${apiUrl}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: jsonBody,
+            body: JSON.stringify({ email, password }),
           });
 
           console.log('📡 Response received:');
