@@ -47,6 +47,6 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://your-backend-url.vercel.app"
+    "VITE_API_URL": "https://captivating-optimism-production-fee7.up.railway.app"
   }
 }
