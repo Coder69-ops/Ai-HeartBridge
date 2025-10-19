@@ -27,7 +27,10 @@ interface MasterAuthViewProps {
 type AuthMode = 'login' | 'signup';
 
 const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
-  const { login, register, isLoading, error, clearError, user, isAuthenticated } = useAuthStore();
+  const authStore = useAuthStore();
+  console.log('🎯 MasterAuthView - authStore:', authStore);
+  console.log('🎯 MasterAuthView - login function:', typeof authStore.login);
+  const { login, register, isLoading, error, clearError, user, isAuthenticated } = authStore;
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   
