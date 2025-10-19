@@ -119,20 +119,31 @@ app.use(errorHandler);
 // Database connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI!);
+    if (!process.env.MONGODB_URI) {
+      logger.warn('MONGODB_URI not set - running without database');
+      return;
+    }
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     logger.error('Error connecting to MongoDB:', error);
-    process.exit(1);
+    // Don't exit - let server run for health checks
+    throw error;
   }
 };
 
 // Start server
 const startServer = async () => {
   try {
-    await connectDB();
+    // Start server first, then connect to DB
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
+    });
+    
+    // Connect to database (non-blocking)
+    connectDB().catch((error) => {
+      logger.error('Database connection failed:', error);
+      // Don't exit - server can run without DB for health checks
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
