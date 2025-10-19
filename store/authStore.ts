@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>()(
           console.log('   VITE_API_URL:', import.meta.env.VITE_API_URL);
           console.log('   typeof VITE_API_URL:', typeof import.meta.env.VITE_API_URL);
           
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+          const apiUrl = 'https://captivating-optimism-production-fee7.up.railway.app/api';
           
           console.log('🔗 Frontend-Backend Connection Debug:');
           console.log('📍 API URL:', apiUrl);
