@@ -23,6 +23,7 @@ export const signup = async (email: string, password: string): Promise<User> => 
 };
 
 export const login = async (email: string, password: string): Promise<User> => {
+    console.log('🚨 OLD AUTHSERVICE LOGIN CALLED - This should NOT appear');
     try {
         const response = await api.post('/auth/login', { email, password });
         const { token, user } = response.data;

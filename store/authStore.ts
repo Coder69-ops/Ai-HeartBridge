@@ -30,6 +30,7 @@ export const useAuthStore = create<AuthState>()(
       error: null,
 
       login: async (email: string, password: string) => {
+        console.log('🚀 AUTHSTORE LOGIN CALLED - This should appear in console');
         try {
           set({ isLoading: true, error: null });
           
