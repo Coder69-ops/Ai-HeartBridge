@@ -25,11 +25,9 @@ import TrendsView from './components/TrendsView';
 import MasterTrendsView from './components/MasterTrendsView';
 import EnhancedProfileView from './components/EnhancedProfileView';
 import MasterProfileView from './components/MasterProfileView';
-import PartnerChatView from './components/PartnerChatView';
 import EnhancedPartnerChat from './components/EnhancedPartnerChat';
 import SafetyModal from './components/SafetyModal';
 import MasterSafetyModal from './components/MasterSafetyModal';
-import { Loader } from './components/shared/Loader';
 import { GorgeousLoader } from './components/shared/GorgeousLoader';
 import { exercises, loadExercises } from './data/exercises';
 
