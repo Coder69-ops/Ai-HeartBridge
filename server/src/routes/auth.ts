@@ -117,8 +117,15 @@ router.post('/login', [
   body('password').exists()
 ], async (req: Request, res: Response) => {
   try {
+    console.log('🔐 Backend Login Request:');
+    console.log('   Origin:', req.headers.origin);
+    console.log('   User-Agent:', req.headers['user-agent']);
+    console.log('   Content-Type:', req.headers['content-type']);
+    console.log('   Body:', { email: req.body.email, password: '[HIDDEN]' });
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -185,6 +192,11 @@ router.post('/login', [
       }
     };
 
+    console.log('✅ Backend Login Success:');
+    console.log('   User found:', user.email);
+    console.log('   Token generated:', token ? 'Yes' : 'No');
+    console.log('   Sending response...');
+    
     res.json({
       message: 'Login successful',
       token,

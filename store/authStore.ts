@@ -35,13 +35,25 @@ export const useAuthStore = create<AuthState>()(
           
           const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
           
+          console.log('🔗 Frontend-Backend Connection Debug:');
+          console.log('📍 API URL:', apiUrl);
+          console.log('📧 Login attempt for:', email);
+          console.log('🌐 Making request to:', `${apiUrl}/auth/login`);
+          
           const response = await fetch(`${apiUrl}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
           });
 
+          console.log('📡 Response received:');
+          console.log('   Status:', response.status);
+          console.log('   Status Text:', response.statusText);
+          console.log('   Headers:', Object.fromEntries(response.headers.entries()));
+          console.log('   OK:', response.ok);
+
           const data = await response.json();
+          console.log('📦 Response data:', data);
 
           if (!response.ok) {
             throw new Error(data.message || 'Login failed');
@@ -80,7 +92,16 @@ export const useAuthStore = create<AuthState>()(
           // Also set tokens for old authService compatibility
           localStorage.setItem('auth_token', data.token);
           localStorage.setItem('user_data', JSON.stringify(user));
+          
+          console.log('✅ Login successful!');
+          console.log('   User:', user);
+          console.log('   Token received:', data.token ? 'Yes' : 'No');
         } catch (error) {
+          console.log('❌ Login Error:');
+          console.log('   Error type:', typeof error);
+          console.log('   Error message:', error instanceof Error ? error.message : error);
+          console.log('   Full error:', error);
+          
           set({
             error: error instanceof Error ? error.message : 'Login failed',
             isLoading: false,
