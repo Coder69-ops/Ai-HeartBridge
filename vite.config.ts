@@ -6,5 +6,20 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true
-  }
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['framer-motion', '@headlessui/react'],
+          utils: ['axios', 'zustand', '@tanstack/react-query']
+        }
+      }
+    }
+  },
+  base: '/'
 });
