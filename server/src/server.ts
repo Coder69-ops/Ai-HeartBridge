@@ -65,7 +65,8 @@ app.use(cors({
     process.env.CLIENT_URL || 'http://localhost:3000',
     'http://localhost:3000',
     'http://localhost:3001',
-    'http://localhost:3002'  // Dev server port
+    'http://localhost:3002',  // Dev server port
+    'https://ai-heartbridge.vercel.app'  // Vercel production domain
   ],
   credentials: true
 }));
