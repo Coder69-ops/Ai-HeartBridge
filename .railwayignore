@@ -1,0 +1,39 @@
+# Frontend files (not needed for backend)
+components/
+src/
+public/
+dist/
+styles/
+hooks/
+store/
+services/
+lib/
+providers/
+data/
+types.ts
+App.tsx
+AppContent.tsx
+index.html
+index.tsx
+vite.config.ts
+tailwind.config.ts
+postcss.config.js
+tsconfig.json
+vite-env.d.ts
+
+# Documentation
+*.md
+docs/
+
+# Development files
+.env.local
+.env.development
+.env.test
+node_modules/
+.git/
+.gitignore
+
+# Build artifacts
+*.log
+*.tmp
+.cache/
