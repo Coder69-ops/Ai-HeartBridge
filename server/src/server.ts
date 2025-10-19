@@ -61,13 +61,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: [
-    process.env.CLIENT_URL || 'http://localhost:3000',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002',  // Dev server port
-    'https://ai-heartbridge.vercel.app'  // Vercel production domain
-  ],
+  origin: true,  // Allow all origins temporarily
   credentials: true
 }));
 
