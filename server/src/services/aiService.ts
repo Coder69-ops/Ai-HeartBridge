@@ -37,9 +37,9 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
   };
 };
 
-// Using OpenRouter API with Qwen model
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'google/gemini-flash-1.5:free'; // Using Gemini model, free tier
+// Using Puter.js API - Free and Unlimited
+const PUTER_API_URL = 'https://api.puter.com/v1/chat/completions';
+const MODEL = 'gpt-5-nano'; // Using GPT-5 nano model, free and unlimited
 
 const createChatbotSystemInstruction = (userContext: any) => `You are Bridge, a warm AI relationship counselor 💝 Your goal is to help users reflect on situations with their partner.
 
@@ -235,7 +235,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
   const maxRetries = 2;
   
   try {
-    console.log('OpenRouter API_KEY configured:', !!process.env.OPENROUTER_API_KEY);
+    console.log('Puter.js API configured - No API key needed');
     console.log('Message history:', messageHistory);
     console.log('User context available:', !!user);
     if (retryCount > 0) console.log(`Retry attempt: ${retryCount}`);
@@ -256,7 +256,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
       }))
     ];
 
-    const response = await fetch(OPENROUTER_API_URL, {
+    const response = await fetch(PUTER_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -369,14 +369,11 @@ ${formattedPartner2Chat}
 Please provide your analysis as a JSON object with this structure:
 ${JSON.stringify(analysisSchema, null, 2)}`;
 
-      const response = await fetch(OPENROUTER_API_URL, {
+      const response = await fetch(PUTER_API_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'http://localhost:3001',
-          'X-Title': 'AI HeartBridge',
-          'X-Description': 'AI relationship counseling app'
+          'User-Agent': 'AI-HeartBridge/1.0'
         },
         body: JSON.stringify({
           model: MODEL,
@@ -403,7 +400,9 @@ ${JSON.stringify(analysisSchema, null, 2)}`;
           await sleep(delay);
           continue;
         }
-        throw new Error(`OpenRouter API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`Puter.js API error: ${response.status} - ${errorText}`);
+        throw new Error(`Puter.js API error: ${response.status} - ${errorText}`);
       }
 
       const data: any = await response.json();
