@@ -177,6 +177,7 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
           text: msg.text,
           timestamp: msg.timestamp
         }))}
+        currentUserId={user.id}
       />
     );
   }

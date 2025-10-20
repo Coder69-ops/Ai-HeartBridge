@@ -15,6 +15,7 @@ interface JournalingViewProps {
   sessionId?: string;
   initialUserChat?: Message[];
   initialPartnerChat?: Message[];
+  currentUserId?: string;
 }
 
 type ActivePartner = 'user' | 'partner';
@@ -26,7 +27,8 @@ const JournalingView: React.FC<JournalingViewProps> = ({
   isReturningUser, 
   sessionId,
   initialUserChat,
-  initialPartnerChat 
+  initialPartnerChat,
+  currentUserId
 }) => {
     const [currentPartner, setCurrentPartner] = useState<ActivePartner>('user');
     const [userChat, setUserChat] = useState<Message[] | null>(initialUserChat || null);
@@ -50,17 +52,17 @@ const JournalingView: React.FC<JournalingViewProps> = ({
         return user.name || user.email.split('@')[0];
     };
 
-    // Determine which partner should continue based on existing data
+    // Determine which chat belongs to the current user
     useEffect(() => {
+      // For now, we'll assume the current user is always 'user' (partner1)
+      // and only show their own chat content
       if (initialUserChat && initialUserChat.length > 0) {
         setUserChat(initialUserChat);
         setSessionStatus(JournalSessionStatus.PARTNER1_COMPLETE);
-        setCurrentPartner('partner');
-      } else if (initialPartnerChat && initialPartnerChat.length > 0) {
-        setPartnerChat(initialPartnerChat);
-        setSessionStatus(JournalSessionStatus.PARTNER2_COMPLETE);
-        setCurrentPartner('user');
       }
+      
+      // Always set current partner to 'user' - the current user should only see their own chat
+      setCurrentPartner('user');
     }, [initialUserChat, initialPartnerChat]);
 
     const handleReflectionComplete = async (chatHistory: Message[]) => {
@@ -80,14 +82,9 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             }));
             const response = await completeJournalReflection(sessionId, journalMessages);
             
-            // Update local state based on which partner completed
-            if (currentPartner === 'user') {
-                setUserChat(chatHistory);
-                setSessionStatus(JournalSessionStatus.PARTNER1_COMPLETE);
-            } else {
-                setPartnerChat(chatHistory);
-                setSessionStatus(JournalSessionStatus.PARTNER2_COMPLETE);
-            }
+            // Update local state - current user completed their reflection
+            setUserChat(chatHistory);
+            setSessionStatus(JournalSessionStatus.PARTNER1_COMPLETE);
 
             // Update session status from response
             setSessionStatus(response.session.status);
@@ -148,13 +145,8 @@ const JournalingView: React.FC<JournalingViewProps> = ({
          );
     }
     
-    // Show waiting screen if one partner has completed but not the other
-    if (sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE || 
-        sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE) {
-        const isWaitingForPartner = (currentPartner === 'user' && sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE) ||
-                                   (currentPartner === 'partner' && sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE);
-        
-        if (isWaitingForPartner) {
+    // Show waiting screen if current user has completed but partner hasn't
+    if (sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE) {
             return (
                 <div className="max-w-2xl mx-auto p-4 sm:p-6">
                     <Card variant="therapy" className="text-center animate-fade-in">
@@ -163,15 +155,12 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                                 <Icon name="clock" className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-600" />
                             </div>
                             <CardTitle className="text-xl sm:text-2xl text-therapy-calm">
-                                ⏳ Waiting for {currentPartner === 'user' ? getPartnerDisplayName() : getUserDisplayName()}
+                                ⏳ Waiting for {getPartnerDisplayName()}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                             <p className="text-neutral-600 leading-relaxed text-sm sm:text-base">
-                                {currentPartner === 'user' 
-                                    ? `${getPartnerDisplayName()} has completed their reflection. You'll be notified when they're ready to view the insights together.`
-                                    : `${getUserDisplayName()} has completed their reflection. You'll be notified when they're ready to view the insights together.`
-                                }
+                                You have completed your reflection. {getPartnerDisplayName()} will be notified to complete their reflection. You'll be notified when both reflections are ready to view together.
                             </p>
                             
                             <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 py-3 sm:py-4 text-xs sm:text-sm text-neutral-500">
@@ -188,11 +177,10 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                     </Card>
                 </div>
             );
-        }
     }
     
-    const currentPartnerName = currentPartner === 'user' ? getUserDisplayName() : getPartnerDisplayName();
-    const isUserTurn = currentPartner === 'user';
+    // Current user is always the active partner
+    const isUserTurn = true;
     
     return (
         <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -202,22 +190,22 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
                         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
-                                <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${userChat ? 'bg-therapy-growth' : isUserTurn ? 'bg-therapy-warmth animate-pulse' : 'bg-neutral-300'}`} />
+                                <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${userChat ? 'bg-therapy-growth' : 'bg-therapy-warmth animate-pulse'}`} />
                                 <span className="text-xs sm:text-sm font-medium truncate">{getUserDisplayName()}</span>
                             </div>
                             <div className="w-4 sm:w-8 h-0.5 bg-neutral-300 flex-shrink-0" />
                             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
-                                <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${partnerChat ? 'bg-therapy-growth' : !isUserTurn ? 'bg-therapy-warmth animate-pulse' : 'bg-neutral-300'}`} />
+                                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 bg-neutral-300" />
                                 <span className="text-xs sm:text-sm font-medium truncate">{getPartnerDisplayName()}</span>
                             </div>
                         </div>
                         
                         <div className="text-left sm:text-right text-xs sm:text-sm text-neutral-500 w-full sm:w-auto">
-                            <div>Progress: {((userChat ? 1 : 0) + (partnerChat ? 1 : 0)) * 50}%</div>
+                            <div>Your Progress: {userChat ? 'Complete' : 'In Progress'}</div>
                             <div className="w-full sm:w-24 h-1 bg-neutral-200 rounded-full mt-1">
                                 <div 
                                     className="h-full bg-therapy-growth rounded-full transition-all duration-500"
-                                    style={{ width: `${((userChat ? 1 : 0) + (partnerChat ? 1 : 0)) * 50}%` }}
+                                    style={{ width: userChat ? '100%' : '50%' }}
                                 />
                             </div>
                         </div>
@@ -229,14 +217,11 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             <Card variant="therapy" className="animate-slide-in-down">
                 <CardHeader className="text-center p-4 sm:p-6">
                     <CardTitle className="flex items-center justify-center gap-2 text-therapy-calm text-lg sm:text-xl">
-                        <span className="text-lg sm:text-xl">{isUserTurn ? '💙' : '🌸'}</span>
-                        <span className="truncate">{currentPartnerName}'s Reflection Time</span>
+                        <span className="text-lg sm:text-xl">💙</span>
+                        <span className="truncate">{getUserDisplayName()}'s Reflection Time</span>
                     </CardTitle>
                     <p className="text-neutral-600 mt-2 text-sm sm:text-base">
-                        {isUserTurn 
-                            ? "Share your heart with Bridge - this is your private space 🤗" 
-                            : "Please give your partner privacy for their reflection session ✨"
-                        }
+                        Share your heart with Bridge - this is your private space 🤗
                     </p>
                 </CardHeader>
             </Card>
@@ -244,10 +229,10 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             {/* Chat Interface */}
             <div className="animate-fade-in">
                 <SimpleChatView
-                    partnerName={currentPartnerName}
+                    partnerName={getUserDisplayName()}
                     onComplete={handleReflectionComplete}
                     isReturningUser={isReturningUser}
-                    initialMessages={isUserTurn ? userChat : partnerChat}
+                    initialMessages={userChat}
                     isCompleting={isCompleting}
                 />
             </div>
