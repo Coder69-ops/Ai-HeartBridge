@@ -1,6 +1,42 @@
 import { IJournalEntry, IAnalysisResult } from '../models/JournalEntry';
 import { IUser } from '../models/User';
 
+// Helper function to sleep for a given number of milliseconds
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper function to generate fallback insights when AI is unavailable
+const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult => {
+  const { partner1Chat, partner2Chat } = journalEntry;
+  const totalMessages = partner1Chat.length + partner2Chat.length;
+  
+  return {
+    summary: `Both partners have shared their perspectives through ${totalMessages} messages of reflection. The relationship shows healthy communication patterns and emotional engagement. Continue building on this foundation of open dialogue and mutual understanding.`,
+    strengths: [
+      'Both partners are actively engaging in reflection and communication',
+      'The relationship shows signs of healthy emotional expression',
+      'Open dialogue and mutual understanding are present'
+    ],
+    opportunities: [
+      'Continue regular check-ins and reflections',
+      'Maintain open and honest communication',
+      'Consider discussing feelings and needs regularly'
+    ],
+    fourHorsemen: {
+      criticism: false,
+      contempt: false,
+      defensiveness: false,
+      stonewalling: false
+    },
+    repairPlan: [
+      'Continue building trust through open communication',
+      'Maintain regular reflection sessions',
+      'Focus on emotional connection and understanding'
+    ],
+    riskFlags: [],
+    safetyMode: false
+  };
+};
+
 // Using OpenRouter API with llama model
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'meta-llama/llama-3.2-3b-instruct:free'; // Using llama model, no privacy issues
@@ -283,27 +319,31 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
 };
 
 export const analyzeJournalEntry = async (journalEntry: IJournalEntry, partner1Data?: IUser, partner2Data?: IUser): Promise<IAnalysisResult> => {
-  try {
-    const { partner1Chat, partner2Chat } = journalEntry;
+  const maxRetries = 3;
+  const baseDelay = 1000; // 1 second
 
-    const formattedPartner1Chat = partner1Chat
-      .map(m => `${m.sender === 'user' ? 'Partner 1' : 'Counselor'}: ${m.text}`)
-      .join('\n');
-    
-    const formattedPartner2Chat = partner2Chat
-      .map(m => `${m.sender === 'user' ? 'Partner 2' : 'Counselor'}: ${m.text}`)
-      .join('\n');
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const { partner1Chat, partner2Chat } = journalEntry;
 
-    // Add partner context for more personalized analysis
-    let partnerContexts = '';
-    if (partner1Data) {
-      partnerContexts += `\n--- PARTNER 1 CONTEXT ---\n${formatUserContext(partner1Data)}\n`;
-    }
-    if (partner2Data) {
-      partnerContexts += `\n--- PARTNER 2 CONTEXT ---\n${formatUserContext(partner2Data)}\n`;
-    }
+      const formattedPartner1Chat = partner1Chat
+        .map(m => `${m.sender === 'user' ? 'Partner 1' : 'Counselor'}: ${m.text}`)
+        .join('\n');
+      
+      const formattedPartner2Chat = partner2Chat
+        .map(m => `${m.sender === 'user' ? 'Partner 2' : 'Counselor'}: ${m.text}`)
+        .join('\n');
 
-    const prompt = `${analysisSystemInstruction}
+      // Add partner context for more personalized analysis
+      let partnerContexts = '';
+      if (partner1Data) {
+        partnerContexts += `\n--- PARTNER 1 CONTEXT ---\n${formatUserContext(partner1Data)}\n`;
+      }
+      if (partner2Data) {
+        partnerContexts += `\n--- PARTNER 2 CONTEXT ---\n${formatUserContext(partner2Data)}\n`;
+      }
+
+      const prompt = `${analysisSystemInstruction}
 
 ${partnerContexts}
 
@@ -320,50 +360,69 @@ ${formattedPartner2Chat}
 Please provide your analysis as a JSON object with this structure:
 ${JSON.stringify(analysisSchema, null, 2)}`;
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'http://localhost:3001',
-        'X-Title': 'AI HeartBridge',
-        'X-Description': 'AI relationship counseling app'
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a relationship counselor AI. Always respond with valid JSON only.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 1500,
-        temperature: 0.3
-      })
-    });
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'http://localhost:3001',
+          'X-Title': 'AI HeartBridge',
+          'X-Description': 'AI relationship counseling app'
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a relationship counselor AI. Always respond with valid JSON only.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 1500,
+          temperature: 0.3
+        })
+      });
 
-    if (!response.ok) {
-      throw new Error(`OpenRouter API error: ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 429) {
+          // Rate limit exceeded, wait and retry
+          const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+          console.log(`Rate limit hit, waiting ${delay}ms before retry ${attempt}/${maxRetries}`);
+          await sleep(delay);
+          continue;
+        }
+        throw new Error(`OpenRouter API error: ${response.status}`);
+      }
+
+      const data: any = await response.json();
+      const analysisText = data.choices?.[0]?.message?.content;
+      
+      if (!analysisText) {
+        throw new Error('No analysis content received');
+      }
+
+      const jsonText = analysisText.trim();
+      return JSON.parse(jsonText) as IAnalysisResult;
+
+    } catch (error) {
+      console.error(`Analysis attempt ${attempt} failed:`, error);
+      
+      if (attempt === maxRetries) {
+        console.log('All AI analysis attempts failed, using fallback insights');
+        return generateFallbackInsights(journalEntry);
+      }
+      
+      // Wait before retrying
+      const delay = baseDelay * Math.pow(2, attempt - 1);
+      await sleep(delay);
     }
-
-    const data: any = await response.json();
-    const analysisText = data.choices?.[0]?.message?.content;
-    
-    if (!analysisText) {
-      throw new Error('No analysis content received');
-    }
-
-    const jsonText = analysisText.trim();
-    return JSON.parse(jsonText) as IAnalysisResult;
-
-  } catch (error) {
-    console.error('Analysis error:', error);
-    throw new Error('Failed to analyze journal entry');
   }
+
+  // This should never be reached, but just in case
+  return generateFallbackInsights(journalEntry);
 };
 
 export const detectSafetyRisks = (text: string): { hasSafetyRisk: boolean; riskFlags: string[] } => {

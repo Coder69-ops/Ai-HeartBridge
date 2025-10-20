@@ -7,8 +7,38 @@ import { User } from '../models/User';
 import { getChatbotResponse } from '../services/aiService';
 import { journalNotificationService } from '../services/notificationService';
 import { analyzeJournalEntry } from '../services/aiService';
+import { IAnalysisResult } from '../models/JournalEntry';
 
 const router = express.Router();
+
+// Helper function to format analysis result as readable text
+function formatAnalysisAsText(analysis: IAnalysisResult): string {
+  return `# Relationship Insights
+
+## Summary
+${analysis.summary}
+
+## Strengths
+${analysis.strengths.map((strength: string) => `- ${strength}`).join('\n')}
+
+## Growth Opportunities
+${analysis.opportunities.map((opportunity: string) => `- ${opportunity}`).join('\n')}
+
+## Four Horsemen Assessment
+- **Criticism**: ${analysis.fourHorsemen.criticism ? '⚠️ Present' : '✅ Not detected'}
+- **Contempt**: ${analysis.fourHorsemen.contempt ? '⚠️ Present' : '✅ Not detected'}
+- **Defensiveness**: ${analysis.fourHorsemen.defensiveness ? '⚠️ Present' : '✅ Not detected'}
+- **Stonewalling**: ${analysis.fourHorsemen.stonewalling ? '⚠️ Present' : '✅ Not detected'}
+
+## Repair Plan
+${analysis.repairPlan.map((plan: string) => `- ${plan}`).join('\n')}
+
+${analysis.riskFlags.length > 0 ? `## Safety Considerations
+${analysis.riskFlags.map((flag: string) => `- ⚠️ ${flag}`).join('\n')}` : ''}
+
+${analysis.safetyMode ? `## Safety Mode Activated
+This session has been flagged for safety review. Please prioritize emotional safety and consider professional support.` : ''}`;
+}
 
 // Helper function to generate insights for a completed session
 async function generateInsights(sessionId: string) {
@@ -67,8 +97,8 @@ async function generateInsights(sessionId: string) {
     // Generate AI analysis
     const analysis = await analyzeJournalEntry(journalEntry, partner1, partner2);
 
-    // Update session with insights (convert analysis to string)
-    session.insights = JSON.stringify(analysis);
+    // Update session with insights (format analysis as readable text)
+    session.insights = formatAnalysisAsText(analysis);
     session.status = JournalSessionStatus.INSIGHTS_READY;
     session.insightsGeneratedAt = new Date();
     await session.save();
