@@ -37,9 +37,11 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
   };
 };
 
-// Using Groq API - Free and Reliable
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'llama-3.1-8b-instant'; // Current available Llama model on Groq
+// Using Puter.js - Free and Unlimited AI
+const { init } = require('@heyputer/puter.js/src/init.cjs');
+
+const puter = init(process.env.PUTER_AUTH_TOKEN || ''); // Optional auth token
+const MODEL = 'gpt-5-nano'; // Using GPT-5 nano model, free and unlimited
 
 const createChatbotSystemInstruction = (userContext: any) => `You are Bridge, a warm AI relationship counselor 💝 Your goal is to help users reflect on situations with their partner.
 
@@ -235,7 +237,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
   const maxRetries = 2;
   
   try {
-    console.log('Groq API configured:', !!process.env.GROQ_API_KEY);
+    console.log('Puter.js API configured - Free and unlimited access');
     console.log('Message history:', messageHistory);
     console.log('User context available:', !!user);
     if (retryCount > 0) console.log(`Retry attempt: ${retryCount}`);
@@ -256,51 +258,21 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
       }))
     ];
 
-    const response = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: messages,
-        max_tokens: 100,
-        temperature: 0.8
-      })
+    // Use Puter.js AI chat instead of fetch
+    const prompt = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+    const response = await puter.ai.chat(prompt, {
+      model: MODEL,
+      max_tokens: 100,
+      temperature: 0.8
     });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Groq API error:', errorData);
-      
-      // Check for rate limiting specifically
-      if (response.status === 429 || errorData.includes('rate-limited')) {
-        console.log('Rate limit detected');
-        
-        // Retry for rate limits if we haven't exceeded max retries
-        if (retryCount < maxRetries) {
-          console.log(`Retrying in ${(retryCount + 1) * 2} seconds...`);
-          await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
-          return getChatbotResponse(messageHistory, user, retryCount + 1);
-        }
-        
-        console.log('Max retries exceeded, using fallback response');
-        return getFallbackResponse(messageHistory, user);
-      }
-      
-      // For other API errors, also use fallback
-      console.log('API error detected, using fallback response');
-      return getFallbackResponse(messageHistory, user);
-    }
-
-    const data: any = await response.json();
-    const responseText = data.choices?.[0]?.message?.content || getFallbackResponse(messageHistory, user);
+    // Puter.js returns the response directly
+    const responseText = response || getFallbackResponse(messageHistory, user);
     
     console.log('Bot response:', responseText);
     return responseText;
   } catch (error) {
-    console.error('Chatbot error:', error);
+    console.error('Puter.js error:', error);
     
     // Retry for network errors if we haven't exceeded max retries
     if (retryCount < maxRetries && error instanceof Error && 
@@ -366,44 +338,19 @@ ${formattedPartner2Chat}
 Please provide your analysis as a JSON object with this structure:
 ${JSON.stringify(analysisSchema, null, 2)}`;
 
-      const response = await fetch(GROQ_API_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a relationship counselor AI. Always respond with valid JSON only.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          max_tokens: 800,
-          temperature: 0.3
-        })
+      // Use Puter.js AI chat for analysis
+      const analysisPrompt = `You are a relationship counselor AI. Always respond with valid JSON only.
+
+${prompt}`;
+      
+      const response = await puter.ai.chat(analysisPrompt, {
+        model: MODEL,
+        max_tokens: 800,
+        temperature: 0.3
       });
 
-      if (!response.ok) {
-        if (response.status === 429) {
-          // Rate limit exceeded, wait and retry
-          const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
-          console.log(`Rate limit hit, waiting ${delay}ms before retry ${attempt}/${maxRetries}`);
-          await sleep(delay);
-          continue;
-        }
-        const errorText = await response.text();
-        console.error(`Groq API error: ${response.status} - ${errorText}`);
-        throw new Error(`Groq API error: ${response.status} - ${errorText}`);
-      }
-
-      const data: any = await response.json();
-      const analysisText = data.choices?.[0]?.message?.content;
+      // Puter.js returns the response directly
+      const analysisText = response;
       
       if (!analysisText) {
         throw new Error('No analysis content received');
@@ -413,10 +360,10 @@ ${JSON.stringify(analysisSchema, null, 2)}`;
       return JSON.parse(jsonText) as IAnalysisResult;
 
     } catch (error) {
-      console.error(`Analysis attempt ${attempt} failed:`, error);
+      console.error(`Puter.js analysis attempt ${attempt} failed:`, error);
       
       if (attempt === maxRetries) {
-        console.log('All AI analysis attempts failed, using fallback insights');
+        console.log('All Puter.js analysis attempts failed, using fallback insights');
         return generateFallbackInsights(journalEntry);
       }
       
