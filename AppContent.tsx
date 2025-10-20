@@ -361,27 +361,15 @@ export const AppContent: React.FC = () => {
             <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
                 {isAuthenticated && user && !authLoading && (
                     <>
-                        {/* Desktop Header - Hidden on mobile */}
-                        <div className="hidden lg:block">
-                            <Header 
-                                user={user} 
-                                onNavigate={handleNavigate}
-                                onShowSafetyModal={() => setShowSafetyModal(true)} 
-                                onLogout={handleLogout}
-                                currentView={currentView}
-                                partner={partner}
-                            />
-                        </div>
-                        
-                        {/* Mobile Header - Hidden on desktop */}
-                        <div className="lg:hidden">
-                            <MobileHeader 
-                                user={user} 
-                                onNavigate={handleNavigate}
-                                onShowSafetyModal={() => setShowSafetyModal(true)} 
-                                onLogout={handleLogout}
-                            />
-                        </div>
+                        {/* Desktop Header */}
+                        <Header 
+                            user={user} 
+                            onNavigate={handleNavigate}
+                            onShowSafetyModal={() => setShowSafetyModal(true)} 
+                            onLogout={handleLogout}
+                            currentView={currentView}
+                            partner={partner}
+                        />
                     </>
                 )}
                 
@@ -396,7 +384,7 @@ export const AppContent: React.FC = () => {
                             duration: 0.4,
                             ease: "easeInOut"
                         }}
-                        className="lg:pt-0"
+                        className="pt-16"
                     >
                         {renderContent()}
                     </motion.div>
