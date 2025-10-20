@@ -150,15 +150,17 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
 
           {/* Right Actions */}
           <div className="flex items-center space-x-2">
-            {/* Notification Badge */}
-            <NotificationBadge
-              notifications={notifications}
-              onMarkAsRead={onMarkNotificationAsRead || (() => {})}
-              onMarkAllAsRead={onMarkAllNotificationsAsRead || (() => {})}
-              onNotificationClick={onNotificationClick || (() => {})}
-            />
+            {/* Desktop Notification Badge - Hidden on mobile */}
+            <div className="hidden md:block">
+              <NotificationBadge
+                notifications={notifications}
+                onMarkAsRead={onMarkNotificationAsRead || (() => {})}
+                onMarkAllAsRead={onMarkAllNotificationsAsRead || (() => {})}
+                onNotificationClick={onNotificationClick || (() => {})}
+              />
+            </div>
 
-            {/* Safety Button */}
+            {/* Safety Button - Always visible */}
             <Button
               variant="ghost"
               size="icon"
@@ -168,8 +170,8 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
               <Shield className="w-5 h-5" />
             </Button>
 
-            {/* User Menu */}
-            <div className="relative" ref={userMenuRef}>
+            {/* User Menu - Desktop only */}
+            <div className="hidden md:block relative" ref={userMenuRef}>
               <Button
                 variant="ghost"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -218,7 +220,7 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
               </AnimatePresence>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button with Notification Badge */}
             <div className="md:hidden flex items-center space-x-2">
               <NotificationBadge
                 notifications={notifications}
@@ -230,6 +232,7 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
               >
                 {mobileMenuOpen ? (
                   <X className="w-5 h-5" />
@@ -252,35 +255,49 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="px-4 py-2 space-y-1">
+            <div className="px-4 py-3 space-y-2">
+              {/* User Info Section */}
+              <div className="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-lg mb-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                  {getUserDisplayName().charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">{getUserDisplayName()}</p>
+                  {partner && (
+                    <p className="text-xs text-emerald-600">
+                      Connected with {(partner as UserType)?.profile?.firstName || (partner as UserType)?.name || 'Partner'}
+                    </p>
+                  )}
+                </div>
+              </div>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item.view)}
-                    className={`w-full flex items-center space-x-3 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                    className={`w-full flex items-center space-x-3 px-4 py-3 text-base font-medium rounded-lg transition-all touch-manipulation ${
                       currentView === item.view
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
+                        ? 'bg-emerald-100 text-emerald-700 shadow-sm'
+                        : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className="w-6 h-6" />
                     <span>{item.label}</span>
                   </button>
                 );
               })}
               
-              <div className="border-t border-gray-200 my-2"></div>
+              <div className="border-t border-gray-200 my-3"></div>
               
               <button
                 onClick={() => {
                   handleNavClick('profile');
                   setMobileMenuOpen(false);
                 }}
-                className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                className="w-full flex items-center space-x-3 px-4 py-3 text-base text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 rounded-lg transition-all touch-manipulation"
               >
-                <User className="w-5 h-5" />
+                <User className="w-6 h-6" />
                 <span>Profile & Settings</span>
               </button>
               
@@ -289,9 +306,9 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
                   handleLogoutClick();
                   setMobileMenuOpen(false);
                 }}
-                className="w-full flex items-center space-x-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                className="w-full flex items-center space-x-3 px-4 py-3 text-base text-red-600 hover:text-red-50 hover:bg-red-50 active:bg-red-100 rounded-lg transition-all touch-manipulation"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-6 h-6" />
                 <span>Sign Out</span>
               </button>
             </div>
@@ -302,4 +319,4 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
   );
 };
 
-export default SimpleHeader;
+export default SimpleHeader; 

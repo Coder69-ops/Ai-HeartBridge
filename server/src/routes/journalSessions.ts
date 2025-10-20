@@ -340,6 +340,9 @@ router.get('/:sessionId', async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Journal session not found' });
     }
 
+    // Determine which partner the current user is
+    const isCurrentUserPartner1 = couple.partner1Id.equals(user._id);
+
     res.json({
       session: {
         id: session._id,
@@ -348,6 +351,7 @@ router.get('/:sessionId', async (req: AuthRequest, res: Response) => {
         partner2Chat: session.partner2Chat,
         isActive: session.isActive,
         isClosed: session.isClosed,
+        status: session.status,
         lastMessageAt: session.lastMessageAt,
         wordCount: session.wordCount,
         messageCount: session.messageCount,
@@ -355,6 +359,10 @@ router.get('/:sessionId', async (req: AuthRequest, res: Response) => {
         themes: session.themes,
         summary: session.summary,
         insights: session.insights,
+        partner1CompletedAt: session.partner1CompletedAt,
+        partner2CompletedAt: session.partner2CompletedAt,
+        insightsGeneratedAt: session.insightsGeneratedAt,
+        isCurrentUserPartner1: isCurrentUserPartner1,
         sessionDurationMinutes: session.sessionDurationMinutes,
         createdAt: session.createdAt,
         updatedAt: session.updatedAt,
