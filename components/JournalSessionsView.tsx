@@ -68,49 +68,49 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
+        {/* Header - Mobile Optimized */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4 sm:gap-0">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
                 📔 Journal History
               </h1>
-              <p className="text-gray-600">View and revisit your relationship reflections</p>
+              <p className="text-gray-600 text-sm sm:text-base">View and revisit your relationship reflections</p>
             </div>
             <Button
               onClick={onNewSession}
-              className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white"
+              className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2.5"
             >
               <Heart className="w-4 h-4 mr-2" />
               New Entry
             </Button>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Stats - Mobile Optimized */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
             <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-3xl font-bold text-emerald-600 mb-1">
+              <CardContent className="p-3 sm:p-4 text-center">
+                <div className="text-xl sm:text-3xl font-bold text-emerald-600 mb-1">
                   {sessions.filter(s => !s.isClosed).length}
                 </div>
                 <div className="text-xs text-gray-600">Active Sessions</div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-3xl font-bold text-cyan-600 mb-1">
+              <CardContent className="p-3 sm:p-4 text-center">
+                <div className="text-xl sm:text-3xl font-bold text-cyan-600 mb-1">
                   {sessions.filter(s => s.isClosed).length}
                 </div>
                 <div className="text-xs text-gray-600">Completed</div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4 text-center">
-                <div className="text-3xl font-bold text-purple-600 mb-1">
+              <CardContent className="p-3 sm:p-4 text-center">
+                <div className="text-xl sm:text-3xl font-bold text-purple-600 mb-1">
                   {sessions.reduce((sum, s) => sum + s.wordCount, 0)}
                 </div>
                 <div className="text-xs text-gray-600">Total Words</div>
@@ -119,18 +119,18 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
           </div>
         </motion.div>
 
-        {/* Filters */}
+        {/* Filters - Mobile Optimized */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 space-y-4"
+          className="mb-4 sm:mb-6 space-y-3 sm:space-y-4"
         >
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-1.5 sm:gap-2 flex-wrap">
             {(['all', 'active', 'completed'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-full font-medium transition-all ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-medium transition-all text-xs sm:text-sm ${
                   filter === f
                     ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white'
                     : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'
@@ -146,12 +146,12 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search journal entries..."
-            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200"
+            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 text-sm sm:text-base"
           />
         </motion.div>
 
-        {/* Sessions List */}
-        <div className="space-y-4">
+        {/* Sessions List - Mobile Optimized */}
+        <div className="space-y-3 sm:space-y-4">
           <AnimatePresence>
             {filteredSessions.length > 0 ? (
               filteredSessions.map((session, index) => (
@@ -168,56 +168,56 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
                     }`}
                     onClick={() => onSelectSession?.(session.id)}
                   >
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
+                        <div className="flex-1 min-w-0 w-full sm:w-auto">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
                             {session.title || `Session on ${new Date(session.createdAt).toLocaleDateString()}`}
                           </h3>
                           
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                          <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2">
                             {session.summary || 'Relationship reflection session'}
                           </p>
 
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-4 h-4" />
-                              {new Date(session.createdAt).toLocaleDateString()}
+                          <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                            <div className="flex items-center gap-1 sm:gap-2">
+                              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <span className="text-xs">{new Date(session.createdAt).toLocaleDateString()}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              💬 {session.messageCount} messages
+                            <div className="flex items-center gap-1 sm:gap-2">
+                              <span className="text-xs">💬 {session.messageCount} messages</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              📝 {session.wordCount} words
+                            <div className="flex items-center gap-1 sm:gap-2">
+                              <span className="text-xs">📝 {session.wordCount} words</span>
                             </div>
                             {session.mood && (
-                              <div className="flex items-center gap-2">
-                                😊 {session.mood}
+                              <div className="flex items-center gap-1 sm:gap-2">
+                                <span className="text-xs">😊 {session.mood}</span>
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex gap-2 flex-shrink-0">
+                        <div className="flex gap-1 sm:gap-2 flex-shrink-0 w-full sm:w-auto justify-end sm:justify-start">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               onSelectSession?.(session.id);
                             }}
-                            className="p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                            className="p-1.5 sm:p-2 hover:bg-emerald-50 rounded-lg transition-colors"
                             title="View session"
                           >
-                            <Eye className="w-5 h-5 text-emerald-600" />
+                            <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDelete(session.id);
                             }}
-                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 sm:p-2 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete session"
                           >
-                            <Trash2 className="w-5 h-5 text-red-600" />
+                            <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
                           </button>
                         </div>
                       </div>
@@ -229,14 +229,14 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-12"
+                className="text-center py-8 sm:py-12"
               >
-                <div className="text-6xl mb-4">📔</div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">No journal sessions yet</h3>
-                <p className="text-gray-600 mb-6">Start your first couple's journal session today</p>
+                <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">📔</div>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">No journal sessions yet</h3>
+                <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">Start your first couple's journal session today</p>
                 <Button
                   onClick={onNewSession}
-                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white"
+                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-sm sm:text-base py-2 sm:py-2.5 px-4 sm:px-6"
                 >
                   Start Journaling
                 </Button>

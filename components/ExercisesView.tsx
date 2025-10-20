@@ -120,46 +120,46 @@ const ExercisesView: React.FC<ExercisesViewProps> = ({ exercises, onSelectExerci
     }
     
     return (
-        <div className="max-w-6xl mx-auto p-6 space-y-8">
-            {/* Header with AI Insights */}
+        <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
+            {/* Header with AI Insights - Mobile Optimized */}
             <Card variant="therapy" className="text-center animate-fade-in">
-                <CardHeader>
-                    <CardTitle className="text-3xl text-therapy-calm">
+                <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="text-2xl sm:text-3xl text-therapy-calm">
                         🌟 Personalized Exercises for You
                     </CardTitle>
-                    <p className="text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+                    <p className="text-neutral-600 max-w-3xl mx-auto leading-relaxed text-sm sm:text-base">
                         Based on your relationship patterns and goals, these evidence-based exercises are tailored to help you build stronger communication and deeper connection.
                     </p>
                     
-                    {/* Quick Stats */}
-                    <div className="flex justify-center items-center gap-8 mt-6 text-sm">
+                    {/* Quick Stats - Mobile Optimized */}
+                    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 mt-4 sm:mt-6 text-xs sm:text-sm">
                         <div className="flex items-center gap-2 text-therapy-growth">
-                            <Icon name="target" className="w-4 h-4" />
+                            <Icon name="target" className="w-3 h-3 sm:w-4 sm:h-4" />
                             <span>{recommendations.filter(r => r.isRecommended).length} AI Recommended</span>
                         </div>
                         <div className="flex items-center gap-2 text-therapy-calm">
-                            <Icon name="book-open" className="w-4 h-4" />
+                            <Icon name="book-open" className="w-3 h-3 sm:w-4 sm:h-4" />
                             <span>{exercises.length} Total Exercises</span>
                         </div>
                         <div className="flex items-center gap-2 text-therapy-warmth">
-                            <Icon name="trending-up" className="w-4 h-4" />
+                            <Icon name="trending-up" className="w-3 h-3 sm:w-4 sm:h-4" />
                             <span>Evidence-Based</span>
                         </div>
                     </div>
                 </CardHeader>
             </Card>
 
-            {/* Category Filter */}
+            {/* Category Filter - Mobile Optimized */}
             <Card className="animate-slide-in-up">
-                <CardContent className="p-4">
-                    <div className="flex flex-wrap justify-center gap-2">
+                <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
                         {categories.map(category => (
                             <Button
                                 key={category}
                                 variant={filterCategory === category ? "therapy" : "outline"}
                                 size="sm"
                                 onClick={() => setFilterCategory(category)}
-                                className="capitalize"
+                                className="capitalize text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                             >
                                 {category}
                             </Button>
@@ -168,8 +168,8 @@ const ExercisesView: React.FC<ExercisesViewProps> = ({ exercises, onSelectExerci
                 </CardContent>
             </Card>
 
-            {/* Exercises Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Exercises Grid - Mobile Optimized */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {filteredRecommendations.map((recommendation, index) => (
                     <Card 
                         key={recommendation.exercise.id} 
@@ -178,57 +178,57 @@ const ExercisesView: React.FC<ExercisesViewProps> = ({ exercises, onSelectExerci
                         className="flex flex-col animate-scale-in hover:shadow-xl transition-all duration-300"
                         style={{animationDelay: `${index * 0.1}s`}}
                     >
-                        <CardHeader className="pb-4">
-                            {/* Recommended Badge */}
+                        <CardHeader className="pb-3 sm:pb-4 p-4 sm:p-6">
+                            {/* Recommended Badge - Mobile Optimized */}
                             {recommendation.isRecommended && (
-                                <div className="flex items-center gap-2 mb-3 px-3 py-1 bg-therapy-growth/10 rounded-full text-therapy-growth text-xs font-medium">
+                                <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 px-2 sm:px-3 py-1 bg-therapy-growth/10 rounded-full text-therapy-growth text-xs font-medium">
                                     <Icon name="sparkles" className="w-3 h-3" />
-                                    AI Recommended
+                                    <span className="text-xs">AI Recommended</span>
                                 </div>
                             )}
                             
-                            <div className="flex items-center gap-3">
-                                <div className="bg-therapy-calm/10 p-3 rounded-full">
-                                    <Icon name={recommendation.exercise.icon} className="w-6 h-6 text-therapy-calm" />
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="bg-therapy-calm/10 p-2 sm:p-3 rounded-full flex-shrink-0">
+                                    <Icon name={recommendation.exercise.icon} className="w-5 h-5 sm:w-6 sm:h-6 text-therapy-calm" />
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium text-therapy-warmth uppercase tracking-wide">
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-xs sm:text-sm font-medium text-therapy-warmth uppercase tracking-wide">
                                         {recommendation.exercise.category}
                                     </p>
-                                    <CardTitle className="text-lg">{recommendation.exercise.title}</CardTitle>
+                                    <CardTitle className="text-base sm:text-lg line-clamp-2">{recommendation.exercise.title}</CardTitle>
                                 </div>
                             </div>
                         </CardHeader>
                         
-                        <CardContent className="flex-grow space-y-4">
-                            <p className="text-neutral-600 text-sm leading-relaxed">
+                        <CardContent className="flex-grow space-y-3 sm:space-y-4 p-4 sm:p-6">
+                            <p className="text-neutral-600 text-xs sm:text-sm leading-relaxed line-clamp-3">
                                 {recommendation.exercise.description}
                             </p>
                             
-                            {/* AI Insights */}
+                            {/* AI Insights - Mobile Optimized */}
                             {recommendation.isRecommended && (
-                                <div className="p-3 bg-therapy-calm/5 rounded-lg border border-therapy-calm/20">
+                                <div className="p-2 sm:p-3 bg-therapy-calm/5 rounded-lg border border-therapy-calm/20">
                                     <p className="text-xs text-therapy-calm font-medium mb-1">💡 AI Insight</p>
-                                    <p className="text-xs text-neutral-600">{recommendation.aiRationale}</p>
+                                    <p className="text-xs text-neutral-600 line-clamp-2">{recommendation.aiRationale}</p>
                                 </div>
                             )}
                             
-                            {/* Exercise Stats */}
+                            {/* Exercise Stats - Mobile Optimized */}
                             <div className="flex justify-between items-center text-xs text-neutral-500">
                                 <div className="flex items-center gap-1">
                                     <Icon name="clock" className="w-3 h-3" />
-                                    <span>Difficulty: {recommendation.difficultyScore}/5</span>
+                                    <span className="text-xs">Difficulty: {recommendation.difficultyScore}/5</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <Icon name="heart" className="w-3 h-3" />
-                                    <span>High Impact</span>
+                                    <span className="text-xs">High Impact</span>
                                 </div>
                             </div>
                             
                             <Button
                                 onClick={() => onSelectExercise(recommendation.exercise)}
                                 variant={recommendation.isRecommended ? "therapy" : "outline"}
-                                className="w-full mt-4 therapy-button"
+                                className="w-full mt-3 sm:mt-4 therapy-button text-xs sm:text-sm py-2 sm:py-2.5"
                             >
                                 {recommendation.isRecommended ? "🌟 Start Recommended" : "View Exercise"}
                             </Button>
@@ -237,10 +237,10 @@ const ExercisesView: React.FC<ExercisesViewProps> = ({ exercises, onSelectExerci
                 ))}
             </div>
 
-            {/* Help Text */}
+            {/* Help Text - Mobile Optimized */}
             <Card variant="calm" className="text-center">
-                <CardContent className="py-6">
-                    <p className="text-neutral-600 text-sm">
+                <CardContent className="py-4 sm:py-6 px-4 sm:px-6">
+                    <p className="text-neutral-600 text-xs sm:text-sm">
                         💙 Each exercise is designed to be done together. Take your time, be patient with each other, and remember that small steps lead to big changes.
                     </p>
                 </CardContent>

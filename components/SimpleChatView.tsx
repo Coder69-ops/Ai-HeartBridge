@@ -110,62 +110,62 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
         className="max-w-2xl mx-auto"
       >
         <Card className="border-2 border-therapy-growth/30 bg-gradient-to-br from-therapy-safe/20 via-white to-therapy-growth/10 overflow-hidden">
-          {/* Celebration Header */}
-          <div className="bg-gradient-to-r from-therapy-warmth via-therapy-growth to-therapy-calm p-8 text-white text-center relative overflow-hidden">
+          {/* Celebration Header - Mobile Optimized */}
+          <div className="bg-gradient-to-r from-therapy-warmth via-therapy-growth to-therapy-calm p-4 sm:p-8 text-white text-center relative overflow-hidden">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="absolute -top-4 -right-4 text-6xl opacity-20"
+              className="absolute -top-2 sm:-top-4 -right-2 sm:-right-4 text-4xl sm:text-6xl opacity-20"
             >
               ✨
             </motion.div>
             <motion.div
               animate={{ rotate: -360 }}
               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="absolute -bottom-4 -left-4 text-6xl opacity-20"
+              className="absolute -bottom-2 sm:-bottom-4 -left-2 sm:-left-4 text-4xl sm:text-6xl opacity-20"
             >
               💝
             </motion.div>
             
-            <div className="relative z-10 space-y-4">
+            <div className="relative z-10 space-y-2 sm:space-y-4">
               <motion.div
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
-                className="text-5xl mb-2"
+                className="text-3xl sm:text-5xl mb-2"
               >
                 🎉
               </motion.div>
-              <h3 className="text-3xl font-bold">
+              <h3 className="text-2xl sm:text-3xl font-bold">
                 Thank You for Sharing!
               </h3>
-              <p className="text-white/90 text-lg">
+              <p className="text-white/90 text-base sm:text-lg">
                 Your reflection session is complete 💝
               </p>
             </div>
           </div>
 
-          {/* Stats Section */}
-          <CardContent className="p-8 space-y-8">
+          {/* Stats Section - Mobile Optimized */}
+          <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8">
             {/* Session Summary */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl p-6 border border-therapy-calm/20 space-y-6"
+              className="bg-white rounded-2xl p-4 sm:p-6 border border-therapy-calm/20 space-y-4 sm:space-y-6"
             >
-              <h4 className="text-xl font-semibold text-gray-900 mb-4">
+              <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
                 Session Summary
               </h4>
               
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200"
+                  className="text-center p-2 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200"
                 >
                   <motion.div
-                    className="text-3xl font-bold text-blue-600 mb-1"
+                    className="text-xl sm:text-3xl font-bold text-blue-600 mb-1"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.4, type: "spring" }}
@@ -179,10 +179,10 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.35 }}
-                  className="text-center p-4 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200"
+                  className="text-center p-2 sm:p-4 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200"
                 >
                   <motion.div
-                    className="text-3xl font-bold text-emerald-600 mb-1"
+                    className="text-xl sm:text-3xl font-bold text-emerald-600 mb-1"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.45, type: "spring" }}
@@ -196,10 +196,10 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200"
+                  className="text-center p-2 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200"
                 >
                   <motion.div
-                    className="text-3xl font-bold text-purple-600 mb-1"
+                    className="text-xl sm:text-3xl font-bold text-purple-600 mb-1"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.5, type: "spring" }}
@@ -282,22 +282,22 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
   return (
     <Card className="max-w-2xl mx-auto">
       <CardContent className="p-0">
-        {/* Chat Header */}
-        <div className="p-4 border-b border-neutral-200 bg-therapy-safe/10">
+        {/* Chat Header - Mobile Optimized */}
+        <div className="p-3 sm:p-4 border-b border-neutral-200 bg-therapy-safe/10">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="w-5 h-5 text-therapy-calm" />
-              <span className="font-medium text-therapy-calm">Bridge</span>
-              <span className="text-xs text-neutral-500">Your AI Counselor</span>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-therapy-calm flex-shrink-0" />
+              <span className="font-medium text-therapy-calm text-sm sm:text-base">Bridge</span>
+              <span className="text-xs text-neutral-500 hidden sm:inline">Your AI Counselor</span>
             </div>
-            <div className="text-sm text-neutral-600">
-              {totalWords} words shared
+            <div className="text-xs sm:text-sm text-neutral-600 flex-shrink-0">
+              {totalWords} words
             </div>
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="h-[500px] overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-therapy-safe/5 to-white">
+        {/* Messages - Mobile Optimized */}
+        <div className="h-[400px] sm:h-[500px] overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-gradient-to-b from-therapy-safe/5 to-white">
           <AnimatePresence mode="popLayout">
             {messages.map((msg, idx) => (
               <motion.div
@@ -308,7 +308,7 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
                 className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] p-4 rounded-2xl ${
+                  className={`max-w-[85%] sm:max-w-[80%] p-3 sm:p-4 rounded-2xl ${
                     msg.sender === 'user'
                       ? 'bg-therapy-warmth text-white rounded-br-md'
                       : 'bg-white border border-neutral-200 text-neutral-800 rounded-bl-md shadow-sm'
@@ -354,15 +354,16 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
           <div ref={chatEndRef} />
         </div>
 
-        {/* Input Area */}
-        <div className="p-4 border-t border-neutral-200 bg-white">
+        {/* Input Area - Mobile Optimized */}
+        <div className="p-3 sm:p-4 border-t border-neutral-200 bg-white">
           <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
             {userInput.trim() && (
               <div className="flex justify-between items-center text-xs text-neutral-500 mb-2">
                 <span>{wordCount} words</span>
                 <span className="text-therapy-calm flex items-center gap-1">
                   <Heart className="w-3 h-3" />
-                  Every word matters
+                  <span className="hidden sm:inline">Every word matters</span>
+                  <span className="sm:hidden">Matters</span>
                 </span>
               </div>
             )}
@@ -376,16 +377,16 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
                 onKeyPress={handleKeyPress}
                 placeholder={isBotTyping ? "Bridge is typing..." : "Share what's on your mind... 💭"}
                 disabled={isBotTyping}
-                className="flex-1 px-4 py-3 border-2 border-therapy-calm/20 rounded-xl focus:outline-none focus:border-therapy-calm focus:ring-2 focus:ring-therapy-calm/20 transition-all duration-200 disabled:bg-neutral-100 disabled:cursor-not-allowed"
+                className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-therapy-calm/20 rounded-xl focus:outline-none focus:border-therapy-calm focus:ring-2 focus:ring-therapy-calm/20 transition-all duration-200 disabled:bg-neutral-100 disabled:cursor-not-allowed text-sm sm:text-base"
               />
               <Button
                 type="submit"
                 disabled={isBotTyping || !userInput.trim()}
                 variant="therapy"
                 size="lg"
-                className="px-6"
+                className="px-4 sm:px-6 min-h-[40px] sm:min-h-[44px]"
               >
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </div>
           </form>

@@ -27,10 +27,7 @@ interface MasterAuthViewProps {
 type AuthMode = 'login' | 'signup';
 
 const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
-  const authStore = useAuthStore();
-  console.log('🎯 MasterAuthView - authStore:', authStore);
-  console.log('🎯 MasterAuthView - login function:', typeof authStore.login);
-  const { login, register, isLoading, error, clearError, user, isAuthenticated } = authStore;
+  const { login, register, isLoading, error, clearError, user, isAuthenticated } = useAuthStore();
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   
@@ -140,43 +137,43 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 flex items-center justify-center p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 flex items-center justify-center p-4 sm:p-6 safe-top safe-bottom">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        {/* Logo & Header */}
+        {/* Logo & Header - Mobile Optimized */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="text-center mb-8"
+          className="text-center mb-6 sm:mb-8"
         >
           <motion.div 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-3xl shadow-2xl mb-4"
+            className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl sm:rounded-3xl shadow-2xl mb-3 sm:mb-4"
           >
-            <Heart className="w-10 h-10 text-white" />
+            <Heart className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </motion.div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-2">
             AI HeartBridge
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-base sm:text-lg">
             {mode === 'login' ? 'Welcome back! 💚' : 'Start your journey together 💙'}
           </p>
         </motion.div>
 
-        {/* Auth Card */}
+        {/* Auth Card - Mobile Optimized */}
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
           <Card className="shadow-2xl border-0 overflow-hidden">
-            <CardContent className="p-6 sm:p-8">
-              <form onSubmit={handleSubmit} className="space-y-5">
+            <CardContent className="p-4 sm:p-6 md:p-8">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                 {/* Error Display */}
                 <AnimatePresence>
                   {error && (
@@ -204,8 +201,8 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
                         Full Name *
                       </label>
                       <div className="relative">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                          <UserIcon className="w-5 h-5" />
+                        <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <UserIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
                         <input
                           id="name"
@@ -215,7 +212,7 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
                           onBlur={() => handleBlur('name')}
                           placeholder="Enter your full name"
                           autoComplete="name"
-                          className={`w-full h-12 pl-12 pr-4 text-base border-2 rounded-xl bg-white focus:outline-none focus:ring-4 transition-all ${
+                          className={`w-full h-11 sm:h-12 pl-10 sm:pl-12 pr-3 sm:pr-4 text-base border-2 rounded-xl bg-white focus:outline-none focus:ring-4 transition-all ${
                             touched.name && formErrors.name
                               ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
                               : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-100'
@@ -239,14 +236,14 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
                   )}
                 </AnimatePresence>
 
-                {/* Email Field */}
+                {/* Email Field - Mobile Optimized */}
                 <div>
                   <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                     Email Address *
                   </label>
                   <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                      <Mail className="w-5 h-5" />
+                    <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                      <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <input
                       id="email"
@@ -256,7 +253,7 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
                       onBlur={() => handleBlur('email')}
                       placeholder="your@email.com"
                       autoComplete="email"
-                      className={`w-full h-12 pl-12 pr-4 text-base border-2 rounded-xl bg-white focus:outline-none focus:ring-4 transition-all ${
+                      className={`w-full h-11 sm:h-12 pl-10 sm:pl-12 pr-3 sm:pr-4 text-base border-2 rounded-xl bg-white focus:outline-none focus:ring-4 transition-all ${
                         touched.email && formErrors.email
                           ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
                           : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-100'
@@ -278,14 +275,14 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
                   </AnimatePresence>
                 </div>
 
-                {/* Password Field */}
+                {/* Password Field - Mobile Optimized */}
                 <div>
                   <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                     Password *
                   </label>
                   <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                      <Lock className="w-5 h-5" />
+                    <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                      <Lock className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <input
                       id="password"
@@ -295,7 +292,7 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
                       onBlur={() => handleBlur('password')}
                       placeholder="••••••••"
                       autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                      className={`w-full h-12 pl-12 pr-12 text-base border-2 rounded-xl bg-white focus:outline-none focus:ring-4 transition-all ${
+                      className={`w-full h-11 sm:h-12 pl-10 sm:pl-12 pr-10 sm:pr-12 text-base border-2 rounded-xl bg-white focus:outline-none focus:ring-4 transition-all ${
                         touched.password && formErrors.password
                           ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
                           : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-100'
@@ -304,10 +301,10 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
+                      className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
                   </div>
                   <AnimatePresence>
@@ -372,11 +369,11 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
                   )}
                 </AnimatePresence>
 
-                {/* Submit Button */}
+                {/* Submit Button - Mobile Optimized */}
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-12 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+                  className="w-full h-12 sm:h-12 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white text-base font-semibold shadow-lg hover:shadow-xl transition-all min-h-[48px]"
                 >
                   {isLoading ? (
                     <>
@@ -384,14 +381,14 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       >
-                        <Loader2 className="w-5 h-5 mr-2" />
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                       </motion.div>
-                      <span>{mode === 'login' ? 'Signing in...' : 'Creating account...'}</span>
+                      <span className="text-sm sm:text-base">{mode === 'login' ? 'Signing in...' : 'Creating account...'}</span>
                     </>
                   ) : (
                     <>
-                      {mode === 'login' ? 'Sign In' : 'Create Account'}
-                      <ArrowRight className="w-5 h-5 ml-2" />
+                      <span className="text-sm sm:text-base">{mode === 'login' ? 'Sign In' : 'Create Account'}</span>
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                     </>
                   )}
                 </Button>
@@ -408,13 +405,13 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
                   </div>
                 </div>
 
-                {/* Toggle Mode Button */}
+                {/* Toggle Mode Button - Mobile Optimized */}
                 <Button
                   type="button"
                   variant="outline"
                   onClick={toggleMode}
                   disabled={isLoading}
-                  className="w-full h-12 text-base font-semibold"
+                  className="w-full h-12 text-sm sm:text-base font-semibold min-h-[48px]"
                 >
                   {mode === 'login' ? 'Create new account' : 'Sign in instead'}
                 </Button>
@@ -423,27 +420,27 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
           </Card>
         </motion.div>
 
-        {/* Features */}
+        {/* Features - Mobile Optimized */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4"
+          className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4"
         >
           {[
-            { icon: <Shield className="w-6 h-6" />, text: 'Secure & Private', color: 'from-blue-500 to-indigo-500' },
-            { icon: <Heart className="w-6 h-6" />, text: 'Evidence-Based', color: 'from-pink-500 to-rose-500' },
-            { icon: <Sparkles className="w-6 h-6" />, text: 'AI-Powered', color: 'from-purple-500 to-pink-500' },
+            { icon: <Shield className="w-5 h-5 sm:w-6 sm:h-6" />, text: 'Secure & Private', color: 'from-blue-500 to-indigo-500' },
+            { icon: <Heart className="w-5 h-5 sm:w-6 sm:h-6" />, text: 'Evidence-Based', color: 'from-pink-500 to-rose-500' },
+            { icon: <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />, text: 'AI-Powered', color: 'from-purple-500 to-pink-500' },
           ].map((feature, index) => (
             <motion.div 
               key={index}
               whileHover={{ scale: 1.05 }}
-              className="flex flex-col items-center gap-3 p-4 bg-white rounded-2xl shadow-md text-center"
+              className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-2xl shadow-md text-center"
             >
-              <div className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-full flex items-center justify-center text-white shadow-lg`}>
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${feature.color} rounded-full flex items-center justify-center text-white shadow-lg`}>
                 {feature.icon}
               </div>
-              <p className="text-sm font-semibold text-gray-700">{feature.text}</p>
+              <p className="text-xs sm:text-sm font-semibold text-gray-700">{feature.text}</p>
             </motion.div>
           ))}
         </motion.div>

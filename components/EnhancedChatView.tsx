@@ -7,6 +7,7 @@ import {
   AnimatedButton, 
   GlassmorphismCard, 
   GlassCardContent,
+  ModernInput,
   InteractiveAnimation,
   PageTransition,
   BreathingAnimation,
@@ -284,42 +285,36 @@ const EnhancedChatView: React.FC<EnhancedChatViewProps> = ({
     toast.success('Chat reset - ready for a fresh conversation!');
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isBotTyping && !isChatComplete) {
-      handleSendMessage();
-    }
-  };
-
   return (
     <PageTransition>
       <div className="max-w-6xl mx-auto space-y-6 p-4">
         {/* Enhanced Header with Stats and Controls */}
         <GlassmorphismCard className="backdrop-blur-xl">
-          <GlassCardContent className="p-6">
+          <GlassCardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                 <BreathingAnimation>
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-2xl shadow-lg">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-xl sm:text-2xl shadow-lg flex-shrink-0">
                     {botPersonality.avatar}
                   </div>
                 </BreathingAnimation>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-800">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-800 truncate">
                     Chat with {botPersonality.name}
                   </h2>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
                     Your AI companion • Private & Secure 🔒
                   </p>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
                 <InteractiveAnimation hover tap>
                   <AnimatedButton
                     variant="ghost"
                     size="sm"
                     onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-                    className={isVoiceEnabled ? 'text-emerald-600' : 'text-gray-400'}
+                    className={`${isVoiceEnabled ? 'text-emerald-600' : 'text-gray-400'} p-2`}
                   >
                     {isVoiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
                   </AnimatedButton>
@@ -330,7 +325,7 @@ const EnhancedChatView: React.FC<EnhancedChatViewProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={resetChat}
-                    className="text-gray-600 hover:text-red-500"
+                    className="text-gray-600 hover:text-red-500 p-2"
                   >
                     <RefreshCw className="w-4 h-4" />
                   </AnimatedButton>
@@ -338,49 +333,49 @@ const EnhancedChatView: React.FC<EnhancedChatViewProps> = ({
               </div>
             </div>
 
-            {/* Session Statistics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            {/* Session Statistics - Mobile Optimized */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 text-center">
               <div className="space-y-1">
                 <div className="flex items-center justify-center space-x-1">
-                  <MessageCircle className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm font-medium text-gray-700">Messages</span>
+                  <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Messages</span>
                 </div>
-                <p className="text-2xl font-bold text-blue-600">
+                <p className="text-lg sm:text-2xl font-bold text-blue-600">
                   {messages.filter(m => m.sender === 'user').length}
                 </p>
               </div>
               
               <div className="space-y-1">
                 <div className="flex items-center justify-center space-x-1">
-                  <Type className="w-4 h-4 text-emerald-500" />
-                  <span className="text-sm font-medium text-gray-700">Words</span>
+                  <Type className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Words</span>
                 </div>
-                <p className="text-2xl font-bold text-emerald-600">{totalWordCount}</p>
+                <p className="text-lg sm:text-2xl font-bold text-emerald-600">{totalWordCount}</p>
               </div>
               
               <div className="space-y-1">
                 <div className="flex items-center justify-center space-x-1">
-                  <Target className="w-4 h-4 text-purple-500" />
-                  <span className="text-sm font-medium text-gray-700">Duration</span>
+                  <Target className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Duration</span>
                 </div>
-                <p className="text-2xl font-bold text-purple-600">{formatDuration(sessionDuration)}</p>
+                <p className="text-lg sm:text-2xl font-bold text-purple-600">{formatDuration(sessionDuration)}</p>
               </div>
               
               <div className="space-y-1">
                 <div className="flex items-center justify-center space-x-1">
                   {getSentimentIcon()}
-                  <span className="text-sm font-medium text-gray-700">Mood</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Mood</span>
                 </div>
-                <p className="text-lg font-semibold capitalize text-gray-700">{sentiment}</p>
+                <p className="text-sm sm:text-lg font-semibold capitalize text-gray-700">{sentiment}</p>
               </div>
             </div>
           </GlassCardContent>
         </GlassmorphismCard>
 
-        {/* Chat Messages Container */}
-        <GlassmorphismCard className="h-[60vh] flex flex-col backdrop-blur-xl">
+        {/* Chat Messages Container - Mobile Optimized */}
+        <GlassmorphismCard className="h-[50vh] sm:h-[60vh] flex flex-col backdrop-blur-xl">
           <GlassCardContent className="flex-1 p-0 overflow-hidden">
-            <div className="h-full overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            <div className="h-full overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar">
               <AnimatePresence>
                 {messages.map((msg, index) => (
                   <motion.div
@@ -393,14 +388,14 @@ const EnhancedChatView: React.FC<EnhancedChatViewProps> = ({
                   >
                     {msg.sender === 'bot' && (
                       <BreathingAnimation>
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-lg shadow-lg flex-shrink-0">
-                          <Bot className="w-5 h-5 text-white" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-lg shadow-lg flex-shrink-0">
+                          <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                       </BreathingAnimation>
                     )}
                     
                     <InteractiveAnimation hover>
-                      <div className={`max-w-md lg:max-w-lg p-4 rounded-2xl shadow-sm ${
+                      <div className={`max-w-xs sm:max-w-md lg:max-w-lg p-3 sm:p-4 rounded-2xl shadow-sm ${
                         msg.sender === 'user' 
                           ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-br-md' 
                           : 'bg-white/90 backdrop-blur-sm text-gray-800 rounded-bl-md border border-gray-200'
@@ -475,8 +470,8 @@ const EnhancedChatView: React.FC<EnhancedChatViewProps> = ({
             </div>
           </GlassCardContent>
 
-          {/* Input Area */}
-          <div className="p-6 border-t border-gray-200/50 bg-white/50 backdrop-blur-sm">
+          {/* Input Area - Mobile Optimized */}
+          <div className="p-3 sm:p-6 border-t border-gray-200/50 bg-white/50 backdrop-blur-sm">
             {isChatComplete ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -499,58 +494,68 @@ const EnhancedChatView: React.FC<EnhancedChatViewProps> = ({
               </motion.div>
             ) : (
               <div className="space-y-4">
-                {/* Suggestion Pills - Enhanced */}
-                {showSuggestions && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="flex flex-wrap gap-2 mb-4"
-                  >
-                    {botPersonality.suggestions.map((suggestion, index) => (
-                      <motion.button
-                        key={index}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.05 }}
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-emerald-500 to-cyan-500 text-white hover:shadow-lg transition-all duration-300 active:scale-95"
-                      >
-                        {suggestion}
-                      </motion.button>
-                    ))}
-                  </motion.div>
-                )}
+                {/* Suggested Responses - Mobile Optimized */}
+                <AnimatePresence>
+                  {showSuggestions && currentSuggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex flex-wrap gap-1 sm:gap-2"
+                    >
+                      {currentSuggestions.slice(0, 3).map((suggestion, index) => (
+                        <motion.button
+                          key={suggestion}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs sm:text-sm rounded-full transition-colors duration-200 flex items-center space-x-1"
+                        >
+                          <Lightbulb className="w-3 h-3" />
+                          <span className="truncate max-w-[120px] sm:max-w-none">{suggestion}</span>
+                        </motion.button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-                {/* Input Area - Enhanced */}
-                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex gap-3 mt-6">
-                  <motion.div
-                    className="flex-1"
-                    whileFocus={{ scale: 1.02 }}
-                  >
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={userInput}
-                      onChange={(e) => setUserInput(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      onFocus={() => setShowSuggestions(false)}
-                      placeholder="Type your thoughts here..."
-                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all placeholder:text-gray-400"
-                      disabled={isBotTyping || isChatComplete}
-                    />
-                  </motion.div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    type="submit"
-                    disabled={isBotTyping || !userInput.trim()}
-                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Send className="w-5 h-5" />
-                  </motion.button>
+                {/* Input Form */}
+                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="space-y-3">
+                  {/* Word count indicator */}
+                  {userInput.trim() && (
+                    <div className="flex justify-between items-center text-xs text-gray-500">
+                      <span>{wordCount} words</span>
+                      <span className="text-emerald-600 flex items-center space-x-1">
+                        <Heart className="w-3 h-3" />
+                        <span>Every word matters</span>
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-end gap-2 sm:gap-3">
+                    <div className="flex-1">
+                      <ModernInput
+                        ref={inputRef}
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder={isBotTyping ? `${botPersonality.name} is typing...` : "Share what's on your mind... 💭"}
+                        disabled={isBotTyping}
+                        className="rounded-2xl text-sm sm:text-base"
+                        onFocus={() => setShowSuggestions(false)}
+                      />
+                    </div>
+                    <AnimatedButton 
+                      type="submit" 
+                      disabled={isBotTyping || !userInput.trim()} 
+                      variant="therapy"
+                      size="lg"
+                      className="rounded-2xl px-4 sm:px-6 min-h-[40px] sm:min-h-[44px]"
+                      ripple
+                    >
+                      <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </AnimatedButton>
+                  </div>
                 </form>
               </div>
             )}

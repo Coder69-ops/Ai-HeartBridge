@@ -79,9 +79,9 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
   ];
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-16 sm:pt-20">
       {/* Mobile-First Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         
         {/* Welcome Header - Mobile Optimized */}
         <motion.div
@@ -89,15 +89,15 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
           animate={{ opacity: 1, y: 0 }}
           className="text-center sm:text-left"
         >
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
             Welcome Back! 💝
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-base sm:text-lg">
             {user.name || user.email}
           </p>
         </motion.div>
 
-        {/* Partner Connection Status */}
+        {/* Partner Connection Status - Mobile Optimized */}
         <AnimatePresence mode="wait">
           {partner ? (
             <motion.div
@@ -109,16 +109,18 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
               <Card className="border-2 border-emerald-200 bg-gradient-to-r from-emerald-50 to-cyan-50">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
-                    <div className="p-3 bg-white rounded-full shadow-lg flex-shrink-0">
-                      <HeartHandshake className="w-8 h-8 text-emerald-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg text-gray-900">Connected with Partner</h3>
-                      <p className="text-gray-600 truncate">{partner.email}</p>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-3 bg-white rounded-full shadow-lg flex-shrink-0">
+                        <HeartHandshake className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base sm:text-lg text-gray-900">Connected with Partner</h3>
+                        <p className="text-sm sm:text-base text-gray-600 truncate">{partner.email}</p>
+                      </div>
                     </div>
                     <Button
                       onClick={() => onNavigate('partner-chat')}
-                      className="px-6 py-3 h-auto flex-shrink-0 whitespace-nowrap bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold hover:from-emerald-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all"
+                      className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 h-auto flex-shrink-0 whitespace-nowrap bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold hover:from-emerald-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all text-sm sm:text-base"
                     >
                       💬 Chat Now
                     </Button>
@@ -137,44 +139,45 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                 <CardContent className="p-4 sm:p-6">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <Users className="w-6 h-6 text-purple-600" />
-                      <h3 className="font-semibold text-lg">Connect with Your Partner</h3>
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                      <h3 className="font-semibold text-base sm:text-lg">Connect with Your Partner</h3>
                     </div>
                     
-                    <div className="bg-white rounded-lg p-4 space-y-3">
+                    <div className="bg-white rounded-lg p-3 sm:p-4 space-y-3">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Your Pairing Code
                         </label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <input
                             type="text"
                             value={user.pairingCode}
                             readOnly
-                            className="flex-1 px-4 py-2 text-center text-2xl font-mono font-bold bg-gray-50 border-2 border-gray-200 rounded-lg"
+                            className="flex-1 px-3 sm:px-4 py-2 text-center text-lg sm:text-2xl font-mono font-bold bg-gray-50 border-2 border-gray-200 rounded-lg"
                           />
                           <Button
                             onClick={() => navigator.clipboard.writeText(user.pairingCode)}
                             variant="outline"
+                            className="w-full sm:w-auto"
                           >
                             Copy
                           </Button>
                         </div>
                       </div>
                       
-                      <div className="text-center text-gray-500">OR</div>
+                      <div className="text-center text-gray-500 text-sm">OR</div>
                       
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Enter Partner's Code
                         </label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <input
                             type="text"
                             value={pairingCode}
                             onChange={(e) => setPairingCode(e.target.value.toUpperCase())}
                             placeholder="ABC123"
-                            className="flex-1 px-4 py-2 text-center text-lg font-mono font-bold border-2 border-purple-200 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200"
+                            className="flex-1 px-3 sm:px-4 py-2 text-center text-base sm:text-lg font-mono font-bold border-2 border-purple-200 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200"
                           />
                           <Button 
                             disabled={pairingCode.length < 6}
@@ -183,7 +186,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                               console.log('Connecting with code:', pairingCode);
                               // After success: setPairingCode('');
                             }}
-                            className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold hover:from-emerald-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold hover:from-emerald-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Connect
                           </Button>
@@ -198,7 +201,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
         </AnimatePresence>
 
         {/* Quick Stats Grid - Mobile Responsive */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -207,11 +210,11 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
               transition={{ delay: index * 0.1 }}
             >
               <Card className="hover-lift">
-                <CardContent className="p-4 text-center">
-                  <div className={`inline-flex p-2 rounded-full bg-gray-50 mb-2 ${stat.color}`}>
+                <CardContent className="p-3 sm:p-4 text-center">
+                  <div className={`inline-flex p-1.5 sm:p-2 rounded-full bg-gray-50 mb-2 ${stat.color}`}>
                     {stat.icon}
                   </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{stat.value}</div>
                   <div className="text-xs sm:text-sm text-gray-600">{stat.label}</div>
                 </CardContent>
               </Card>
@@ -221,12 +224,12 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
 
         {/* Quick Actions Grid - Mobile First */}
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-emerald-600" />
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
             Quick Actions
           </h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {quickActions.map((action, index) => (
               <motion.div
                 key={action.title}
@@ -238,23 +241,23 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                   className={`hover-lift cursor-pointer group ${action.disabled ? 'opacity-50' : ''}`}
                   onClick={action.disabled ? undefined : action.action}
                 >
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${action.color} text-white shadow-lg`}>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className={`inline-flex p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${action.color} text-white shadow-lg`}>
                         {action.icon}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-lg text-gray-900 mb-1">{action.title}</h3>
-                        <p className="text-sm text-gray-600">{action.description}</p>
+                        <h3 className="font-semibold text-base sm:text-lg text-gray-900 mb-1">{action.title}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600">{action.description}</p>
                       </div>
                       {!action.disabled && (
-                        <div className="flex items-center text-emerald-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                        <div className="flex items-center text-emerald-600 font-medium text-xs sm:text-sm group-hover:translate-x-1 transition-transform">
                           Get Started
-                          <ArrowRight className="w-4 h-4 ml-1" />
+                          <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                         </div>
                       )}
                       {action.disabled && (
-                        <div className="text-sm text-gray-400">
+                        <div className="text-xs sm:text-sm text-gray-400">
                           Connect partner first
                         </div>
                       )}
@@ -268,46 +271,46 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
 
         {/* Recent Activity - Mobile Friendly */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-emerald-600" />
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
               Your Progress
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-between p-3 sm:p-4 bg-emerald-50 rounded-lg">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
                   <div>
-                    <p className="font-medium">Completed daily check-in</p>
-                    <p className="text-sm text-gray-600">2 hours ago</p>
+                    <p className="font-medium text-sm sm:text-base">Completed daily check-in</p>
+                    <p className="text-xs sm:text-sm text-gray-600">2 hours ago</p>
                   </div>
                 </div>
-                <span className="text-2xl">✨</span>
+                <span className="text-xl sm:text-2xl">✨</span>
               </div>
               
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <MessageCircle className="w-5 h-5 text-blue-600" />
+              <div className="flex items-center justify-between p-3 sm:p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   <div>
-                    <p className="font-medium">Chat session</p>
-                    <p className="text-sm text-gray-600">Yesterday</p>
+                    <p className="font-medium text-sm sm:text-base">Chat session</p>
+                    <p className="text-xs sm:text-sm text-gray-600">Yesterday</p>
                   </div>
                 </div>
-                <span className="text-2xl">💙</span>
+                <span className="text-xl sm:text-2xl">💙</span>
               </div>
               
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full text-sm sm:text-base">
                 View All Activity
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
               </Button>
             </div>
           </CardContent>
         </Card>
 
         {/* Mobile Bottom Spacing */}
-        <div className="h-20 sm:h-0" />
+        <div className="h-16 sm:h-20" />
       </div>
     </div>
   );

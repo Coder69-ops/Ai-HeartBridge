@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import MasterChatSessionsView from './MasterChatSessionsView';
+import ChatSessionsView from './ChatSessionsView';
 import PersistentChatView from './PersistentChatView';
 import { ChatSession } from '../services/chatSessionService';
 
@@ -43,7 +43,7 @@ const ChatManager: React.FC<ChatManagerProps> = ({ onBack }) => {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <MasterChatSessionsView 
+            <ChatSessionsView 
               onSessionSelect={handleSessionSelect}
               onNewSession={handleNewSession}
             />
