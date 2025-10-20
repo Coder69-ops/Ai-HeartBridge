@@ -37,9 +37,9 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
   };
 };
 
-// Using Hugging Face Inference API - Free and Reliable
-const HF_API_URL = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-large';
-const MODEL = 'microsoft/DialoGPT-large'; // Free conversational AI model
+// Using Groq API - Free and Reliable
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const MODEL = 'llama3-8b-8192'; // Free Llama model on Groq
 
 const createChatbotSystemInstruction = (userContext: any) => `You are Bridge, a warm AI relationship counselor 💝 Your goal is to help users reflect on situations with their partner.
 
@@ -235,7 +235,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
   const maxRetries = 2;
   
   try {
-    console.log('Hugging Face API configured - Free conversational AI');
+    console.log('Groq API configured:', !!process.env.GROQ_API_KEY);
     console.log('Message history:', messageHistory);
     console.log('User context available:', !!user);
     if (retryCount > 0) console.log(`Retry attempt: ${retryCount}`);
@@ -256,31 +256,23 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
       }))
     ];
 
-    const response = await fetch(HF_API_URL, {
+    const response = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'http://localhost:3001',
-        'X-Title': 'AI HeartBridge',
-        'X-Description': 'AI relationship counseling app'
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        inputs: {
-          past_user_inputs: messages.filter(m => m.role === 'user').slice(-5).map(m => m.content),
-          generated_responses: messages.filter(m => m.role === 'assistant').slice(-5).map(m => m.content),
-          text: messages[messages.length - 1]?.content || "Hello, I need relationship advice."
-        },
-        parameters: {
-          max_length: 100,
-          temperature: 0.8,
-          do_sample: true
-        }
+        model: MODEL,
+        messages: messages,
+        max_tokens: 100,
+        temperature: 0.8
       })
     });
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Hugging Face API error:', errorData);
+      console.error('Groq API error:', errorData);
       
       // Check for rate limiting specifically
       if (response.status === 429 || errorData.includes('rate-limited')) {
@@ -303,7 +295,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
     }
 
     const data: any = await response.json();
-    const responseText = data.generated_text || getFallbackResponse(messageHistory, user);
+    const responseText = data.choices?.[0]?.message?.content || getFallbackResponse(messageHistory, user);
     
     console.log('Bot response:', responseText);
     return responseText;
@@ -374,19 +366,26 @@ ${formattedPartner2Chat}
 Please provide your analysis as a JSON object with this structure:
 ${JSON.stringify(analysisSchema, null, 2)}`;
 
-      const response = await fetch(HF_API_URL, {
+      const response = await fetch(GROQ_API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'AI-HeartBridge/1.0'
+          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_length: 800,
-            temperature: 0.3,
-            do_sample: true
-          }
+          model: MODEL,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a relationship counselor AI. Always respond with valid JSON only.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 800,
+          temperature: 0.3
         })
       });
 
@@ -399,12 +398,12 @@ ${JSON.stringify(analysisSchema, null, 2)}`;
           continue;
         }
         const errorText = await response.text();
-        console.error(`Hugging Face API error: ${response.status} - ${errorText}`);
-        throw new Error(`Hugging Face API error: ${response.status} - ${errorText}`);
+        console.error(`Groq API error: ${response.status} - ${errorText}`);
+        throw new Error(`Groq API error: ${response.status} - ${errorText}`);
       }
 
       const data: any = await response.json();
-      const analysisText = data[0]?.generated_text;
+      const analysisText = data.choices?.[0]?.message?.content;
       
       if (!analysisText) {
         throw new Error('No analysis content received');
