@@ -210,7 +210,7 @@ export const continueJournalSession = async (sessionId: string): Promise<Journal
 // Get journal session history
 export const getJournalSessionHistory = async (): Promise<JournalSession[]> => {
   try {
-    const response = await api.get('/journal-sessions');
+    const response = await api.get('/journal-sessions/list');
     return response.data.sessions;
   } catch (error: any) {
     console.error('Get journal history error:', error);
