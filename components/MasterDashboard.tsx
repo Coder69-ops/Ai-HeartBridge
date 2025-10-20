@@ -47,6 +47,21 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
   const [pairingError, setPairingError] = useState('');
   const { showToast } = useToast();
 
+  const getPartnerDisplayName = () => {
+    if (!partner) return '';
+    if (partner.profile?.firstName) {
+      return partner.profile.firstName + (partner.profile.lastName ? ` ${partner.profile.lastName}` : '');
+    }
+    return partner.name || partner.email.split('@')[0];
+  };
+
+  const getUserDisplayName = () => {
+    if (user.profile?.firstName) {
+      return user.profile.firstName + (user.profile.lastName ? ` ${user.profile.lastName}` : '');
+    }
+    return user.name || user.email.split('@')[0];
+  };
+
   const handlePairingSubmit = async () => {
     if (!pairingCode.trim() || pairingCode.length < 6) return;
     
@@ -122,7 +137,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
             Welcome Back! 💝
           </h1>
           <p className="text-gray-600 text-base sm:text-lg">
-            {user.name || user.email}
+            {getUserDisplayName()}
           </p>
         </motion.div>
 
@@ -144,7 +159,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-base sm:text-lg text-gray-900">Connected with Partner</h3>
-                        <p className="text-sm sm:text-base text-gray-600 truncate">{partner.email}</p>
+                        <p className="text-sm sm:text-base text-gray-600 truncate">{getPartnerDisplayName()}</p>
                       </div>
                     </div>
                     <Button

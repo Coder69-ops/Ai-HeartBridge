@@ -34,6 +34,13 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const getUserDisplayName = () => {
+    if (user.profile?.firstName) {
+      return user.profile.firstName + (user.profile.lastName ? ` ${user.profile.lastName}` : '');
+    }
+    return user.name || user.email.split('@')[0];
+  };
+
   const navItems = [
     { icon: <Home className="w-5 h-5" />, label: 'Home', view: 'dashboard' },
     { icon: <MessageCircle className="w-5 h-5" />, label: 'Chat', view: 'chat' },
@@ -155,10 +162,10 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
                 <div className="pb-6 border-b border-gray-200">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      {(user.name || user.email || 'U')[0].toUpperCase()}
+                      {getUserDisplayName()[0].toUpperCase()}
                     </div>
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-900">{user.name || 'User'}</p>
+                      <p className="font-semibold text-gray-900">{getUserDisplayName()}</p>
                       <p className="text-sm text-gray-500 truncate">{user.email}</p>
                     </div>
                   </div>

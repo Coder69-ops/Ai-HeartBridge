@@ -83,7 +83,22 @@ const JournalingView: React.FC<JournalingViewProps> = ({ user, partner, onComple
          );
     }
     
-    const currentPartnerName = activePartner === 'user' ? user.email : partner.email;
+    const getPartnerDisplayName = () => {
+        if (!partner) return '';
+        if (partner.profile?.firstName) {
+            return partner.profile.firstName + (partner.profile.lastName ? ` ${partner.profile.lastName}` : '');
+        }
+        return partner.name || partner.email.split('@')[0];
+    };
+
+    const getUserDisplayName = () => {
+        if (user.profile?.firstName) {
+            return user.profile.firstName + (user.profile.lastName ? ` ${user.profile.lastName}` : '');
+        }
+        return user.name || user.email.split('@')[0];
+    };
+    
+    const currentPartnerName = activePartner === 'user' ? getUserDisplayName() : getPartnerDisplayName();
     const handleComplete = activePartner === 'user' ? handleUserComplete : handlePartnerComplete;
     const isUserTurn = activePartner === 'user';
     
@@ -96,12 +111,12 @@ const JournalingView: React.FC<JournalingViewProps> = ({ user, partner, onComple
                         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
                                 <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${userChat ? 'bg-therapy-growth' : isUserTurn ? 'bg-therapy-warmth animate-pulse' : 'bg-neutral-300'}`} />
-                                <span className="text-xs sm:text-sm font-medium truncate">{user.email}</span>
+                                <span className="text-xs sm:text-sm font-medium truncate">{getUserDisplayName()}</span>
                             </div>
                             <div className="w-4 sm:w-8 h-0.5 bg-neutral-300 flex-shrink-0" />
                             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
                                 <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${partnerChat ? 'bg-therapy-growth' : !isUserTurn ? 'bg-therapy-warmth animate-pulse' : 'bg-neutral-300'}`} />
-                                <span className="text-xs sm:text-sm font-medium truncate">{partner.email}</span>
+                                <span className="text-xs sm:text-sm font-medium truncate">{getPartnerDisplayName()}</span>
                             </div>
                         </div>
                         
