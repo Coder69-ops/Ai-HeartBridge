@@ -178,6 +178,8 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
           timestamp: msg.timestamp
         }))}
         currentUserId={user.id}
+        sessionStatus={activeSession.status}
+        isCurrentUserPartner1={true}
       />
     );
   }

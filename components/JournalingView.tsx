@@ -16,6 +16,8 @@ interface JournalingViewProps {
   initialUserChat?: Message[];
   initialPartnerChat?: Message[];
   currentUserId?: string;
+  sessionStatus?: JournalSessionStatus;
+  isCurrentUserPartner1?: boolean;
 }
 
 type ActivePartner = 'user' | 'partner';
@@ -28,14 +30,16 @@ const JournalingView: React.FC<JournalingViewProps> = ({
   sessionId,
   initialUserChat,
   initialPartnerChat,
-  currentUserId
+  currentUserId,
+  sessionStatus: initialSessionStatus,
+  isCurrentUserPartner1 = true
 }) => {
     const [currentPartner, setCurrentPartner] = useState<ActivePartner>('user');
     const [userChat, setUserChat] = useState<Message[] | null>(initialUserChat || null);
     const [partnerChat, setPartnerChat] = useState<Message[] | null>(initialPartnerChat || null);
     const [sessionStartTime] = useState<Date>(new Date());
     const [isCompleting, setIsCompleting] = useState(false);
-    const [sessionStatus, setSessionStatus] = useState<JournalSessionStatus>(JournalSessionStatus.CREATED);
+    const [sessionStatus, setSessionStatus] = useState<JournalSessionStatus>(initialSessionStatus || JournalSessionStatus.CREATED);
 
     const getPartnerDisplayName = () => {
         if (!partner) return '';
@@ -54,16 +58,22 @@ const JournalingView: React.FC<JournalingViewProps> = ({
 
     // Determine which chat belongs to the current user
     useEffect(() => {
-      // For now, we'll assume the current user is always 'user' (partner1)
-      // and only show their own chat content
-      if (initialUserChat && initialUserChat.length > 0) {
-        setUserChat(initialUserChat);
-        setSessionStatus(JournalSessionStatus.PARTNER1_COMPLETE);
+      // Load the current user's chat based on whether they are partner1 or partner2
+      if (isCurrentUserPartner1) {
+        // Current user is partner1, so load their chat
+        if (initialUserChat && initialUserChat.length > 0) {
+          setUserChat(initialUserChat);
+        }
+      } else {
+        // Current user is partner2, so load their chat (which is in initialPartnerChat)
+        if (initialPartnerChat && initialPartnerChat.length > 0) {
+          setUserChat(initialPartnerChat);
+        }
       }
       
       // Always set current partner to 'user' - the current user should only see their own chat
       setCurrentPartner('user');
-    }, [initialUserChat, initialPartnerChat]);
+    }, [initialUserChat, initialPartnerChat, isCurrentUserPartner1]);
 
     const handleReflectionComplete = async (chatHistory: Message[]) => {
         if (!sessionId) {
@@ -84,7 +94,13 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             
             // Update local state - current user completed their reflection
             setUserChat(chatHistory);
-            setSessionStatus(JournalSessionStatus.PARTNER1_COMPLETE);
+            
+            // Update status based on which partner completed
+            if (isCurrentUserPartner1) {
+              setSessionStatus(JournalSessionStatus.PARTNER1_COMPLETE);
+            } else {
+              setSessionStatus(JournalSessionStatus.PARTNER2_COMPLETE);
+            }
 
             // Update session status from response
             setSessionStatus(response.session.status);
@@ -145,8 +161,21 @@ const JournalingView: React.FC<JournalingViewProps> = ({
          );
     }
     
-    // Show waiting screen if current user has completed but partner hasn't
-    if (sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE) {
+    // Show waiting screen only if current user has completed their reflection
+    // and the session status indicates they are waiting for their partner
+    const shouldShowWaitingScreen = () => {
+      if (!userChat || userChat.length === 0) return false;
+      
+      if (isCurrentUserPartner1) {
+        // Current user is partner1, show waiting if partner1 completed but partner2 hasn't
+        return sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE;
+      } else {
+        // Current user is partner2, show waiting if partner2 completed but partner1 hasn't
+        return sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE;
+      }
+    };
+    
+    if (shouldShowWaitingScreen()) {
             return (
                 <div className="max-w-2xl mx-auto p-4 sm:p-6">
                     <Card variant="therapy" className="text-center animate-fade-in">
