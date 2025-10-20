@@ -181,6 +181,42 @@ export const completeJournalReflection = async (
   }
 };
 
+// Get active journal session for the couple
+export const getActiveJournalSession = async (): Promise<JournalSession | null> => {
+  try {
+    const response = await api.get('/journal-sessions/active');
+    return response.data.session;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return null; // No active session
+    }
+    console.error('Get active journal session error:', error);
+    throw new Error(error.response?.data?.error || 'Failed to get active session');
+  }
+};
+
+// Continue existing journal session
+export const continueJournalSession = async (sessionId: string): Promise<JournalSession> => {
+  try {
+    const response = await api.get(`/journal-sessions/${sessionId}`);
+    return response.data.session;
+  } catch (error: any) {
+    console.error('Continue journal session error:', error);
+    throw new Error(error.response?.data?.error || 'Failed to continue session');
+  }
+};
+
+// Get journal session history
+export const getJournalSessionHistory = async (): Promise<JournalSession[]> => {
+  try {
+    const response = await api.get('/journal-sessions');
+    return response.data.sessions;
+  } catch (error: any) {
+    console.error('Get journal history error:', error);
+    throw new Error(error.response?.data?.error || 'Failed to get journal history');
+  }
+};
+
 /**
  * Get journal insights/summary
  */

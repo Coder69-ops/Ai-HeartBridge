@@ -8,22 +8,30 @@ import { Calendar, Trash2, Eye, Archive, Heart, Clock, Brain, CheckCircle, Play,
 import Icon from './shared/Icon';
 
 interface JournalSessionsViewProps {
+  sessions?: JournalSession[];
   onSelectSession?: (sessionId: string) => void;
   onNewSession?: () => void;
+  onContinueSession?: (sessionId: string) => void;
+  onBack?: () => void;
 }
 
 const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({ 
+  sessions: propSessions,
   onSelectSession, 
-  onNewSession 
+  onNewSession,
+  onContinueSession,
+  onBack
 }) => {
-  const [sessions, setSessions] = useState<JournalSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [sessions, setSessions] = useState<JournalSession[]>(propSessions || []);
+  const [isLoading, setIsLoading] = useState(!propSessions);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'insights_ready' | 'waiting'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    loadSessions();
-  }, [filter]);
+    if (!propSessions) {
+      loadSessions();
+    }
+  }, [filter, propSessions]);
 
   const loadSessions = async () => {
     try {
@@ -156,9 +164,21 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4 sm:gap-0">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
-                📔 Journal History
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                {onBack && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onBack}
+                    className="hover:bg-white/50"
+                  >
+                    <Icon name="arrow-left" className="w-5 h-5" />
+                  </Button>
+                )}
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
+                  📔 Journal History
+                </h1>
+              </div>
               <p className="text-gray-600 text-sm sm:text-base">View and revisit your relationship reflections</p>
             </div>
             <Button
@@ -297,16 +317,37 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
                         </div>
 
                         <div className="flex gap-1 sm:gap-2 flex-shrink-0 w-full sm:w-auto justify-end sm:justify-start">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onSelectSession?.(session.id);
-                            }}
-                            className="p-1.5 sm:p-2 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title="View session"
-                          >
-                            <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
-                          </button>
+                          {/* Continue button for active sessions */}
+                          {(session.status === JournalSessionStatus.CREATED || 
+                            session.status === JournalSessionStatus.PARTNER1_COMPLETE ||
+                            session.status === JournalSessionStatus.PARTNER2_COMPLETE) && onContinueSession && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onContinueSession(session.id);
+                              }}
+                              className="p-1.5 sm:p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+                              title="Continue session"
+                            >
+                              <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
+                          )}
+                          
+                          {/* View button for completed sessions */}
+                          {(session.status === JournalSessionStatus.INSIGHTS_READY || 
+                            session.status === JournalSessionStatus.CLOSED) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectSession?.(session.id);
+                              }}
+                              className="p-1.5 sm:p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                              title="View session"
+                            >
+                              <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                            </button>
+                          )}
+                          
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

@@ -14,6 +14,7 @@ import EnhancedDashboard from './components/EnhancedDashboard';
 import MasterDashboard from './components/MasterDashboard';
 import SimpleHeader from './components/SimpleHeader';
 import JournalingView from './components/JournalingView';
+import JournalManager from './components/JournalManager';
 import EnhancedCheckInView from './components/EnhancedCheckInView';
 import MasterCheckInView from './components/MasterCheckInView';
 import ExercisesView from './components/ExercisesView';
@@ -278,15 +279,29 @@ export const AppContent: React.FC = () => {
             case 'journal':
                 if (user && partner) {
                     return (
-                        <JournalingView 
+                        <JournalManager 
                             user={user} 
                             partner={partner} 
-                            onComplete={handleJournalingComplete} 
-                            isReturningUser={!!couple?.journalIds?.length} 
+                            onBack={() => setCurrentView('dashboard')}
                         />
                     );
                 }
-                return null;
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 flex items-center justify-center p-4">
+                        <div className="text-center">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-4">Journal</h2>
+                            <p className="text-gray-600 mb-6">
+                                You need to be paired with a partner to use the journal feature.
+                            </p>
+                            <button 
+                                onClick={() => setCurrentView('dashboard')}
+                                className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+                            >
+                                Go to Dashboard
+                            </button>
+                        </div>
+                    </div>
+                );
             case 'mood':
                 // If coming from journaling, use the current journal ID
                 if (couple && currentJournalId) {

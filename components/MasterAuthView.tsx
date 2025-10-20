@@ -154,14 +154,38 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
           <motion.div 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="mb-3 sm:mb-4"
+            className="mb-3 sm:mb-4 flex flex-col items-center"
           >
-            <Logo 
-              size="xl" 
-              animated={true}
-              showText={true}
-              variant="default"
-            />
+            <div className="relative mb-3 w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-white rounded-2xl shadow-lg">
+              <img
+                src="/aiheartbridgelogo.png"
+                alt="AI HeartBridge"
+                className="w-full h-full object-contain p-2"
+                loading="eager"
+                onError={(e) => {
+                  console.error('Logo failed to load:', e);
+                  // Show fallback heart icon
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+                onLoad={() => {
+                  console.log('Logo loaded successfully');
+                }}
+              />
+              {/* Fallback heart icon */}
+              <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center" style={{ display: 'none' }}>
+                <Heart className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
+              </div>
+            </div>
+            <div className="text-center">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-1">
+                AI HeartBridge
+              </h1>
+              <p className="text-sm text-gray-500 font-medium">
+                Relationship Intelligence
+              </p>
+            </div>
           </motion.div>
           <p className="text-gray-600 text-base sm:text-lg">
             {mode === 'login' ? 'Welcome back! 💚' : 'Start your journey together 💙'}

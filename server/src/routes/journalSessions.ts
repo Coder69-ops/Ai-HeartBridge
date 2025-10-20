@@ -63,6 +63,60 @@ router.post('/create', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Get active journal session for couple
+router.get('/active', async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user!;
+    
+    // Get user's couple
+    const couple = await Couple.findOne({
+      $or: [
+        { partner1Id: user._id },
+        { partner2Id: user._id }
+      ]
+    });
+
+    if (!couple) {
+      return res.status(400).json({ error: 'User must be in a couple to view journal sessions' });
+    }
+
+    const activeSession = await JournalSession.findOne({ 
+      coupleId: couple._id,
+      isActive: true,
+      isClosed: false
+    }).sort({ createdAt: -1 });
+
+    if (!activeSession) {
+      return res.status(404).json({ error: 'No active journal session found' });
+    }
+
+    res.json({
+      session: {
+        id: activeSession._id,
+        title: activeSession.title,
+        partner1Chat: activeSession.partner1Chat,
+        partner2Chat: activeSession.partner2Chat,
+        isActive: activeSession.isActive,
+        isClosed: activeSession.isClosed,
+        status: activeSession.status,
+        messageCount: activeSession.messageCount,
+        wordCount: activeSession.wordCount,
+        lastMessageAt: activeSession.lastMessageAt,
+        createdAt: activeSession.createdAt,
+        completedAt: activeSession.completedAt,
+        insights: activeSession.insights,
+        partner1CompletedAt: activeSession.partner1CompletedAt,
+        partner2CompletedAt: activeSession.partner2CompletedAt,
+        insightsGeneratedAt: activeSession.insightsGeneratedAt
+      }
+    });
+
+  } catch (error) {
+    console.error('Get active journal session error:', error);
+    res.status(500).json({ error: 'Failed to get active journal session' });
+  }
+});
+
 // Get all journal sessions for couple (thread list)
 router.get('/list', [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),

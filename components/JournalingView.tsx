@@ -11,16 +11,42 @@ interface JournalingViewProps {
   partner: User;
   onComplete: (entry: { partner1Chat: Message[], partner2Chat: Message[] }) => void;
   isReturningUser: boolean;
+  sessionId?: string;
+  initialUserChat?: Message[];
+  initialPartnerChat?: Message[];
 }
 
 type ActivePartner = 'user' | 'partner';
 
-const JournalingView: React.FC<JournalingViewProps> = ({ user, partner, onComplete, isReturningUser }) => {
+const JournalingView: React.FC<JournalingViewProps> = ({ 
+  user, 
+  partner, 
+  onComplete, 
+  isReturningUser, 
+  sessionId,
+  initialUserChat,
+  initialPartnerChat 
+}) => {
     const [activePartner, setActivePartner] = useState<ActivePartner>('user');
-    const [userChat, setUserChat] = useState<Message[] | null>(null);
-    const [partnerChat, setPartnerChat] = useState<Message[] | null>(null);
+    const [userChat, setUserChat] = useState<Message[] | null>(initialUserChat || null);
+    const [partnerChat, setPartnerChat] = useState<Message[] | null>(initialPartnerChat || null);
     const [sessionStartTime] = useState<Date>(new Date());
     const [currentWordCount, setCurrentWordCount] = useState<number>(0);
+
+    // Determine which partner should start based on existing data
+    useEffect(() => {
+      if (initialUserChat && initialUserChat.length > 0) {
+        setUserChat(initialUserChat);
+        if (initialPartnerChat && initialPartnerChat.length > 0) {
+          setPartnerChat(initialPartnerChat);
+        } else {
+          setActivePartner('partner');
+        }
+      } else if (initialPartnerChat && initialPartnerChat.length > 0) {
+        setPartnerChat(initialPartnerChat);
+        setActivePartner('user');
+      }
+    }, [initialUserChat, initialPartnerChat]);
 
     const handleUserComplete = (chatHistory: Message[]) => {
         setUserChat(chatHistory);
