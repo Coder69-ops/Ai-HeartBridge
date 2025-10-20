@@ -326,21 +326,30 @@ export const analyzeJournalEntry = async (journalEntry: IJournalEntry, partner1D
     try {
       const { partner1Chat, partner2Chat } = journalEntry;
 
-      const formattedPartner1Chat = partner1Chat
+      // Limit chat length to prevent token overflow
+      const maxMessagesPerPartner = 10;
+      const limitedPartner1Chat = partner1Chat.slice(-maxMessagesPerPartner);
+      const limitedPartner2Chat = partner2Chat.slice(-maxMessagesPerPartner);
+      
+      const formattedPartner1Chat = limitedPartner1Chat
         .map(m => `${m.sender === 'user' ? 'Partner 1' : 'Counselor'}: ${m.text}`)
         .join('\n');
       
-      const formattedPartner2Chat = partner2Chat
+      const formattedPartner2Chat = limitedPartner2Chat
         .map(m => `${m.sender === 'user' ? 'Partner 2' : 'Counselor'}: ${m.text}`)
         .join('\n');
 
-      // Add partner context for more personalized analysis
+      // Add minimal partner context to reduce token usage
       let partnerContexts = '';
       if (partner1Data) {
-        partnerContexts += `\n--- PARTNER 1 CONTEXT ---\n${formatUserContext(partner1Data)}\n`;
+        partnerContexts += `\n--- PARTNER 1 CONTEXT ---\n`;
+        partnerContexts += `Name: ${partner1Data.firstName || partner1Data.email?.split('@')[0] || 'Partner 1'}\n`;
+        partnerContexts += `\n`;
       }
       if (partner2Data) {
-        partnerContexts += `\n--- PARTNER 2 CONTEXT ---\n${formatUserContext(partner2Data)}\n`;
+        partnerContexts += `--- PARTNER 2 CONTEXT ---\n`;
+        partnerContexts += `Name: ${partner2Data.firstName || partner2Data.email?.split('@')[0] || 'Partner 2'}\n`;
+        partnerContexts += `\n`;
       }
 
       const prompt = `${analysisSystemInstruction}
@@ -381,7 +390,7 @@ ${JSON.stringify(analysisSchema, null, 2)}`;
               content: prompt
             }
           ],
-          max_tokens: 1500,
+          max_tokens: 800,
           temperature: 0.3
         })
       });
