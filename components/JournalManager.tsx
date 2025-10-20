@@ -56,13 +56,21 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
 
       // Show appropriate notifications based on session status
       if (activeSessionData) {
-        if (activeSessionData.status === JournalSessionStatus.PARTNER1_COMPLETE || 
-            activeSessionData.status === JournalSessionStatus.PARTNER2_COMPLETE) {
+        // Only show notifications to the partner who should see them
+        if (activeSessionData.status === JournalSessionStatus.PARTNER1_COMPLETE && !activeSessionData.isCurrentUserPartner1) {
+          // Partner1 completed, show notification to Partner2
+          setNotification({
+            type: 'partner_completed',
+            partnerName: partner.profile?.firstName || partner.name || 'Your partner'
+          });
+        } else if (activeSessionData.status === JournalSessionStatus.PARTNER2_COMPLETE && activeSessionData.isCurrentUserPartner1) {
+          // Partner2 completed, show notification to Partner1
           setNotification({
             type: 'partner_completed',
             partnerName: partner.profile?.firstName || partner.name || 'Your partner'
           });
         } else if (activeSessionData.status === JournalSessionStatus.INSIGHTS_READY) {
+          // Both completed, show insights ready notification to both
           setNotification({
             type: 'insights_ready'
           });
@@ -179,7 +187,7 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
         }))}
         currentUserId={user.id}
         sessionStatus={activeSession.status}
-        isCurrentUserPartner1={true}
+        isCurrentUserPartner1={activeSession.isCurrentUserPartner1}
       />
     );
   }

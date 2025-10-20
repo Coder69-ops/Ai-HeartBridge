@@ -90,6 +90,9 @@ router.get('/active', async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'No active journal session found' });
     }
 
+    // Determine which partner the current user is
+    const isCurrentUserPartner1 = couple.partner1Id.equals(user._id);
+
     res.json({
       session: {
         id: activeSession._id,
@@ -107,7 +110,8 @@ router.get('/active', async (req: AuthRequest, res: Response) => {
         insights: activeSession.insights,
         partner1CompletedAt: activeSession.partner1CompletedAt,
         partner2CompletedAt: activeSession.partner2CompletedAt,
-        insightsGeneratedAt: activeSession.insightsGeneratedAt
+        insightsGeneratedAt: activeSession.insightsGeneratedAt,
+        isCurrentUserPartner1: isCurrentUserPartner1
       }
     });
 

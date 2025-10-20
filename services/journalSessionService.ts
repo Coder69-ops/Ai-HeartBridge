@@ -44,6 +44,7 @@ export interface JournalSession {
     partner2Complete: boolean;
     insightsReady: boolean;
   };
+  isCurrentUserPartner1?: boolean;
 }
 
 export interface JournalSessionListResponse {
