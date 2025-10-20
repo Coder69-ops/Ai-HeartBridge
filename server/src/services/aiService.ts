@@ -39,7 +39,7 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
 
 // Using Groq API - Free and Reliable
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'llama3-8b-8192'; // Free Llama model on Groq
+const MODEL = 'llama-3.1-8b-instant'; // Current available Llama model on Groq
 
 const createChatbotSystemInstruction = (userContext: any) => `You are Bridge, a warm AI relationship counselor 💝 Your goal is to help users reflect on situations with their partner.
 
