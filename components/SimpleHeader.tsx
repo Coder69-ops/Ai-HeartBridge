@@ -15,6 +15,10 @@ import {
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { Button } from './shared/Button';
+import NotificationBadge from './NotificationBadge';
+import { Notification } from './NotificationCenter';
+import Logo from './shared/Logo';
+import { PulseIndicator } from '../src/components/ui/enhanced';
 
 interface SimpleHeaderProps {
   user: UserType;
@@ -23,6 +27,10 @@ interface SimpleHeaderProps {
   onLogout: () => void;
   currentView?: string;
   partner?: UserType | null;
+  notifications?: Notification[];
+  onMarkNotificationAsRead?: (notificationId: string) => void;
+  onMarkAllNotificationsAsRead?: () => void;
+  onNotificationClick?: (notification: Notification) => void;
 }
 
 const SimpleHeader: React.FC<SimpleHeaderProps> = ({
@@ -31,7 +39,11 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
   onShowSafetyModal,
   onLogout,
   currentView = 'dashboard',
-  partner = null
+  partner = null,
+  notifications = [],
+  onMarkNotificationAsRead,
+  onMarkAllNotificationsAsRead,
+  onNotificationClick,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -90,19 +102,28 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
-              <Heart className="w-6 h-6 text-white" />
-            </div>
-            <div className="ml-3">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
-                AI HeartBridge
-              </h1>
+            <div className="relative">
+              <Logo 
+                size="md" 
+                animated={true}
+                showText={true}
+                className="group-hover:scale-105 transition-transform duration-200"
+              />
               {partner && (
-                <p className="text-xs text-emerald-500 font-medium">
-                  Connected with {partner.profile?.firstName || partner.name || 'Partner'}
-                </p>
+                <PulseIndicator
+                  size="sm"
+                  color="emerald"
+                  className="absolute -top-1 -right-1"
+                />
               )}
             </div>
+            {partner && (
+              <div className="ml-3 hidden sm:block">
+                <p className="text-xs text-emerald-500 font-medium">
+                  Connected with {(partner as UserType)?.profile?.firstName || (partner as UserType)?.name || 'Partner'}
+                </p>
+              </div>
+            )}
           </motion.div>
 
           {/* Desktop Navigation */}
@@ -129,6 +150,14 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
 
           {/* Right Actions */}
           <div className="flex items-center space-x-2">
+            {/* Notification Badge */}
+            <NotificationBadge
+              notifications={notifications}
+              onMarkAsRead={onMarkNotificationAsRead || (() => {})}
+              onMarkAllAsRead={onMarkAllNotificationsAsRead || (() => {})}
+              onNotificationClick={onNotificationClick || (() => {})}
+            />
+
             {/* Safety Button */}
             <Button
               variant="ghost"
@@ -190,18 +219,25 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
             </div>
 
             {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden"
-            >
-              {mobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
-            </Button>
+            <div className="md:hidden flex items-center space-x-2">
+              <NotificationBadge
+                notifications={notifications}
+                onMarkAsRead={onMarkNotificationAsRead || (() => {})}
+                onMarkAllAsRead={onMarkAllNotificationsAsRead || (() => {})}
+                onNotificationClick={onNotificationClick || (() => {})}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

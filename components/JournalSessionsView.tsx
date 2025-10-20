@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GorgeousLoader } from './shared/GorgeousLoader';
 import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import { Button } from './shared/Button';
-import { JournalSession, getJournalSessions, deleteJournalSession } from '../services/journalSessionService';
-import { Calendar, Trash2, Eye, Archive, Heart } from 'lucide-react';
+import { JournalSession, JournalSessionStatus, getJournalSessions, deleteJournalSession } from '../services/journalSessionService';
+import { Calendar, Trash2, Eye, Archive, Heart, Clock, Brain, CheckCircle, Play, AlertCircle } from 'lucide-react';
+import Icon from './shared/Icon';
 
 interface JournalSessionsViewProps {
   onSelectSession?: (sessionId: string) => void;
@@ -17,7 +18,7 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
 }) => {
   const [sessions, setSessions] = useState<JournalSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'completed' | 'active'>('all');
+  const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'insights_ready' | 'waiting'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -50,10 +51,89 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
     }
   };
 
-  const filteredSessions = sessions.filter(session =>
-    session.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    session.summary?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const getStatusInfo = (session: JournalSession) => {
+    switch (session.status) {
+      case JournalSessionStatus.CREATED:
+        return { 
+          text: 'Ready to begin', 
+          color: 'blue', 
+          icon: Play,
+          bgColor: 'bg-blue-50',
+          borderColor: 'border-blue-200',
+          textColor: 'text-blue-700'
+        };
+      case JournalSessionStatus.PARTNER1_COMPLETE:
+      case JournalSessionStatus.PARTNER2_COMPLETE:
+        return { 
+          text: 'Waiting for partner', 
+          color: 'yellow', 
+          icon: Clock,
+          bgColor: 'bg-yellow-50',
+          borderColor: 'border-yellow-200',
+          textColor: 'text-yellow-700'
+        };
+      case JournalSessionStatus.ANALYSIS_PENDING:
+        return { 
+          text: 'Analyzing...', 
+          color: 'purple', 
+          icon: Brain,
+          bgColor: 'bg-purple-50',
+          borderColor: 'border-purple-200',
+          textColor: 'text-purple-700'
+        };
+      case JournalSessionStatus.INSIGHTS_READY:
+        return { 
+          text: 'Insights ready', 
+          color: 'green', 
+          icon: CheckCircle,
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200',
+          textColor: 'text-green-700'
+        };
+      case JournalSessionStatus.CLOSED:
+        return { 
+          text: 'Completed', 
+          color: 'gray', 
+          icon: Archive,
+          bgColor: 'bg-gray-50',
+          borderColor: 'border-gray-200',
+          textColor: 'text-gray-700'
+        };
+      default:
+        return { 
+          text: 'Unknown', 
+          color: 'gray', 
+          icon: AlertCircle,
+          bgColor: 'bg-gray-50',
+          borderColor: 'border-gray-200',
+          textColor: 'text-gray-700'
+        };
+    }
+  };
+
+  const filteredSessions = sessions.filter(session => {
+    const matchesSearch = session.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         session.summary?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    switch (filter) {
+      case 'active':
+        return session.status === JournalSessionStatus.CREATED || 
+               session.status === JournalSessionStatus.PARTNER1_COMPLETE ||
+               session.status === JournalSessionStatus.PARTNER2_COMPLETE;
+      case 'completed':
+        return session.status === JournalSessionStatus.CLOSED;
+      case 'insights_ready':
+        return session.status === JournalSessionStatus.INSIGHTS_READY;
+      case 'waiting':
+        return session.status === JournalSessionStatus.PARTNER1_COMPLETE ||
+               session.status === JournalSessionStatus.PARTNER2_COMPLETE ||
+               session.status === JournalSessionStatus.ANALYSIS_PENDING;
+      default:
+        return true;
+    }
+  });
 
   if (isLoading) {
     return (
@@ -91,26 +171,36 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
           </div>
 
           {/* Stats - Mobile Optimized */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
             <Card>
               <CardContent className="p-3 sm:p-4 text-center">
                 <div className="text-xl sm:text-3xl font-bold text-emerald-600 mb-1">
-                  {sessions.filter(s => !s.isClosed).length}
+                  {sessions.filter(s => s.status === JournalSessionStatus.CREATED || 
+                                       s.status === JournalSessionStatus.PARTNER1_COMPLETE ||
+                                       s.status === JournalSessionStatus.PARTNER2_COMPLETE).length}
                 </div>
-                <div className="text-xs text-gray-600">Active Sessions</div>
+                <div className="text-xs text-gray-600">Active</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3 sm:p-4 text-center">
+                <div className="text-xl sm:text-3xl font-bold text-purple-600 mb-1">
+                  {sessions.filter(s => s.status === JournalSessionStatus.INSIGHTS_READY).length}
+                </div>
+                <div className="text-xs text-gray-600">Insights Ready</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-3 sm:p-4 text-center">
                 <div className="text-xl sm:text-3xl font-bold text-cyan-600 mb-1">
-                  {sessions.filter(s => s.isClosed).length}
+                  {sessions.filter(s => s.status === JournalSessionStatus.CLOSED).length}
                 </div>
                 <div className="text-xs text-gray-600">Completed</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-3 sm:p-4 text-center">
-                <div className="text-xl sm:text-3xl font-bold text-purple-600 mb-1">
+                <div className="text-xl sm:text-3xl font-bold text-orange-600 mb-1">
                   {sessions.reduce((sum, s) => sum + s.wordCount, 0)}
                 </div>
                 <div className="text-xs text-gray-600">Total Words</div>
@@ -126,7 +216,7 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
           className="mb-4 sm:mb-6 space-y-3 sm:space-y-4"
         >
           <div className="flex gap-1.5 sm:gap-2 flex-wrap">
-            {(['all', 'active', 'completed'] as const).map(f => (
+            {(['all', 'active', 'waiting', 'insights_ready', 'completed'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -136,7 +226,9 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
                     : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'
                 }`}
               >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
+                {f === 'insights_ready' ? 'Insights Ready' : 
+                 f === 'waiting' ? 'Waiting' :
+                 f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
             ))}
           </div>
@@ -163,17 +255,23 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
                   transition={{ delay: index * 0.05 }}
                 >
                   <Card 
-                    className={`cursor-pointer hover:shadow-lg transition-all ${
-                      session.isClosed ? 'border-l-4 border-l-cyan-500' : 'border-l-4 border-l-emerald-500'
+                    className={`cursor-pointer hover:shadow-lg transition-all border-l-4 ${
+                      getStatusInfo(session).borderColor
                     }`}
                     onClick={() => onSelectSession?.(session.id)}
                   >
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
                         <div className="flex-1 min-w-0 w-full sm:w-auto">
-                          <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 line-clamp-2">
-                            {session.title || `Session on ${new Date(session.createdAt).toLocaleDateString()}`}
-                          </h3>
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-800 line-clamp-2 flex-1">
+                              {session.title || `Session on ${new Date(session.createdAt).toLocaleDateString()}`}
+                            </h3>
+                            <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusInfo(session).bgColor} ${getStatusInfo(session).textColor}`}>
+                              {React.createElement(getStatusInfo(session).icon, { className: "w-3 h-3" })}
+                              <span>{getStatusInfo(session).text}</span>
+                            </div>
+                          </div>
                           
                           <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2">
                             {session.summary || 'Relationship reflection session'}

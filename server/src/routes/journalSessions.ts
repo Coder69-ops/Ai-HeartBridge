@@ -1,10 +1,11 @@
 import express, { Response } from 'express';
 import { body, validationResult, query } from 'express-validator';
 import { AuthRequest } from '../middleware/auth';
-import { JournalSession, IJournalMessage } from '../models/JournalSession';
+import { JournalSession, IJournalMessage, JournalSessionStatus } from '../models/JournalSession';
 import { Couple } from '../models/Couple';
 import { User } from '../models/User';
 import { getChatbotResponse } from '../services/aiService';
+import { journalNotificationService } from '../services/notificationService';
 
 const router = express.Router();
 
@@ -31,7 +32,13 @@ router.post('/create', async (req: AuthRequest, res: Response) => {
       partner1Chat: [],
       partner2Chat: [],
       isActive: true,
-      isClosed: false
+      isClosed: false,
+      status: JournalSessionStatus.CREATED,
+      notificationSent: {
+        partner1Complete: false,
+        partner2Complete: false,
+        insightsReady: false
+      }
     });
 
     await journalSession.save();
@@ -262,6 +269,115 @@ router.put('/:sessionId/save', [
   }
 });
 
+// Complete partner reflection (async workflow)
+router.post('/:sessionId/complete-reflection', [
+  body('chatHistory').isArray().withMessage('chatHistory must be an array')
+], async (req: AuthRequest, res: Response) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { sessionId } = req.params;
+    const { chatHistory } = req.body;
+    const user = req.user!;
+
+    // Get user's couple
+    const couple = await Couple.findOne({
+      $or: [
+        { partner1Id: user._id },
+        { partner2Id: user._id }
+      ]
+    });
+
+    if (!couple) {
+      return res.status(400).json({ error: 'User must be in a couple to complete reflections' });
+    }
+
+    const session = await JournalSession.findOne({
+      _id: sessionId,
+      coupleId: couple._id
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Journal session not found' });
+    }
+
+    // Determine which partner is completing
+    const isPartner1 = couple.partner1Id.equals(user._id);
+    const partnerId = isPartner1 ? couple.partner2Id : couple.partner1Id;
+
+    // Update the appropriate chat
+    if (isPartner1) {
+      session.partner1Chat = chatHistory;
+      session.partner1CompletedAt = new Date();
+      
+      // Update status
+      if (session.status === JournalSessionStatus.CREATED) {
+        session.status = JournalSessionStatus.PARTNER1_COMPLETE;
+      }
+    } else {
+      session.partner2Chat = chatHistory;
+      session.partner2CompletedAt = new Date();
+      
+      // Update status
+      if (session.status === JournalSessionStatus.PARTNER1_COMPLETE) {
+        session.status = JournalSessionStatus.PARTNER2_COMPLETE;
+      }
+    }
+
+    await session.save();
+
+    // Send notification to partner
+    if (isPartner1 && !session.notificationSent.partner1Complete) {
+      await journalNotificationService.notifyPartnerReflectionComplete(
+        sessionId,
+        user._id.toString(),
+        partnerId.toString()
+      );
+    } else if (!isPartner1 && !session.notificationSent.partner2Complete) {
+      await journalNotificationService.notifyPartnerReflectionComplete(
+        sessionId,
+        user._id.toString(),
+        partnerId.toString()
+      );
+    }
+
+    // If both partners have completed, trigger analysis
+    if (session.status === JournalSessionStatus.PARTNER2_COMPLETE) {
+      session.status = JournalSessionStatus.ANALYSIS_PENDING;
+      session.analysisRequestedAt = new Date();
+      await session.save();
+
+      // Trigger AI analysis (this would be done asynchronously)
+      // For now, we'll simulate it
+      setTimeout(async () => {
+        try {
+          // This would call the insights endpoint
+          // await generateInsights(sessionId);
+        } catch (error) {
+          console.error('Error generating insights:', error);
+        }
+      }, 1000);
+    }
+
+    res.json({
+      message: 'Reflection completed successfully',
+      session: {
+        id: session._id,
+        status: session.status,
+        partner1CompletedAt: session.partner1CompletedAt,
+        partner2CompletedAt: session.partner2CompletedAt
+      }
+    });
+
+  } catch (error) {
+    console.error('Complete reflection error:', error);
+    res.status(500).json({ error: 'Failed to complete reflection' });
+  }
+});
+
 // Close journal session
 router.put('/:sessionId/close', async (req: AuthRequest, res: Response) => {
   try {
@@ -388,6 +504,27 @@ ${analysis.opportunities.map((o: string) => `• ${o}`).join('\n')}
 • Defensiveness: ${analysis.fourHorsemen.defensiveness ? 'Present' : 'Not detected'}
 • Stonewalling: ${analysis.fourHorsemen.stonewalling ? 'Present' : 'Not detected'}
 
+**Emotional Intelligence:**
+• Empathy Level: ${analysis.emotionalIntelligence?.empathyLevel || 'Not assessed'}
+• Emotional Regulation: ${analysis.emotionalIntelligence?.emotionalRegulation || 'Not assessed'}
+• Communication Style: ${analysis.emotionalIntelligence?.communicationStyle || 'Not assessed'}
+• Emotional Validation: ${analysis.emotionalIntelligence?.emotionalValidation || 'Not assessed'}
+
+**Attachment Patterns:**
+• Secure Behaviors: ${analysis.attachmentPatterns?.secure || 'Not observed'}
+• Anxious Patterns: ${analysis.attachmentPatterns?.anxious || 'Not observed'}
+• Avoidant Patterns: ${analysis.attachmentPatterns?.avoidant || 'Not observed'}
+
+**Conflict Resolution:**
+• Style: ${analysis.conflictResolution?.style || 'Not assessed'}
+• Effectiveness: ${analysis.conflictResolution?.effectiveness || 'Not assessed'}
+• Repair Attempts: ${analysis.conflictResolution?.repairAttempts || 'Not identified'}
+
+**Relationship Satisfaction:**
+• Overall Score: ${analysis.relationshipSatisfaction?.overallScore || 'Not assessed'}/10
+• Key Factors: ${analysis.relationshipSatisfaction?.keyFactors || 'Not identified'}
+• Improvement Areas: ${analysis.relationshipSatisfaction?.improvementAreas || 'Not identified'}
+
 **Repair Plan:**
 ${analysis.repairPlan.map((r: string) => `• ${r}`).join('\n')}
 
@@ -400,7 +537,12 @@ ${analysis.safetyMode ? `\n⚠️ **Safety Notice:** ${analysis.riskFlags.join('
 
     // Update session with insights
     session.insights = insights;
+    session.status = JournalSessionStatus.INSIGHTS_READY;
+    session.insightsGeneratedAt = new Date();
     await session.save();
+
+    // Send notification to both partners
+    await journalNotificationService.notifyInsightsReady(sessionId);
 
     res.json({
       insights,

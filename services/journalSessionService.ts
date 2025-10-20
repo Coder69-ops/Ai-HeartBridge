@@ -6,6 +6,15 @@ export interface JournalMessage {
   timestamp: Date;
 }
 
+export enum JournalSessionStatus {
+  CREATED = 'created',
+  PARTNER1_COMPLETE = 'partner1_complete',
+  PARTNER2_COMPLETE = 'partner2_complete',
+  ANALYSIS_PENDING = 'analysis_pending',
+  INSIGHTS_READY = 'insights_ready',
+  CLOSED = 'closed'
+}
+
 export interface JournalSession {
   id: string;
   title: string;
@@ -14,6 +23,7 @@ export interface JournalSession {
   partner2Chat: JournalMessage[];
   isActive: boolean;
   isClosed: boolean;
+  status: JournalSessionStatus;
   lastMessageAt: Date;
   wordCount: number;
   messageCount: number;
@@ -25,6 +35,15 @@ export interface JournalSession {
   updatedAt: Date;
   completedAt?: Date;
   insights?: string;
+  partner1CompletedAt?: Date;
+  partner2CompletedAt?: Date;
+  analysisRequestedAt?: Date;
+  insightsGeneratedAt?: Date;
+  notificationSent: {
+    partner1Complete: boolean;
+    partner2Complete: boolean;
+    insightsReady: boolean;
+  };
 }
 
 export interface JournalSessionListResponse {
@@ -141,6 +160,24 @@ export const deleteJournalSession = async (sessionId: string): Promise<{ message
   } catch (error: any) {
     console.error('Delete journal session error:', error);
     throw new Error(error.response?.data?.error || 'Failed to delete journal session');
+  }
+};
+
+/**
+ * Complete journal reflection (async workflow)
+ */
+export const completeJournalReflection = async (
+  sessionId: string,
+  chatHistory: JournalMessage[]
+): Promise<{ session: JournalSession }> => {
+  try {
+    const response = await api.post(`/journal-sessions/${sessionId}/complete-reflection`, {
+      chatHistory
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Complete journal reflection error:', error);
+    throw new Error(error.response?.data?.error || 'Failed to complete reflection');
   }
 };
 

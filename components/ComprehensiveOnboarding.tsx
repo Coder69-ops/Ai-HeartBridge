@@ -10,6 +10,7 @@ import {
   InteractiveAnimation,
   PageTransition 
 } from '../src/components/ui/enhanced';
+import Logo from './shared/Logo';
 import { 
   Heart, 
   User as UserIcon, 
@@ -47,7 +48,7 @@ const WelcomeStep: React.FC<{ user: User }> = ({ user }) => (
         ease: "easeInOut"
       }}
     >
-      <Heart className="w-12 h-12 text-white" />
+      <Logo size="lg" animated={true} showText={false} />
     </motion.div>
     
     <div>

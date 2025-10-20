@@ -6,6 +6,15 @@ export interface IJournalMessage {
   timestamp: Date;
 }
 
+export enum JournalSessionStatus {
+  CREATED = 'created',
+  PARTNER1_COMPLETE = 'partner1_complete',
+  PARTNER2_COMPLETE = 'partner2_complete',
+  ANALYSIS_PENDING = 'analysis_pending',
+  INSIGHTS_READY = 'insights_ready',
+  CLOSED = 'closed'
+}
+
 export interface IJournalSession extends Document {
   _id: mongoose.Types.ObjectId;
   coupleId: mongoose.Types.ObjectId;
@@ -14,6 +23,7 @@ export interface IJournalSession extends Document {
   partner2Chat: IJournalMessage[];
   isActive: boolean;
   isClosed: boolean;
+  status: JournalSessionStatus;
   lastMessageAt: Date;
   wordCount: number;
   messageCount: number;
@@ -23,6 +33,15 @@ export interface IJournalSession extends Document {
   insights?: string;
   sessionDurationMinutes?: number;
   completedAt?: Date;
+  partner1CompletedAt?: Date;
+  partner2CompletedAt?: Date;
+  analysisRequestedAt?: Date;
+  insightsGeneratedAt?: Date;
+  notificationSent: {
+    partner1Complete: boolean;
+    partner2Complete: boolean;
+    insightsReady: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,6 +85,11 @@ const journalSessionSchema = new Schema<IJournalSession>({
     type: Boolean,
     default: false
   },
+  status: {
+    type: String,
+    enum: Object.values(JournalSessionStatus),
+    default: JournalSessionStatus.CREATED
+  },
   lastMessageAt: {
     type: Date,
     default: Date.now
@@ -100,6 +124,23 @@ const journalSessionSchema = new Schema<IJournalSession>({
   },
   completedAt: {
     type: Date
+  },
+  partner1CompletedAt: {
+    type: Date
+  },
+  partner2CompletedAt: {
+    type: Date
+  },
+  analysisRequestedAt: {
+    type: Date
+  },
+  insightsGeneratedAt: {
+    type: Date
+  },
+  notificationSent: {
+    partner1Complete: { type: Boolean, default: false },
+    partner2Complete: { type: Boolean, default: false },
+    insightsReady: { type: Boolean, default: false }
   }
 }, {
   timestamps: true
@@ -109,6 +150,8 @@ const journalSessionSchema = new Schema<IJournalSession>({
 journalSessionSchema.index({ coupleId: 1, createdAt: -1 });
 journalSessionSchema.index({ coupleId: 1, isActive: 1 });
 journalSessionSchema.index({ coupleId: 1, isClosed: 1, lastMessageAt: -1 });
+journalSessionSchema.index({ coupleId: 1, status: 1 });
+journalSessionSchema.index({ status: 1, createdAt: -1 });
 
 // Pre-save middleware
 journalSessionSchema.pre('save', function(next) {

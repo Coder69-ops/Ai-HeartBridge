@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Button } from './shared/Button';
 import { Card, CardContent } from './shared/Card';
+import Logo from './shared/Logo';
 
 interface MasterAuthViewProps {
   onLoginSuccess: (user: User) => void;
@@ -153,13 +154,15 @@ const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
           <motion.div 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl sm:rounded-3xl shadow-2xl mb-3 sm:mb-4"
+            className="mb-3 sm:mb-4"
           >
-            <Heart className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+            <Logo 
+              size="xl" 
+              animated={true}
+              showText={true}
+              variant="default"
+            />
           </motion.div>
-          <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-2">
-            AI HeartBridge
-          </h1>
           <p className="text-gray-600 text-base sm:text-lg">
             {mode === 'login' ? 'Welcome back! 💚' : 'Start your journey together 💙'}
           </p>

@@ -56,6 +56,27 @@ const analysisSchema = {
     defensiveness: "Is there defensiveness (victimizing self, not taking responsibility)?",
     stonewalling: "Is there stonewalling (shutting down, refusing to engage)?"
   },
+  emotionalIntelligence: {
+    empathyLevel: "High/Medium/Low empathy demonstrated by both partners",
+    emotionalRegulation: "How well emotions were managed during the conversation",
+    communicationStyle: "Assertive/Passive/Aggressive patterns observed",
+    emotionalValidation: "How well partners validated each other's emotions"
+  },
+  attachmentPatterns: {
+    secure: "Secure attachment behaviors observed (e.g., seeking comfort, providing support)",
+    anxious: "Anxious attachment patterns (e.g., seeking reassurance, fear of abandonment)",
+    avoidant: "Avoidant attachment patterns (e.g., emotional distance, self-reliance)"
+  },
+  conflictResolution: {
+    style: "Collaborative/Competitive/Avoidant/Accommodating approach to conflict",
+    effectiveness: "How well conflicts were resolved or managed",
+    repairAttempts: "Successful repair attempts and connection bids identified"
+  },
+  relationshipSatisfaction: {
+    overallScore: "1-10 relationship satisfaction based on the conversation",
+    keyFactors: "Main factors affecting relationship satisfaction",
+    improvementAreas: "Specific areas for relationship growth and improvement"
+  },
   repairPlan: "A concrete, 3-step actionable repair plan for the couple to reconnect on this issue.",
   riskFlags: "List any specific safety concerns or abuse patterns detected. Leave empty if none found.",
   safetyMode: "Set to true if any intimate partner violence, abuse, or serious safety concerns are detected."
