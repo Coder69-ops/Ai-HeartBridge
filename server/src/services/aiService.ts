@@ -37,10 +37,8 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
   };
 };
 
-// Using Puter.js - Free and Unlimited AI
-const { init } = require('@heyputer/puter.js/src/init.cjs');
-
-const puter = init(process.env.PUTER_AUTH_TOKEN || ''); // Optional auth token
+// Using Puter.js API - Free and Unlimited AI
+const PUTER_API_URL = 'https://api.puter.com/ai/chat';
 const MODEL = 'gpt-5-nano'; // Using GPT-5 nano model, free and unlimited
 
 const createChatbotSystemInstruction = (userContext: any) => `You are Bridge, a warm AI relationship counselor 💝 Your goal is to help users reflect on situations with their partner.
@@ -258,16 +256,33 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
       }))
     ];
 
-    // Use Puter.js AI chat instead of fetch
+    // Use Puter.js API via fetch
     const prompt = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
-    const response = await puter.ai.chat(prompt, {
-      model: MODEL,
-      max_tokens: 100,
-      temperature: 0.8
+    const response = await fetch(PUTER_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'AI-HeartBridge/1.0'
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        model: MODEL,
+        max_tokens: 100,
+        temperature: 0.8
+      })
     });
 
-    // Puter.js returns the response directly
-    const responseText = response || getFallbackResponse(messageHistory, user);
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Puter.js API error:', errorData);
+      
+      // For API errors, use fallback
+      console.log('API error detected, using fallback response');
+      return getFallbackResponse(messageHistory, user);
+    }
+
+    const data: any = await response.json();
+    const responseText = data.response || data.text || data.content || getFallbackResponse(messageHistory, user);
     
     console.log('Bot response:', responseText);
     return responseText;
@@ -338,19 +353,31 @@ ${formattedPartner2Chat}
 Please provide your analysis as a JSON object with this structure:
 ${JSON.stringify(analysisSchema, null, 2)}`;
 
-      // Use Puter.js AI chat for analysis
+      // Use Puter.js API for analysis
       const analysisPrompt = `You are a relationship counselor AI. Always respond with valid JSON only.
 
 ${prompt}`;
       
-      const response = await puter.ai.chat(analysisPrompt, {
-        model: MODEL,
-        max_tokens: 800,
-        temperature: 0.3
+      const response = await fetch(PUTER_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'AI-HeartBridge/1.0'
+        },
+        body: JSON.stringify({
+          prompt: analysisPrompt,
+          model: MODEL,
+          max_tokens: 800,
+          temperature: 0.3
+        })
       });
 
-      // Puter.js returns the response directly
-      const analysisText = response;
+      if (!response.ok) {
+        throw new Error(`Puter.js API error: ${response.status}`);
+      }
+
+      const data: any = await response.json();
+      const analysisText = data.response || data.text || data.content;
       
       if (!analysisText) {
         throw new Error('No analysis content received');
