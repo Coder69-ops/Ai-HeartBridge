@@ -38,7 +38,7 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
 };
 
 // Using Puter.js API - Free and Unlimited
-const PUTER_API_URL = 'https://api.puter.com/v1/chat/completions';
+const PUTER_API_URL = 'https://api.puter.com/v1/ai/chat';
 const MODEL = 'gpt-5-nano'; // Using GPT-5 nano model, free and unlimited
 
 const createChatbotSystemInstruction = (userContext: any) => `You are Bridge, a warm AI relationship counselor 💝 Your goal is to help users reflect on situations with their partner.
@@ -235,7 +235,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
   const maxRetries = 2;
   
   try {
-    console.log('Puter.js API configured - No API key needed');
+    console.log('Puter.js API configured - Free and unlimited access');
     console.log('Message history:', messageHistory);
     console.log('User context available:', !!user);
     if (retryCount > 0) console.log(`Retry attempt: ${retryCount}`);
@@ -259,15 +259,14 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
     const response = await fetch(PUTER_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'http://localhost:3001',
         'X-Title': 'AI HeartBridge',
         'X-Description': 'AI relationship counseling app'
       },
       body: JSON.stringify({
+        prompt: messages[messages.length - 1]?.content || "Hello, I need relationship advice.",
         model: MODEL,
-        messages: messages,
         max_tokens: 100,
         temperature: 0.8
       })
@@ -275,7 +274,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('OpenRouter API error:', errorData);
+      console.error('Puter.js API error:', errorData);
       
       // Check for rate limiting specifically
       if (response.status === 429 || errorData.includes('rate-limited')) {
@@ -298,7 +297,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
     }
 
     const data: any = await response.json();
-    const responseText = data.choices?.[0]?.message?.content || getFallbackResponse(messageHistory, user);
+    const responseText = data.response || data.text || data.content || getFallbackResponse(messageHistory, user);
     
     console.log('Bot response:', responseText);
     return responseText;
@@ -376,17 +375,8 @@ ${JSON.stringify(analysisSchema, null, 2)}`;
           'User-Agent': 'AI-HeartBridge/1.0'
         },
         body: JSON.stringify({
+          prompt: prompt,
           model: MODEL,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a relationship counselor AI. Always respond with valid JSON only.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
           max_tokens: 800,
           temperature: 0.3
         })
@@ -406,7 +396,7 @@ ${JSON.stringify(analysisSchema, null, 2)}`;
       }
 
       const data: any = await response.json();
-      const analysisText = data.choices?.[0]?.message?.content;
+      const analysisText = data.response || data.text || data.content;
       
       if (!analysisText) {
         throw new Error('No analysis content received');
