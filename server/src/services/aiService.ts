@@ -37,9 +37,9 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
   };
 };
 
-// Using OpenRouter API with llama model
+// Using OpenRouter API with Qwen model
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'meta-llama/llama-3.2-3b-instruct:free'; // Using llama model, no privacy issues
+const MODEL = 'qwen/qwen3-14b:free'; // Using Qwen model, free tier
 
 const createChatbotSystemInstruction = (userContext: any) => `You are Bridge, a warm AI relationship counselor 💝 Your goal is to help users reflect on situations with their partner.
 
@@ -235,7 +235,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
   const maxRetries = 2;
   
   try {
-    console.log('DeepSeek API_KEY configured:', !!process.env.DEEPSEEK_API_KEY);
+    console.log('OpenRouter API_KEY configured:', !!process.env.OPENROUTER_API_KEY);
     console.log('Message history:', messageHistory);
     console.log('User context available:', !!user);
     if (retryCount > 0) console.log(`Retry attempt: ${retryCount}`);
@@ -259,7 +259,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
     const response = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'http://localhost:3001',
         'X-Title': 'AI HeartBridge',
@@ -372,7 +372,7 @@ ${JSON.stringify(analysisSchema, null, 2)}`;
       const response = await fetch(OPENROUTER_API_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': 'http://localhost:3001',
           'X-Title': 'AI HeartBridge',
