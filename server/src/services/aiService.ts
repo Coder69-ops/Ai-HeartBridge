@@ -37,9 +37,9 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
   };
 };
 
-// Using Puter.js API - Free and Unlimited
-const PUTER_API_URL = 'https://api.puter.com/v1/ai/chat';
-const MODEL = 'gpt-5-nano'; // Using GPT-5 nano model, free and unlimited
+// Using Hugging Face Inference API - Free and Reliable
+const HF_API_URL = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-large';
+const MODEL = 'microsoft/DialoGPT-large'; // Free conversational AI model
 
 const createChatbotSystemInstruction = (userContext: any) => `You are Bridge, a warm AI relationship counselor 💝 Your goal is to help users reflect on situations with their partner.
 
@@ -235,7 +235,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
   const maxRetries = 2;
   
   try {
-    console.log('Puter.js API configured - Free and unlimited access');
+    console.log('Hugging Face API configured - Free conversational AI');
     console.log('Message history:', messageHistory);
     console.log('User context available:', !!user);
     if (retryCount > 0) console.log(`Retry attempt: ${retryCount}`);
@@ -256,7 +256,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
       }))
     ];
 
-    const response = await fetch(PUTER_API_URL, {
+    const response = await fetch(HF_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -265,16 +265,22 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
         'X-Description': 'AI relationship counseling app'
       },
       body: JSON.stringify({
-        prompt: messages[messages.length - 1]?.content || "Hello, I need relationship advice.",
-        model: MODEL,
-        max_tokens: 100,
-        temperature: 0.8
+        inputs: {
+          past_user_inputs: messages.filter(m => m.role === 'user').slice(-5).map(m => m.content),
+          generated_responses: messages.filter(m => m.role === 'assistant').slice(-5).map(m => m.content),
+          text: messages[messages.length - 1]?.content || "Hello, I need relationship advice."
+        },
+        parameters: {
+          max_length: 100,
+          temperature: 0.8,
+          do_sample: true
+        }
       })
     });
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Puter.js API error:', errorData);
+      console.error('Hugging Face API error:', errorData);
       
       // Check for rate limiting specifically
       if (response.status === 429 || errorData.includes('rate-limited')) {
@@ -297,7 +303,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
     }
 
     const data: any = await response.json();
-    const responseText = data.response || data.text || data.content || getFallbackResponse(messageHistory, user);
+    const responseText = data.generated_text || getFallbackResponse(messageHistory, user);
     
     console.log('Bot response:', responseText);
     return responseText;
@@ -368,17 +374,19 @@ ${formattedPartner2Chat}
 Please provide your analysis as a JSON object with this structure:
 ${JSON.stringify(analysisSchema, null, 2)}`;
 
-      const response = await fetch(PUTER_API_URL, {
+      const response = await fetch(HF_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'User-Agent': 'AI-HeartBridge/1.0'
         },
         body: JSON.stringify({
-          prompt: prompt,
-          model: MODEL,
-          max_tokens: 800,
-          temperature: 0.3
+          inputs: prompt,
+          parameters: {
+            max_length: 800,
+            temperature: 0.3,
+            do_sample: true
+          }
         })
       });
 
@@ -391,12 +399,12 @@ ${JSON.stringify(analysisSchema, null, 2)}`;
           continue;
         }
         const errorText = await response.text();
-        console.error(`Puter.js API error: ${response.status} - ${errorText}`);
-        throw new Error(`Puter.js API error: ${response.status} - ${errorText}`);
+        console.error(`Hugging Face API error: ${response.status} - ${errorText}`);
+        throw new Error(`Hugging Face API error: ${response.status} - ${errorText}`);
       }
 
       const data: any = await response.json();
-      const analysisText = data.response || data.text || data.content;
+      const analysisText = data[0]?.generated_text;
       
       if (!analysisText) {
         throw new Error('No analysis content received');
