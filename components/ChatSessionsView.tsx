@@ -332,7 +332,7 @@ const ChatSessionsView: React.FC<ChatSessionsViewProps> = ({ onSessionSelect, on
                           </span>
                         </div>
                         
-                        {session.topics.length > 0 && (
+                        {session.topics && Array.isArray(session.topics) && session.topics.length > 0 && (
                           <div className="mt-2 flex flex-wrap gap-1">
                             {session.topics.slice(0, 3).map((topic) => (
                               <span 

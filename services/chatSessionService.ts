@@ -16,12 +16,15 @@ export interface ChatSession {
   wordCount: number;
   messageCount: number;
   mood?: string;
-  topics: string[];
+  topics?: string[];
+  themes?: string[];
   summary?: string;
   sessionDurationMinutes?: number;
   createdAt: Date;
   updatedAt: Date;
   timeSinceLastMessage?: number;
+  status?: 'active' | 'closed';
+  lastMessage?: string;
 }
 
 export interface ChatSessionListResponse {

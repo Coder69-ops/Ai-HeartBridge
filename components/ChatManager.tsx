@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ChatSessionsView from './ChatSessionsView';
 import PersistentChatView from './PersistentChatView';
-import { ChatSession } from '../services/chatSessionService';
+import { ChatSession, createChatSession } from '../services/chatSessionService';
 
 interface ChatManagerProps {
   onBack?: () => void;
@@ -18,8 +18,16 @@ const ChatManager: React.FC<ChatManagerProps> = ({ onBack }) => {
     setCurrentView('chat');
   };
 
-  const handleNewSession = () => {
-    setCurrentView('chat');
+  const handleNewSession = async () => {
+    try {
+      const response = await createChatSession();
+      setSelectedSessionId(response.session.id);
+      setCurrentView('chat');
+    } catch (err) {
+      console.error('Failed to create new session:', err);
+      // Still navigate to chat view even if creation fails
+      setCurrentView('chat');
+    }
   };
 
   const handleBackToSessions = () => {

@@ -92,7 +92,7 @@ const MasterChatSessionsView: React.FC<MasterChatSessionsViewProps> = ({
   };
 
   const filteredSessions = sessions.filter(session => 
-    session.title.toLowerCase().includes(searchQuery.toLowerCase())
+    session.title?.toLowerCase().includes(searchQuery.toLowerCase()) || false
   );
 
   if (isLoading) {
@@ -461,7 +461,7 @@ const MasterChatSessionsView: React.FC<MasterChatSessionsViewProps> = ({
                               </div>
                             )}
 
-                            {session.themes && session.themes.length > 0 && (
+                            {session.themes && Array.isArray(session.themes) && session.themes.length > 0 && (
                               <div className="flex flex-wrap gap-1 sm:gap-2 mt-3">
                                 {session.themes.slice(0, 3).map((theme, idx) => (
                                   <span 
