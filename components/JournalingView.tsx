@@ -89,6 +89,9 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                 setSessionStatus(JournalSessionStatus.PARTNER2_COMPLETE);
             }
 
+            // Update session status from response
+            setSessionStatus(response.session.status);
+
             // If both partners have completed, show results
             if (response.session.status === JournalSessionStatus.ANALYSIS_PENDING || 
                 response.session.status === JournalSessionStatus.INSIGHTS_READY) {
@@ -144,12 +147,12 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             </div>
          );
     }
-
+    
     // Show waiting screen if one partner has completed but not the other
     if (sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE || 
         sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE) {
-        const isWaitingForPartner = (currentPartner === 'user' && sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE) ||
-                                   (currentPartner === 'partner' && sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE);
+        const isWaitingForPartner = (currentPartner === 'user' && sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE) ||
+                                   (currentPartner === 'partner' && sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE);
         
         if (isWaitingForPartner) {
             return (

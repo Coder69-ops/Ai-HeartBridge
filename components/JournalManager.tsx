@@ -67,7 +67,7 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
             type: 'insights_ready'
           });
         }
-        setCurrentView('active');
+        // Don't automatically go to active view - let user choose from menu
       }
     } catch (err: any) {
       console.error('Error loading journal data:', err);
@@ -231,48 +231,34 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
 
         {/* Active Session Card */}
         {activeSession && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
-          >
-            <Card className="border-l-4 border-l-emerald-500">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Continue Your Session</CardTitle>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSessionStatusInfo(activeSession.status).bg} ${getSessionStatusInfo(activeSession.status).color}`}>
-                    {getSessionStatusInfo(activeSession.status).text}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Started {new Date(activeSession.createdAt).toLocaleDateString()}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Icon name="message-circle" className="w-3 h-3" />
-                        {activeSession.messageCount} messages
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Icon name="file-text" className="w-3 h-3" />
-                        {activeSession.wordCount} words
-                      </span>
-                    </div>
+          <Card className="mb-6 border-2 border-emerald-200 bg-emerald-50">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-emerald-100 rounded-full">
+                    <Icon name="book-open" className="w-6 h-6 text-emerald-600" />
                   </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Active Journal Session</h3>
+                    <p className="text-sm text-gray-600">
+                      {getSessionStatusInfo(activeSession.status).text}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
                   <Button
                     onClick={() => setCurrentView('active')}
-                    className="bg-emerald-600 hover:bg-emerald-700"
+                    variant="therapy"
+                    size="sm"
                   >
-                    Continue
+                    {activeSession.status === JournalSessionStatus.INSIGHTS_READY ? 'View Insights' : 'Continue'}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
+            </CardContent>
+          </Card>
         )}
+
 
         {/* Action Cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">

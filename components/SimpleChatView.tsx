@@ -404,6 +404,21 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
               </Button>
             </div>
           </form>
+          
+          {/* Manual Completion Button */}
+          {messages.length > 2 && !isChatComplete && (
+            <div className="mt-4 pt-4 border-t border-therapy-calm/20">
+              <Button
+                onClick={() => onComplete?.(messages)}
+                variant="outline"
+                size="sm"
+                className="w-full text-therapy-calm border-therapy-calm hover:bg-therapy-calm hover:text-white"
+                disabled={isCompleting}
+              >
+                {isCompleting ? "Completing..." : "✨ Complete My Reflection"}
+              </Button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
