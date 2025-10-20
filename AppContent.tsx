@@ -94,20 +94,20 @@ export const AppContent: React.FC = () => {
                 onboardingCompletedAt: new Date(),
                 
                 // Personal Information
-                firstName: onboardingData.personalInfo.firstName,
-                lastName: onboardingData.personalInfo.lastName,
-                age: onboardingData.personalInfo.age,
-                gender: onboardingData.personalInfo.gender,
-                location: onboardingData.personalInfo.location ? 
+                firstName: onboardingData.personalInfo?.firstName,
+                lastName: onboardingData.personalInfo?.lastName,
+                age: onboardingData.personalInfo?.age,
+                gender: onboardingData.personalInfo?.gender,
+                location: onboardingData.personalInfo?.location ? 
                     `${onboardingData.personalInfo.location.city || ''}, ${onboardingData.personalInfo.location.country || ''}`.trim().replace(/^,\s*|,\s*$/g, '') : undefined,
                 
                 // Relationship Information
-                relationshipStatus: onboardingData.relationshipInfo.relationshipStatus,
-                relationshipDuration: onboardingData.relationshipInfo.relationshipDuration ? 
+                relationshipStatus: onboardingData.relationshipInfo?.relationshipStatus,
+                relationshipDuration: onboardingData.relationshipInfo?.relationshipDuration ? 
                     `${onboardingData.relationshipInfo.relationshipDuration.years || 0} years, ${onboardingData.relationshipInfo.relationshipDuration.months || 0} months` : undefined,
-                livingTogether: onboardingData.relationshipInfo.livingTogether,
-                hasChildren: onboardingData.relationshipInfo.hasChildren,
-                childrenAges: onboardingData.relationshipInfo.childrenAges,
+                livingTogether: onboardingData.relationshipInfo?.livingTogether,
+                hasChildren: onboardingData.relationshipInfo?.hasChildren,
+                childrenAges: onboardingData.relationshipInfo?.childrenAges,
                 
                 // Goals and Challenges
                 primaryGoals: Array.isArray(onboardingData.goals) && onboardingData.goals.length > 0 ? onboardingData.goals : undefined,
@@ -137,8 +137,8 @@ export const AppContent: React.FC = () => {
             // Also update the profile nested structure for frontend consistency
             await updateProfile({
                 profile: {
-                    ...onboardingData.personalInfo,
-                    ...onboardingData.relationshipInfo,
+                    ...(onboardingData.personalInfo || {}),
+                    ...(onboardingData.relationshipInfo || {}),
                     primaryGoals: onboardingData.goals,
                     relationshipChallenges: onboardingData.challenges
                 },
@@ -360,12 +360,29 @@ export const AppContent: React.FC = () => {
         <ToastProvider>
             <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
                 {isAuthenticated && user && !authLoading && (
-                    <MobileHeader 
-                        user={user} 
-                        onNavigate={handleNavigate}
-                        onShowSafetyModal={() => setShowSafetyModal(true)} 
-                        onLogout={handleLogout}
-                    />
+                    <>
+                        {/* Desktop Header - Hidden on mobile */}
+                        <div className="hidden lg:block">
+                            <Header 
+                                user={user} 
+                                onNavigate={handleNavigate}
+                                onShowSafetyModal={() => setShowSafetyModal(true)} 
+                                onLogout={handleLogout}
+                                currentView={currentView}
+                                partner={partner}
+                            />
+                        </div>
+                        
+                        {/* Mobile Header - Hidden on desktop */}
+                        <div className="lg:hidden">
+                            <MobileHeader 
+                                user={user} 
+                                onNavigate={handleNavigate}
+                                onShowSafetyModal={() => setShowSafetyModal(true)} 
+                                onLogout={handleLogout}
+                            />
+                        </div>
+                    </>
                 )}
                 
                 {/* Page Transition Animations */}
@@ -379,6 +396,7 @@ export const AppContent: React.FC = () => {
                             duration: 0.4,
                             ease: "easeInOut"
                         }}
+                        className="lg:pt-0"
                     >
                         {renderContent()}
                     </motion.div>

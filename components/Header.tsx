@@ -93,7 +93,7 @@ const Header: React.FC<HeaderProps> = ({
 
     const getPartnerStatus = () => {
         if (partner) {
-            return `Connected with ${partner.profile?.firstName || partner.name || 'Partner'}`;
+            return `Connected with ${(partner as User).profile?.firstName || (partner as User).name || 'Partner'}`;
         }
         return 'Single user mode';
     };
@@ -383,7 +383,7 @@ const Header: React.FC<HeaderProps> = ({
             {/* Connection Status Indicator */}
             {partner && (
                 <FloatingNotification
-                    message={`Connected with ${partner.profile?.firstName || 'Partner'}`}
+                    message={`Connected with ${(partner as User).profile?.firstName || 'Partner'}`}
                     type="success"
                     position="top-right"
                     duration={3000}
