@@ -361,15 +361,27 @@ export const AppContent: React.FC = () => {
             <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
                 {isAuthenticated && user && !authLoading && (
                     <>
-                        {/* Desktop Header */}
-                        <Header 
-                            user={user} 
-                            onNavigate={handleNavigate}
-                            onShowSafetyModal={() => setShowSafetyModal(true)} 
-                            onLogout={handleLogout}
-                            currentView={currentView}
-                            partner={partner}
-                        />
+                        {/* Desktop Header - Hidden on mobile */}
+                        <div className="hidden md:block">
+                            <Header 
+                                user={user} 
+                                onNavigate={handleNavigate}
+                                onShowSafetyModal={() => setShowSafetyModal(true)} 
+                                onLogout={handleLogout}
+                                currentView={currentView}
+                                partner={partner}
+                            />
+                        </div>
+                        
+                        {/* Mobile Header - Hidden on desktop */}
+                        <div className="md:hidden">
+                            <MobileHeader 
+                                user={user} 
+                                onNavigate={handleNavigate}
+                                onShowSafetyModal={() => setShowSafetyModal(true)} 
+                                onLogout={handleLogout}
+                            />
+                        </div>
                     </>
                 )}
                 
