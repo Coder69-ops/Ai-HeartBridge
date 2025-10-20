@@ -39,7 +39,7 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
 
 // Using OpenRouter API with Qwen model
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'qwen/qwen3-14b:free'; // Using Qwen model, free tier
+const MODEL = 'google/gemini-flash-1.5:free'; // Using Gemini model, free tier
 
 const createChatbotSystemInstruction = (userContext: any) => `You are Bridge, a warm AI relationship counselor 💝 Your goal is to help users reflect on situations with their partner.
 
