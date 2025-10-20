@@ -173,21 +173,38 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
         onComplete={handleJournalComplete}
         isReturningUser={sessionHistory.length > 0}
         sessionId={activeSession.id}
-        initialUserChat={activeSession.partner1Chat?.map(msg => ({
-          id: `msg_${Date.now()}_${Math.random()}`,
-          sender: msg.sender,
-          text: msg.text,
-          timestamp: msg.timestamp
-        }))}
-        initialPartnerChat={activeSession.partner2Chat?.map(msg => ({
-          id: `msg_${Date.now()}_${Math.random()}`,
-          sender: msg.sender,
-          text: msg.text,
-          timestamp: msg.timestamp
-        }))}
+        initialUserChat={activeSession.isCurrentUserPartner1 
+          ? activeSession.partner1Chat?.map(msg => ({
+              id: `msg_${Date.now()}_${Math.random()}`,
+              sender: msg.sender,
+              text: msg.text,
+              timestamp: msg.timestamp
+            }))
+          : activeSession.partner2Chat?.map(msg => ({
+              id: `msg_${Date.now()}_${Math.random()}`,
+              sender: msg.sender,
+              text: msg.text,
+              timestamp: msg.timestamp
+            }))
+        }
+        initialPartnerChat={activeSession.isCurrentUserPartner1 
+          ? activeSession.partner2Chat?.map(msg => ({
+              id: `msg_${Date.now()}_${Math.random()}`,
+              sender: msg.sender,
+              text: msg.text,
+              timestamp: msg.timestamp
+            }))
+          : activeSession.partner1Chat?.map(msg => ({
+              id: `msg_${Date.now()}_${Math.random()}`,
+              sender: msg.sender,
+              text: msg.text,
+              timestamp: msg.timestamp
+            }))
+        }
         currentUserId={user.id}
         sessionStatus={activeSession.status}
         isCurrentUserPartner1={activeSession.isCurrentUserPartner1}
+        insights={activeSession.insights}
       />
     );
   }

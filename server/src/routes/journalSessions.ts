@@ -6,8 +6,81 @@ import { Couple } from '../models/Couple';
 import { User } from '../models/User';
 import { getChatbotResponse } from '../services/aiService';
 import { journalNotificationService } from '../services/notificationService';
+import { analyzeJournalEntry } from '../services/aiService';
 
 const router = express.Router();
+
+// Helper function to generate insights for a completed session
+async function generateInsights(sessionId: string) {
+  try {
+    const session = await JournalSession.findById(sessionId);
+    if (!session) {
+      console.error('Session not found for insights generation:', sessionId);
+      return;
+    }
+
+    // Get the couple and both partners
+    const couple = await Couple.findById(session.coupleId);
+    if (!couple) {
+      console.error('Couple not found for session:', sessionId);
+      return;
+    }
+
+    const partner1 = await User.findById(couple.partner1Id);
+    const partner2 = await User.findById(couple.partner2Id);
+
+    if (!partner1 || !partner2) {
+      console.error('Partners not found for session:', sessionId);
+      return;
+    }
+
+    // Create a journal entry object for analysis
+    const journalEntry = {
+      _id: session._id,
+      coupleId: session.coupleId,
+      partner1Id: couple.partner1Id,
+      partner2Id: couple.partner2Id,
+      partner1Chat: session.partner1Chat,
+      partner2Chat: session.partner2Chat,
+      title: session.title,
+      createdAt: session.createdAt,
+      updatedAt: session.updatedAt,
+      isActive: session.isActive,
+      isClosed: session.isClosed,
+      status: session.status,
+      messageCount: session.messageCount,
+      wordCount: session.wordCount,
+      lastMessageAt: session.lastMessageAt,
+      completedAt: session.completedAt,
+      insights: session.insights,
+      partner1CompletedAt: session.partner1CompletedAt,
+      partner2CompletedAt: session.partner2CompletedAt,
+      analysisRequestedAt: session.analysisRequestedAt,
+      insightsGeneratedAt: session.insightsGeneratedAt,
+      notificationSent: session.notificationSent,
+      themes: session.themes || [],
+      summary: session.summary,
+      sessionDurationMinutes: session.sessionDurationMinutes,
+      mood: session.mood
+    } as any; // Type assertion to match IJournalEntry
+
+    // Generate AI analysis
+    const analysis = await analyzeJournalEntry(journalEntry, partner1, partner2);
+
+    // Update session with insights (convert analysis to string)
+    session.insights = JSON.stringify(analysis);
+    session.status = JournalSessionStatus.INSIGHTS_READY;
+    session.insightsGeneratedAt = new Date();
+    await session.save();
+
+    // Send notification to both partners
+    await journalNotificationService.notifyInsightsReady(sessionId);
+
+    console.log('Insights generated successfully for session:', sessionId);
+  } catch (error) {
+    console.error('Error generating insights:', error);
+  }
+}
 
 // Create new journal session
 router.post('/create', async (req: AuthRequest, res: Response) => {
@@ -409,11 +482,10 @@ router.post('/:sessionId/complete-reflection', [
       await session.save();
 
       // Trigger AI analysis (this would be done asynchronously)
-      // For now, we'll simulate it
       setTimeout(async () => {
         try {
-          // This would call the insights endpoint
-          // await generateInsights(sessionId);
+          // Generate insights for the completed session
+          await generateInsights(sessionId);
         } catch (error) {
           console.error('Error generating insights:', error);
         }

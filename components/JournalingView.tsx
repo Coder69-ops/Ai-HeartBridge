@@ -18,6 +18,7 @@ interface JournalingViewProps {
   currentUserId?: string;
   sessionStatus?: JournalSessionStatus;
   isCurrentUserPartner1?: boolean;
+  insights?: string;
 }
 
 type ActivePartner = 'user' | 'partner';
@@ -32,7 +33,8 @@ const JournalingView: React.FC<JournalingViewProps> = ({
   initialPartnerChat,
   currentUserId,
   sessionStatus: initialSessionStatus,
-  isCurrentUserPartner1 = true
+  isCurrentUserPartner1 = true,
+  insights
 }) => {
     const [currentPartner, setCurrentPartner] = useState<ActivePartner>('user');
     const [userChat, setUserChat] = useState<Message[] | null>(initialUserChat || null);
@@ -56,24 +58,16 @@ const JournalingView: React.FC<JournalingViewProps> = ({
         return user.name || user.email.split('@')[0];
     };
 
-    // Determine which chat belongs to the current user
+    // Load the current user's chat
     useEffect(() => {
-      // Load the current user's chat based on whether they are partner1 or partner2
-      if (isCurrentUserPartner1) {
-        // Current user is partner1, so load their chat
-        if (initialUserChat && initialUserChat.length > 0) {
-          setUserChat(initialUserChat);
-        }
-      } else {
-        // Current user is partner2, so load their chat (which is in initialPartnerChat)
-        if (initialPartnerChat && initialPartnerChat.length > 0) {
-          setUserChat(initialPartnerChat);
-        }
+      // JournalManager now passes the correct chat data based on partner identity
+      if (initialUserChat && initialUserChat.length > 0) {
+        setUserChat(initialUserChat);
       }
       
       // Always set current partner to 'user' - the current user should only see their own chat
       setCurrentPartner('user');
-    }, [initialUserChat, initialPartnerChat, isCurrentUserPartner1]);
+    }, [initialUserChat]);
 
     const handleReflectionComplete = async (chatHistory: Message[]) => {
         if (!sessionId) {
@@ -159,6 +153,39 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                 </Card>
             </div>
          );
+    }
+
+    // Show insights if they are ready
+    if (sessionStatus === JournalSessionStatus.INSIGHTS_READY && insights) {
+        return (
+            <div className="max-w-2xl mx-auto p-4 sm:p-6">
+                <Card variant="therapy" className="text-center animate-fade-in">
+                    <CardHeader className="p-4 sm:p-6">
+                        <div className="mx-auto mb-3 sm:mb-4 p-3 sm:p-4 bg-therapy-growth/10 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                            <Icon name="lightbulb" className="w-8 h-8 sm:w-10 sm:h-10 text-therapy-growth" />
+                        </div>
+                        <CardTitle className="text-xl sm:text-2xl text-therapy-calm">
+                            ✨ Your Shared Insights
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 p-4 sm:p-6">
+                        <div 
+                            className="text-neutral-600 leading-relaxed text-sm sm:text-base text-left"
+                            dangerouslySetInnerHTML={{ __html: insights.replace(/\n/g, '<br/>') }}
+                        />
+                        <Button
+                            onClick={() => onComplete({ partner1Chat: userChat || [], partner2Chat: partnerChat || [] })}
+                            variant="therapy"
+                            size="lg"
+                            className="w-full"
+                        >
+                            <Icon name="check" className="w-5 h-5 mr-2" />
+                            Complete Session
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
     }
     
     // Show waiting screen only if current user has completed their reflection
