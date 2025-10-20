@@ -5,6 +5,7 @@ import SimpleChatView from './SimpleChatView';
 import { Button } from './shared/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import Icon from './shared/Icon';
+import { completeJournalReflection, JournalSessionStatus } from '../services/journalSessionService';
 
 interface JournalingViewProps {
   user: User;
@@ -27,47 +28,82 @@ const JournalingView: React.FC<JournalingViewProps> = ({
   initialUserChat,
   initialPartnerChat 
 }) => {
-    const [activePartner, setActivePartner] = useState<ActivePartner>('user');
+    const [currentPartner, setCurrentPartner] = useState<ActivePartner>('user');
     const [userChat, setUserChat] = useState<Message[] | null>(initialUserChat || null);
     const [partnerChat, setPartnerChat] = useState<Message[] | null>(initialPartnerChat || null);
     const [sessionStartTime] = useState<Date>(new Date());
-    const [currentWordCount, setCurrentWordCount] = useState<number>(0);
+    const [isCompleting, setIsCompleting] = useState(false);
+    const [sessionStatus, setSessionStatus] = useState<JournalSessionStatus>(JournalSessionStatus.CREATED);
 
-    // Determine which partner should start based on existing data
+    const getPartnerDisplayName = () => {
+        if (!partner) return '';
+        if (partner.profile?.firstName) {
+            return partner.profile.firstName + (partner.profile.lastName ? ` ${partner.profile.lastName}` : '');
+        }
+        return partner.name || partner.email.split('@')[0];
+    };
+
+    const getUserDisplayName = () => {
+        if (user.profile?.firstName) {
+            return user.profile.firstName + (user.profile.lastName ? ` ${user.profile.lastName}` : '');
+        }
+        return user.name || user.email.split('@')[0];
+    };
+
+    // Determine which partner should continue based on existing data
     useEffect(() => {
       if (initialUserChat && initialUserChat.length > 0) {
         setUserChat(initialUserChat);
-        if (initialPartnerChat && initialPartnerChat.length > 0) {
-          setPartnerChat(initialPartnerChat);
-        } else {
-          setActivePartner('partner');
-        }
+        setSessionStatus(JournalSessionStatus.PARTNER1_COMPLETE);
+        setCurrentPartner('partner');
       } else if (initialPartnerChat && initialPartnerChat.length > 0) {
         setPartnerChat(initialPartnerChat);
-        setActivePartner('user');
+        setSessionStatus(JournalSessionStatus.PARTNER2_COMPLETE);
+        setCurrentPartner('user');
       }
     }, [initialUserChat, initialPartnerChat]);
 
-    const handleUserComplete = (chatHistory: Message[]) => {
-        setUserChat(chatHistory);
-        setActivePartner('partner');
-    };
+    const handleReflectionComplete = async (chatHistory: Message[]) => {
+        if (!sessionId) {
+            console.error('No session ID provided');
+            return;
+        }
 
-    const handlePartnerComplete = (chatHistory: Message[]) => {
-        setPartnerChat(chatHistory);
-    };
-    
-    const handleSeeResults = () => {
-        if (userChat && partnerChat) {
-            onComplete({ partner1Chat: userChat, partner2Chat: partnerChat });
+        try {
+            setIsCompleting(true);
+            
+            // Complete the reflection for the current partner
+            const journalMessages = chatHistory.map(msg => ({
+                sender: msg.sender as 'user' | 'bot',
+                text: msg.text,
+                timestamp: msg.timestamp || new Date()
+            }));
+            const response = await completeJournalReflection(sessionId, journalMessages);
+            
+            // Update local state based on which partner completed
+            if (currentPartner === 'user') {
+                setUserChat(chatHistory);
+                setSessionStatus(JournalSessionStatus.PARTNER1_COMPLETE);
+            } else {
+                setPartnerChat(chatHistory);
+                setSessionStatus(JournalSessionStatus.PARTNER2_COMPLETE);
+            }
+
+            // If both partners have completed, show results
+            if (response.session.status === JournalSessionStatus.ANALYSIS_PENDING || 
+                response.session.status === JournalSessionStatus.INSIGHTS_READY) {
+                onComplete({ partner1Chat: userChat || [], partner2Chat: partnerChat || [] });
+            }
+        } catch (error) {
+            console.error('Error completing reflection:', error);
+        } finally {
+            setIsCompleting(false);
         }
     };
-    
-    // Calculate session progress
-    const sessionProgress = userChat && partnerChat ? 100 : userChat ? 50 : 0;
-    const elapsedTime = Math.floor((Date.now() - sessionStartTime.getTime()) / 1000 / 60);
 
-    if (userChat && partnerChat) {
+    // Show completion screen only when both partners have completed
+    if (sessionStatus === JournalSessionStatus.ANALYSIS_PENDING || 
+        sessionStatus === JournalSessionStatus.INSIGHTS_READY) {
          return (
             <div className="max-w-2xl mx-auto p-4 sm:p-6">
                 <Card variant="therapy" className="text-center animate-fade-in">
@@ -87,7 +123,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                         <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 py-3 sm:py-4 text-xs sm:text-sm text-neutral-500">
                             <div className="flex items-center gap-2">
                                 <Icon name="clock" className="w-3 h-3 sm:w-4 sm:h-4" />
-                                <span>{elapsedTime} min session</span>
+                                <span>{Math.floor((Date.now() - sessionStartTime.getTime()) / 1000 / 60)} min session</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Icon name="users" className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -96,7 +132,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                         </div>
 
                         <Button 
-                            onClick={handleSeeResults} 
+                            onClick={() => onComplete({ partner1Chat: userChat || [], partner2Chat: partnerChat || [] })} 
                             variant="therapy" 
                             size="lg"
                             className="mt-4 sm:mt-6 animate-bounce-in text-sm sm:text-base py-2.5 sm:py-3"
@@ -108,25 +144,52 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             </div>
          );
     }
-    
-    const getPartnerDisplayName = () => {
-        if (!partner) return '';
-        if (partner.profile?.firstName) {
-            return partner.profile.firstName + (partner.profile.lastName ? ` ${partner.profile.lastName}` : '');
-        }
-        return partner.name || partner.email.split('@')[0];
-    };
 
-    const getUserDisplayName = () => {
-        if (user.profile?.firstName) {
-            return user.profile.firstName + (user.profile.lastName ? ` ${user.profile.lastName}` : '');
+    // Show waiting screen if one partner has completed but not the other
+    if (sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE || 
+        sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE) {
+        const isWaitingForPartner = (currentPartner === 'user' && sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE) ||
+                                   (currentPartner === 'partner' && sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE);
+        
+        if (isWaitingForPartner) {
+            return (
+                <div className="max-w-2xl mx-auto p-4 sm:p-6">
+                    <Card variant="therapy" className="text-center animate-fade-in">
+                        <CardHeader className="p-4 sm:p-6">
+                            <div className="mx-auto mb-3 sm:mb-4 p-3 sm:p-4 bg-yellow-100 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                                <Icon name="clock" className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-600" />
+                            </div>
+                            <CardTitle className="text-xl sm:text-2xl text-therapy-calm">
+                                ⏳ Waiting for {currentPartner === 'user' ? getPartnerDisplayName() : getUserDisplayName()}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+                            <p className="text-neutral-600 leading-relaxed text-sm sm:text-base">
+                                {currentPartner === 'user' 
+                                    ? `${getPartnerDisplayName()} has completed their reflection. You'll be notified when they're ready to view the insights together.`
+                                    : `${getUserDisplayName()} has completed their reflection. You'll be notified when they're ready to view the insights together.`
+                                }
+                            </p>
+                            
+                            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 py-3 sm:py-4 text-xs sm:text-sm text-neutral-500">
+                                <div className="flex items-center gap-2">
+                                    <Icon name="clock" className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    <span>{Math.floor((Date.now() - sessionStartTime.getTime()) / 1000 / 60)} min session</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Icon name="users" className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    <span>1 of 2 perspectives shared</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            );
         }
-        return user.name || user.email.split('@')[0];
-    };
+    }
     
-    const currentPartnerName = activePartner === 'user' ? getUserDisplayName() : getPartnerDisplayName();
-    const handleComplete = activePartner === 'user' ? handleUserComplete : handlePartnerComplete;
-    const isUserTurn = activePartner === 'user';
+    const currentPartnerName = currentPartner === 'user' ? getUserDisplayName() : getPartnerDisplayName();
+    const isUserTurn = currentPartner === 'user';
     
     return (
         <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -147,11 +210,11 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                         </div>
                         
                         <div className="text-left sm:text-right text-xs sm:text-sm text-neutral-500 w-full sm:w-auto">
-                            <div>Progress: {sessionProgress}%</div>
+                            <div>Progress: {((userChat ? 1 : 0) + (partnerChat ? 1 : 0)) * 50}%</div>
                             <div className="w-full sm:w-24 h-1 bg-neutral-200 rounded-full mt-1">
                                 <div 
                                     className="h-full bg-therapy-growth rounded-full transition-all duration-500"
-                                    style={{ width: `${sessionProgress}%` }}
+                                    style={{ width: `${((userChat ? 1 : 0) + (partnerChat ? 1 : 0)) * 50}%` }}
                                 />
                             </div>
                         </div>
@@ -179,8 +242,10 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             <div className="animate-fade-in">
                 <SimpleChatView
                     partnerName={currentPartnerName}
-                    onComplete={handleComplete}
+                    onComplete={handleReflectionComplete}
                     isReturningUser={isReturningUser}
+                    initialMessages={isUserTurn ? userChat : partnerChat}
+                    isCompleting={isCompleting}
                 />
             </div>
         </div>

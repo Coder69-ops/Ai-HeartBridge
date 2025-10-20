@@ -108,8 +108,10 @@ export interface Couple {
 }
 
 export interface Message {
+  id?: string;
   sender: 'user' | 'bot';
   text: string;
+  timestamp?: Date;
 }
 
 export interface JournalEntry {

@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import Icon from './shared/Icon';
 import JournalingView from './JournalingView';
 import JournalSessionsView from './JournalSessionsView';
+import JournalNotification from './JournalNotification';
 
 interface JournalManagerProps {
   user: User;
@@ -29,6 +30,10 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
   const [sessionHistory, setSessionHistory] = useState<JournalSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    type: 'partner_completed' | 'insights_ready' | 'reminder';
+    partnerName?: string;
+  } | null>(null);
 
   // Load active session and history on mount
   useEffect(() => {
@@ -49,8 +54,19 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
       setActiveSession(activeSessionData);
       setSessionHistory(historyData);
 
-      // If there's an active session, go directly to it
+      // Show appropriate notifications based on session status
       if (activeSessionData) {
+        if (activeSessionData.status === JournalSessionStatus.PARTNER1_COMPLETE || 
+            activeSessionData.status === JournalSessionStatus.PARTNER2_COMPLETE) {
+          setNotification({
+            type: 'partner_completed',
+            partnerName: partner.profile?.firstName || partner.name || 'Your partner'
+          });
+        } else if (activeSessionData.status === JournalSessionStatus.INSIGHTS_READY) {
+          setNotification({
+            type: 'insights_ready'
+          });
+        }
         setCurrentView('active');
       }
     } catch (err: any) {
@@ -149,8 +165,18 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
         onComplete={handleJournalComplete}
         isReturningUser={sessionHistory.length > 0}
         sessionId={activeSession.id}
-        initialUserChat={activeSession.partner1Chat}
-        initialPartnerChat={activeSession.partner2Chat}
+        initialUserChat={activeSession.partner1Chat?.map(msg => ({
+          id: `msg_${Date.now()}_${Math.random()}`,
+          sender: msg.sender,
+          text: msg.text,
+          timestamp: msg.timestamp
+        }))}
+        initialPartnerChat={activeSession.partner2Chat?.map(msg => ({
+          id: `msg_${Date.now()}_${Math.random()}`,
+          sender: msg.sender,
+          text: msg.text,
+          timestamp: msg.timestamp
+        }))}
       />
     );
   }
@@ -170,6 +196,20 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
   // Main menu view
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4">
+      {/* Notification */}
+      {notification && (
+        <JournalNotification
+          type={notification.type}
+          partnerName={notification.partnerName}
+          onAction={() => {
+            if (notification.type === 'partner_completed' || notification.type === 'insights_ready') {
+              setCurrentView('active');
+            }
+          }}
+          onDismiss={() => setNotification(null)}
+        />
+      )}
+      
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

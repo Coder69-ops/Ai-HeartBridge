@@ -11,14 +11,18 @@ interface SimpleChatViewProps {
   partnerName?: string;
   onComplete?: (chatHistory: Message[]) => void;
   isReturningUser?: boolean;
+  initialMessages?: Message[] | null;
+  isCompleting?: boolean;
 }
 
 const SimpleChatView: React.FC<SimpleChatViewProps> = ({ 
   partnerName, 
   onComplete, 
-  isReturningUser = false 
+  isReturningUser = false,
+  initialMessages,
+  isCompleting = false
 }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [userInput, setUserInput] = useState('');
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [isChatComplete, setIsChatComplete] = useState(false);
@@ -27,14 +31,24 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initial greeting from Bridge
+  // Initial greeting from Bridge (only if no existing messages)
   useEffect(() => {
+    if (initialMessages && initialMessages.length > 0) {
+      // Calculate word count from existing messages
+      const existingWords = initialMessages
+        .filter(msg => msg.sender === 'user')
+        .reduce((total, msg) => total + msg.text.split(' ').length, 0);
+      setTotalWords(existingWords);
+      setWordCount(existingWords);
+      return;
+    }
+
     const greeting = isReturningUser
       ? "Welcome back 🤗 I'm here to listen whenever you're ready to share what's on your heart 💙"
       : "Hello there 🌸 I'm Bridge, your private counselor. I'm here to help you reflect. What's weighing on your mind today? 💭";
     
     setMessages([{ sender: 'bot', text: greeting }]);
-  }, [isReturningUser]);
+  }, [isReturningUser, initialMessages]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -375,13 +389,13 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={isBotTyping ? "Bridge is typing..." : "Share what's on your mind... 💭"}
-                disabled={isBotTyping}
+                placeholder={isCompleting ? "Completing reflection..." : isBotTyping ? "Bridge is typing..." : "Share what's on your mind... 💭"}
+                disabled={isBotTyping || isCompleting}
                 className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-therapy-calm/20 rounded-xl focus:outline-none focus:border-therapy-calm focus:ring-2 focus:ring-therapy-calm/20 transition-all duration-200 disabled:bg-neutral-100 disabled:cursor-not-allowed text-sm sm:text-base"
               />
               <Button
                 type="submit"
-                disabled={isBotTyping || !userInput.trim()}
+                disabled={isBotTyping || !userInput.trim() || isCompleting}
                 variant="therapy"
                 size="lg"
                 className="px-4 sm:px-6 min-h-[40px] sm:min-h-[44px]"
