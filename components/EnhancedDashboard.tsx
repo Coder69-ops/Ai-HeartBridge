@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User } from '../types';
-import * as authService from '../services/authService';
+import { pairUsers } from '../services/authService';
 import { 
   GlassmorphismCard, 
   GlassCardHeader, 
@@ -44,7 +44,7 @@ const EnhancedDashboard: React.FC<DashboardProps> = ({
     setPairingError('');
 
     try {
-      const { currentUser, partner } = await authService.pairUsers(user.id, pairingCode);
+      const { currentUser, partner } = await pairUsers(user.id, pairingCode);
       setPairingSuccessData({ currentUser, partner });
       showToast(toast.success('Partnership Connected!', 'You are now connected with your partner.'));
     } catch (err) {

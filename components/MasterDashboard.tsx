@@ -15,11 +15,16 @@ import {
   ArrowRight,
   Plus,
   CheckCircle,
-  HeartHandshake
+  HeartHandshake,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { User } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import { Button } from './shared/Button';
+import { pairUsers } from '../services/authService';
+import { useToast } from '../src/components/ui/enhanced/ModernToast';
+import { toast } from '../src/components/ui/enhanced/ModernToast';
 
 interface MasterDashboardProps {
   user: User;
@@ -38,6 +43,30 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
 }) => {
   const [pairingCode, setPairingCode] = useState('');
   const [showPairing, setShowPairing] = useState(!partner);
+  const [isPairing, setIsPairing] = useState(false);
+  const [pairingError, setPairingError] = useState('');
+  const { showToast } = useToast();
+
+  const handlePairingSubmit = async () => {
+    if (!pairingCode.trim() || pairingCode.length < 6) return;
+    
+    setIsPairing(true);
+    setPairingError('');
+
+    try {
+      const { currentUser, partner } = await pairUsers(user.id, pairingCode);
+      onPairingSuccess(currentUser, partner);
+      setPairingCode('');
+      setShowPairing(false);
+      showToast(toast.success('Partnership Connected!', 'You are now connected with your partner.'));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setPairingError(errorMessage);
+      showToast(toast.error('Connection Failed', errorMessage));
+    } finally {
+      setIsPairing(false);
+    }
+  };
 
   const quickActions = [
     {
@@ -180,17 +209,35 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                             className="flex-1 px-3 sm:px-4 py-2 text-center text-base sm:text-lg font-mono font-bold border-2 border-purple-200 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200"
                           />
                           <Button 
-                            disabled={pairingCode.length < 6}
-                            onClick={() => {
-                              // TODO: Implement partner pairing logic here
-                              console.log('Connecting with code:', pairingCode);
-                              // After success: setPairingCode('');
-                            }}
+                            disabled={pairingCode.length < 6 || isPairing}
+                            onClick={handlePairingSubmit}
                             className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-semibold hover:from-emerald-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Connect
+                            {isPairing ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Connecting...
+                              </>
+                            ) : (
+                              'Connect'
+                            )}
                           </Button>
                         </div>
+                        
+                        {/* Error Display */}
+                        <AnimatePresence>
+                          {pairingError && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="flex items-center space-x-2 text-red-600 text-sm mt-2"
+                            >
+                              <AlertCircle className="w-4 h-4" />
+                              <span>{pairingError}</span>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </div>
                   </div>
