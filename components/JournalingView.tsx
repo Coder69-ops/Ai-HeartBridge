@@ -174,6 +174,11 @@ const JournalingView: React.FC<JournalingViewProps> = ({
     console.log('JournalingView - sessionStatus:', sessionStatus);
     console.log('JournalingView - insights:', insights);
     console.log('JournalingView - INSIGHTS_READY:', JournalSessionStatus.INSIGHTS_READY);
+    console.log('JournalingView - Condition check:', {
+        sessionStatusEquals: sessionStatus === JournalSessionStatus.INSIGHTS_READY,
+        hasInsights: !!insights,
+        bothTrue: sessionStatus === JournalSessionStatus.INSIGHTS_READY && insights
+    });
     
     if (sessionStatus === JournalSessionStatus.INSIGHTS_READY && insights) {
         console.log('JournalingView - Showing insights view');
@@ -213,16 +218,23 @@ const JournalingView: React.FC<JournalingViewProps> = ({
     const shouldShowWaitingScreen = () => {
       if (!userChat || userChat.length === 0) return false;
       
-      if (isCurrentUserPartner1) {
-        // Current user is partner1, show waiting if partner1 completed but partner2 hasn't
-        return sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE;
-      } else {
-        // Current user is partner2, show waiting if partner2 completed but partner1 hasn't
-        return sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE;
-      }
+      const result = isCurrentUserPartner1 
+        ? sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE
+        : sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE;
+      
+      console.log('JournalingView - shouldShowWaitingScreen:', {
+        hasUserChat: !!userChat,
+        userChatLength: userChat?.length,
+        isCurrentUserPartner1,
+        sessionStatus,
+        result
+      });
+      
+      return result;
     };
     
     if (shouldShowWaitingScreen()) {
+            console.log('JournalingView - Showing waiting screen instead of insights');
             return (
                 <div className="max-w-2xl mx-auto p-4 sm:p-6">
                     <Card variant="therapy" className="text-center animate-fade-in">
