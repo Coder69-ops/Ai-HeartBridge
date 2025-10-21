@@ -166,6 +166,9 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
 
   // If there's an active session, show the journaling view
   if (currentView === 'active' && activeSession) {
+    console.log('JournalManager - Rendering JournalingView with activeSession:', activeSession);
+    console.log('JournalManager - activeSession.status:', activeSession.status);
+    console.log('JournalManager - activeSession.insights:', activeSession.insights);
     return (
       <JournalingView
         user={user}
@@ -275,7 +278,12 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => setCurrentView('active')}
+                    onClick={() => {
+                      console.log('View Insights button clicked');
+                      console.log('activeSession.status:', activeSession.status);
+                      console.log('activeSession.insights:', activeSession.insights);
+                      setCurrentView('active');
+                    }}
                     variant="therapy"
                     size="sm"
                   >

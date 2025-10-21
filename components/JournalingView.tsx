@@ -156,7 +156,12 @@ const JournalingView: React.FC<JournalingViewProps> = ({
     }
 
     // Show insights if they are ready
+    console.log('JournalingView - sessionStatus:', sessionStatus);
+    console.log('JournalingView - insights:', insights);
+    console.log('JournalingView - INSIGHTS_READY:', JournalSessionStatus.INSIGHTS_READY);
+    
     if (sessionStatus === JournalSessionStatus.INSIGHTS_READY && insights) {
+        console.log('JournalingView - Showing insights view');
         return (
             <div className="max-w-2xl mx-auto p-4 sm:p-6">
                 <Card variant="therapy" className="text-center animate-fade-in">
