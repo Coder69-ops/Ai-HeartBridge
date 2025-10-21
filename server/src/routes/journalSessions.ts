@@ -43,11 +43,13 @@ This session has been flagged for safety review. Please prioritize emotional saf
 // Helper function to generate insights for a completed session
 async function generateInsights(sessionId: string) {
   try {
+    console.log('generateInsights called for session:', sessionId);
     const session = await JournalSession.findById(sessionId);
     if (!session) {
       console.error('Session not found for insights generation:', sessionId);
       return;
     }
+    console.log('Session found, status:', session.status);
 
     // Get the couple and both partners
     const couple = await Couple.findById(session.coupleId);
@@ -95,13 +97,17 @@ async function generateInsights(sessionId: string) {
     } as any; // Type assertion to match IJournalEntry
 
     // Generate AI analysis
+    console.log('Starting AI analysis for session:', sessionId);
     const analysis = await analyzeJournalEntry(journalEntry, partner1, partner2);
+    console.log('AI analysis completed for session:', sessionId);
 
     // Update session with insights (format analysis as readable text)
+    console.log('Formatting analysis as text for session:', sessionId);
     session.insights = formatAnalysisAsText(analysis);
     session.status = JournalSessionStatus.INSIGHTS_READY;
     session.insightsGeneratedAt = new Date();
     await session.save();
+    console.log('Session updated with insights for session:', sessionId);
 
     // Send notification to both partners
     await journalNotificationService.notifyInsightsReady(sessionId);
@@ -520,14 +526,17 @@ router.post('/:sessionId/complete-reflection', [
       await session.save();
 
       // Trigger AI analysis (this would be done asynchronously)
+      console.log('Both partners completed, triggering insights generation for session:', sessionId);
       setTimeout(async () => {
         try {
+          console.log('Starting insights generation for session:', sessionId);
           // Generate insights for the completed session
           await generateInsights(sessionId);
+          console.log('Insights generation completed for session:', sessionId);
         } catch (error) {
-          console.error('Error generating insights:', error);
+          console.error('Error generating insights for session:', sessionId, error);
         }
-      }, 1000);
+      }, 2000); // Increased delay to 2 seconds
     }
 
     res.json({
