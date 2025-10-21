@@ -292,6 +292,7 @@ export const analyzeJournalEntry = async (journalEntry: IJournalEntry, partner1D
   const baseDelay = 1000; // 1 second
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    let analysisText = '';
     try {
       const { partner1Chat, partner2Chat } = journalEntry;
 
@@ -339,7 +340,7 @@ Please provide your analysis as a JSON object with this structure:
 ${JSON.stringify(analysisSchema, null, 2)}`;
 
       // Use Google Gemini API for analysis
-      const analysisPrompt = `You are a relationship counselor AI. Always respond with valid JSON only.
+      const analysisPrompt = `You are a relationship counselor AI. You MUST respond with ONLY valid JSON. Do not include any markdown formatting, code blocks, or explanatory text. Just return the raw JSON object.
 
 ${prompt}`;
       
@@ -348,17 +349,36 @@ ${prompt}`;
         contents: analysisPrompt
       });
 
-      const analysisText = response.text;
+      analysisText = response.text || '';
       
       if (!analysisText) {
         throw new Error('No analysis content received');
       }
 
-      const jsonText = analysisText.trim();
+      // Clean the response text to extract JSON
+      let jsonText = analysisText.trim();
+      
+      // Remove markdown code blocks if present
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      // Remove any leading/trailing text that's not JSON
+      const jsonStart = jsonText.indexOf('{');
+      const jsonEnd = jsonText.lastIndexOf('}') + 1;
+      
+      if (jsonStart !== -1 && jsonEnd > jsonStart) {
+        jsonText = jsonText.substring(jsonStart, jsonEnd);
+      }
+      
+      console.log('Cleaned JSON text:', jsonText);
       return JSON.parse(jsonText) as IAnalysisResult;
 
     } catch (error) {
       console.error(`Gemini analysis attempt ${attempt} failed:`, error);
+      console.error('Raw response text:', analysisText);
       
       if (attempt === maxRetries) {
         console.log('All Gemini analysis attempts failed, using fallback insights');
