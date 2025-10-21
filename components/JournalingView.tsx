@@ -36,12 +36,27 @@ const JournalingView: React.FC<JournalingViewProps> = ({
   isCurrentUserPartner1 = true,
   insights
 }) => {
+    console.log('JournalingView - Component rendered with props:', {
+        sessionId,
+        initialSessionStatus,
+        insights: insights ? 'Present' : 'Missing',
+        isCurrentUserPartner1
+    });
+    
     const [currentPartner, setCurrentPartner] = useState<ActivePartner>('user');
     const [userChat, setUserChat] = useState<Message[] | null>(initialUserChat || null);
     const [partnerChat, setPartnerChat] = useState<Message[] | null>(initialPartnerChat || null);
     const [sessionStartTime] = useState<Date>(new Date());
     const [isCompleting, setIsCompleting] = useState(false);
     const [sessionStatus, setSessionStatus] = useState<JournalSessionStatus>(initialSessionStatus || JournalSessionStatus.CREATED);
+    
+    // Sync local sessionStatus with prop changes
+    useEffect(() => {
+        if (initialSessionStatus) {
+            console.log('JournalingView - Updating sessionStatus from', sessionStatus, 'to', initialSessionStatus);
+            setSessionStatus(initialSessionStatus);
+        }
+    }, [initialSessionStatus]);
 
     const getPartnerDisplayName = () => {
         if (!partner) return '';
