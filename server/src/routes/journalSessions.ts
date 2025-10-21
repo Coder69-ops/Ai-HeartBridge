@@ -31,7 +31,7 @@ ${analysis.opportunities.map((opportunity: string) => `- ${opportunity}`).join('
 - **Stonewalling**: ${analysis.fourHorsemen.stonewalling ? '⚠️ Present' : '✅ Not detected'}
 
 ## Repair Plan
-${analysis.repairPlan.map((plan: string) => `- ${plan}`).join('\n')}
+${typeof analysis.repairPlan === 'string' ? analysis.repairPlan : analysis.repairPlan.map((plan: string) => `- ${plan}`).join('\n')}
 
 ${analysis.riskFlags.length > 0 ? `## Safety Considerations
 ${analysis.riskFlags.map((flag: string) => `- ⚠️ ${flag}`).join('\n')}` : ''}
@@ -703,7 +703,7 @@ ${analysis.opportunities.map((o: string) => `• ${o}`).join('\n')}
 • Improvement Areas: ${analysis.relationshipSatisfaction?.improvementAreas || 'Not identified'}
 
 **Repair Plan:**
-${analysis.repairPlan.map((r: string) => `• ${r}`).join('\n')}
+${typeof analysis.repairPlan === 'string' ? analysis.repairPlan : analysis.repairPlan.map((r: string) => `• ${r}`).join('\n')}
 
 ${analysis.safetyMode ? `\n⚠️ **Safety Notice:** ${analysis.riskFlags.join(', ')}` : ''}`;
       
