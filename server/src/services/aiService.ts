@@ -263,7 +263,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
     // Use Google Gemini API
     const prompt = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
     const response = await ai.models.generateContent({
-      model: MODEL,
+        model: MODEL,
       contents: prompt
     });
 
@@ -293,36 +293,49 @@ export const analyzeJournalEntry = async (journalEntry: IJournalEntry, partner1D
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     let analysisText = '';
-    try {
-      const { partner1Chat, partner2Chat } = journalEntry;
+  try {
+    const { partner1Chat, partner2Chat } = journalEntry;
 
-      // Limit chat length to prevent token overflow
-      const maxMessagesPerPartner = 10;
-      const limitedPartner1Chat = partner1Chat.slice(-maxMessagesPerPartner);
-      const limitedPartner2Chat = partner2Chat.slice(-maxMessagesPerPartner);
+      // Use full chat history for better analysis
+      const limitedPartner1Chat = partner1Chat;
+      const limitedPartner2Chat = partner2Chat;
       
       const formattedPartner1Chat = limitedPartner1Chat
-        .map(m => `${m.sender === 'user' ? 'Partner 1' : 'Counselor'}: ${m.text}`)
-        .join('\n');
-      
+      .map(m => `${m.sender === 'user' ? 'Partner 1' : 'Counselor'}: ${m.text}`)
+      .join('\n');
+    
       const formattedPartner2Chat = limitedPartner2Chat
-        .map(m => `${m.sender === 'user' ? 'Partner 2' : 'Counselor'}: ${m.text}`)
-        .join('\n');
+      .map(m => `${m.sender === 'user' ? 'Partner 2' : 'Counselor'}: ${m.text}`)
+      .join('\n');
 
-      // Add minimal partner context to reduce token usage
-      let partnerContexts = '';
-      if (partner1Data) {
+      // Full partner context for comprehensive analysis
+    let partnerContexts = '';
+    if (partner1Data) {
         partnerContexts += `\n--- PARTNER 1 CONTEXT ---\n`;
         partnerContexts += `Name: ${partner1Data.firstName || partner1Data.email?.split('@')[0] || 'Partner 1'}\n`;
+        if (partner1Data.age) partnerContexts += `Age: ${partner1Data.age}\n`;
+        if (partner1Data.gender) partnerContexts += `Gender: ${partner1Data.gender}\n`;
+        if (partner1Data.location) partnerContexts += `Location: ${partner1Data.location}\n`;
+        if (partner1Data.primaryGoals?.length) partnerContexts += `Goals: ${partner1Data.primaryGoals.join(', ')}\n`;
+        if (partner1Data.communicationStyle) partnerContexts += `Communication Style: ${partner1Data.communicationStyle}\n`;
+        if (partner1Data.loveLanguages?.length) partnerContexts += `Love Languages: ${partner1Data.loveLanguages.join(', ')}\n`;
+        if (partner1Data.relationshipChallenges?.length) partnerContexts += `Challenges: ${partner1Data.relationshipChallenges.join(', ')}\n`;
         partnerContexts += `\n`;
-      }
-      if (partner2Data) {
+    }
+    if (partner2Data) {
         partnerContexts += `--- PARTNER 2 CONTEXT ---\n`;
         partnerContexts += `Name: ${partner2Data.firstName || partner2Data.email?.split('@')[0] || 'Partner 2'}\n`;
+        if (partner2Data.age) partnerContexts += `Age: ${partner2Data.age}\n`;
+        if (partner2Data.gender) partnerContexts += `Gender: ${partner2Data.gender}\n`;
+        if (partner2Data.location) partnerContexts += `Location: ${partner2Data.location}\n`;
+        if (partner2Data.primaryGoals?.length) partnerContexts += `Goals: ${partner2Data.primaryGoals.join(', ')}\n`;
+        if (partner2Data.communicationStyle) partnerContexts += `Communication Style: ${partner2Data.communicationStyle}\n`;
+        if (partner2Data.loveLanguages?.length) partnerContexts += `Love Languages: ${partner2Data.loveLanguages.join(', ')}\n`;
+        if (partner2Data.relationshipChallenges?.length) partnerContexts += `Challenges: ${partner2Data.relationshipChallenges.join(', ')}\n`;
         partnerContexts += `\n`;
-      }
+    }
 
-      const prompt = `${analysisSystemInstruction}
+    const prompt = `${analysisSystemInstruction}
 
 ${partnerContexts}
 
@@ -350,10 +363,10 @@ ${prompt}`;
       });
 
       analysisText = response.text || '';
-      
-      if (!analysisText) {
-        throw new Error('No analysis content received');
-      }
+    
+    if (!analysisText) {
+      throw new Error('No analysis content received');
+    }
 
       // Clean the response text to extract JSON
       let jsonText = analysisText.trim();
@@ -374,9 +387,9 @@ ${prompt}`;
       }
       
       console.log('Cleaned JSON text:', jsonText);
-      return JSON.parse(jsonText) as IAnalysisResult;
+    return JSON.parse(jsonText) as IAnalysisResult;
 
-    } catch (error) {
+  } catch (error) {
       console.error(`Gemini analysis attempt ${attempt} failed:`, error);
       console.error('Raw response text:', analysisText);
       
