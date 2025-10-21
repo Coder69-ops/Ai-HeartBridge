@@ -103,11 +103,14 @@ async function generateInsights(sessionId: string) {
 
     // Update session with insights (format analysis as readable text)
     console.log('Formatting analysis as text for session:', sessionId);
-    session.insights = formatAnalysisAsText(analysis);
+    const formattedInsights = formatAnalysisAsText(analysis);
+    console.log('Formatted insights length:', formattedInsights.length);
+    session.insights = formattedInsights;
     session.status = JournalSessionStatus.INSIGHTS_READY;
     session.insightsGeneratedAt = new Date();
+    console.log('About to save session with insights for session:', sessionId);
     await session.save();
-    console.log('Session updated with insights for session:', sessionId);
+    console.log('Session successfully saved with insights for session:', sessionId);
 
     // Send notification to both partners
     await journalNotificationService.notifyInsightsReady(sessionId);
@@ -527,16 +530,25 @@ router.post('/:sessionId/complete-reflection', [
 
       // Trigger AI analysis (this would be done asynchronously)
       console.log('Both partners completed, triggering insights generation for session:', sessionId);
-      setTimeout(async () => {
-        try {
-          console.log('Starting insights generation for session:', sessionId);
-          // Generate insights for the completed session
-          await generateInsights(sessionId);
-          console.log('Insights generation completed for session:', sessionId);
-        } catch (error) {
-          console.error('Error generating insights for session:', sessionId, error);
-        }
-      }, 2000); // Increased delay to 2 seconds
+      
+      // Try immediate generation first, then fallback to setTimeout
+      try {
+        console.log('Attempting immediate insights generation for session:', sessionId);
+        await generateInsights(sessionId);
+        console.log('Immediate insights generation completed for session:', sessionId);
+      } catch (error) {
+        console.error('Immediate insights generation failed, trying setTimeout for session:', sessionId, error);
+        setTimeout(async () => {
+          try {
+            console.log('Starting delayed insights generation for session:', sessionId);
+            // Generate insights for the completed session
+            await generateInsights(sessionId);
+            console.log('Delayed insights generation completed for session:', sessionId);
+          } catch (error) {
+            console.error('Error generating insights for session:', sessionId, error);
+          }
+        }, 2000); // Increased delay to 2 seconds
+      }
     }
 
     res.json({
@@ -614,6 +626,58 @@ router.put('/:sessionId/close', async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Close journal session error:', error);
     res.status(500).json({ error: 'Failed to close journal session' });
+  }
+});
+
+// Manually trigger insights generation for stuck sessions
+router.post('/:sessionId/generate-insights', async (req: AuthRequest, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    const user = req.user!;
+
+    // Get user's couple
+    const couple = await Couple.findOne({
+      $or: [
+        { partner1Id: user._id },
+        { partner2Id: user._id }
+      ]
+    });
+
+    if (!couple) {
+      return res.status(400).json({ error: 'User must be in a couple to generate insights' });
+    }
+
+    const session = await JournalSession.findOne({
+      _id: sessionId,
+      coupleId: couple._id
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Journal session not found' });
+    }
+
+    if (session.status !== JournalSessionStatus.ANALYSIS_PENDING) {
+      return res.status(400).json({ error: 'Session is not in analysis pending status' });
+    }
+
+    console.log('Manually triggering insights generation for session:', sessionId);
+    await generateInsights(sessionId);
+
+    // Refresh session data
+    const updatedSession = await JournalSession.findById(sessionId);
+    
+    res.json({
+      message: 'Insights generation triggered successfully',
+      session: {
+        id: updatedSession?._id,
+        status: updatedSession?.status,
+        insights: updatedSession?.insights ? 'Generated' : 'Still processing'
+      }
+    });
+
+  } catch (error) {
+    console.error('Manual insights generation error:', error);
+    res.status(500).json({ error: 'Failed to generate insights' });
   }
 });
 
