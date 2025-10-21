@@ -116,7 +116,7 @@ const journalSessionSchema = new Schema<IJournalSession>({
   },
   insights: {
     type: String,
-    maxlength: 2000
+    maxlength: 5000
   },
   sessionDurationMinutes: {
     type: Number,
