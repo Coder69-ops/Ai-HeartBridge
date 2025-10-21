@@ -126,8 +126,12 @@ const JournalingView: React.FC<JournalingViewProps> = ({
         }
     };
 
+    // Debug: Check what's happening in the render logic
+    console.log('JournalingView - Starting render logic with sessionStatus:', sessionStatus);
+    
     // Show completion screen only when both partners have completed
     if (sessionStatus === JournalSessionStatus.ANALYSIS_PENDING) {
+        console.log('JournalingView - Showing ANALYSIS_PENDING screen');
          return (
             <div className="max-w-2xl mx-auto p-4 sm:p-6">
                 <Card variant="therapy" className="text-center animate-fade-in">
@@ -168,8 +172,9 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             </div>
          );
     }
-
+    
     // Show insights if they are ready
+    console.log('JournalingView - Reached insights check section');
     console.log('JournalingView - sessionStatus:', sessionStatus);
     console.log('JournalingView - insights:', insights);
     console.log('JournalingView - INSIGHTS_READY:', JournalSessionStatus.INSIGHTS_READY);
@@ -315,6 +320,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
 
             {/* Chat Interface */}
             <div className="animate-fade-in">
+                {console.log('JournalingView - Rendering chat interface - this should not happen for insights_ready status')}
                 <SimpleChatView
                     partnerName={getUserDisplayName()}
                     onComplete={handleReflectionComplete}
