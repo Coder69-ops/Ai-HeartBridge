@@ -80,13 +80,13 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
     if (!trimmed || isBotTyping) return;
 
     const userMessage: Message = { sender: 'user', text: trimmed };
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setUserInput('');
     setIsBotTyping(true);
 
     try {
-      const updatedHistory = [...messages, userMessage];
-      const response = await getChatbotResponse(updatedHistory);
+      const response = await getChatbotResponse(updatedMessages);
       
       const botMessage: Message = { sender: 'bot', text: response };
       setMessages(prev => [...prev, botMessage]);
