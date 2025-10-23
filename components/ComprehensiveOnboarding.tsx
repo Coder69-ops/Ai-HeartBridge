@@ -545,11 +545,11 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({ user,
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-3 sm:p-4">
       <div className="max-w-2xl mx-auto">
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+        {/* Progress Bar - Mobile Optimized */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600 mb-2">
             <span>Step {currentStep + 1} of {steps.length}</span>
             <span>{Math.round(((currentStep + 1) / steps.length) * 100)}% Complete</span>
           </div>
@@ -570,8 +570,8 @@ const ComprehensiveOnboarding: React.FC<ComprehensiveOnboardingProps> = ({ user,
               {getCurrentStepComponent()}
             </div>
 
-            {/* Navigation */}
-            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+            {/* Navigation - Mobile Optimized */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
               <AnimatedButton
                 variant="ghost"
                 onClick={prevStep}
