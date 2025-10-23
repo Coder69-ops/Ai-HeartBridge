@@ -274,14 +274,14 @@ const PersistentChatView: React.FC<PersistentChatViewProps> = ({
             
             {/* Messages Container - Mobile Optimized */}
             <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 bg-gradient-to-b from-white to-gray-50">
-              <AnimatePresence mode="popLayout">
+              <AnimatePresence>
                 {session.messages?.map((msg, idx) => (
                   <motion.div
-                    key={`${msg.sender}-${idx}-${msg.text.slice(0, 20)}-${Date.now()}`}
+                    key={`${msg.sender}-${idx}-${msg.text.slice(0, 20)}`}
                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.2 }}
                     className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div className={`flex items-start gap-2 sm:gap-3 max-w-[90%] sm:max-w-[85%] lg:max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
