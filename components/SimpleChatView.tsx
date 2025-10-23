@@ -81,6 +81,8 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
 
     const userMessage: Message = { sender: 'user', text: trimmed };
     const updatedMessages = [...messages, userMessage];
+    
+    // Update state with user message immediately
     setMessages(updatedMessages);
     setUserInput('');
     setIsBotTyping(true);
@@ -89,7 +91,25 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
       const response = await getChatbotResponse(updatedMessages);
       
       const botMessage: Message = { sender: 'bot', text: response };
-      setMessages(updatedMessages.concat(botMessage));
+      // Use functional update to ensure we get the latest state
+      setMessages(prev => {
+        console.log('Adding bot message. Current messages:', prev.length);
+        console.log('Looking for user message:', trimmed);
+        
+        // Ensure we have the user message in the state
+        const hasUserMessage = prev.some(msg => 
+          msg.sender === 'user' && msg.text === trimmed
+        );
+        console.log('Has user message:', hasUserMessage);
+        
+        if (!hasUserMessage) {
+          console.log('User message missing, adding it back');
+          // If user message is missing, add it back
+          return [...prev, userMessage, botMessage];
+        }
+        console.log('User message present, adding bot message');
+        return [...prev, botMessage];
+      });
 
       // Check if conversation is complete
       if (response.includes('[CONVERSATION_COMPLETE]')) {
@@ -101,7 +121,15 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
         sender: 'bot', 
         text: "I'm having trouble connecting right now 💙 Please try again in a moment." 
       };
-      setMessages(updatedMessages.concat(errorMessage));
+      setMessages(prev => {
+        const hasUserMessage = prev.some(msg => 
+          msg.sender === 'user' && msg.text === trimmed
+        );
+        if (!hasUserMessage) {
+          return [...prev, userMessage, errorMessage];
+        }
+        return [...prev, errorMessage];
+      });
     } finally {
       setIsBotTyping(false);
       inputRef.current?.focus();
