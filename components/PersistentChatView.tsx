@@ -38,6 +38,8 @@ const PersistentChatView: React.FC<PersistentChatViewProps> = ({
   onBackToSessions, 
   onSessionUpdate 
 }) => {
+  console.log('🔥 PersistentChatView RENDERED - This is the NEW redesigned component!');
+  
   const [session, setSession] = useState<ChatSession | null>(null);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
