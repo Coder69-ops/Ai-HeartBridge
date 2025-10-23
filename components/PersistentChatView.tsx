@@ -272,7 +272,7 @@ const PersistentChatView: React.FC<PersistentChatViewProps> = ({
               <AnimatePresence mode="popLayout">
                 {session.messages?.map((msg, idx) => (
                   <motion.div
-                    key={`${msg.sender}-${idx}-${msg.timestamp?.getTime()}`}
+                    key={`${msg.sender}-${idx}-${msg.text.slice(0, 20)}-${Date.now()}`}
                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
