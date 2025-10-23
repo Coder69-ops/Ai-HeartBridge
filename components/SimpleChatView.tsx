@@ -1,115 +1,86 @@
-// Simple, focused chat for AI HeartBridge therapy sessions
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Message } from '../types';
-import { getChatbotResponse } from '../services/geminiService';
-import { Send, Heart, MessageCircle } from 'lucide-react';
-import { Button } from './shared/Button';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from './shared/Card';
+import { Button } from './shared/Button';
+import { Input } from './shared/Input';
+import { MessageCircle, Send, Bot, User, Heart, Sparkles, Clock, MessageSquare } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getChatbotResponse } from '../services/geminiService';
+import { Message } from '../types';
 
 interface SimpleChatViewProps {
   partnerName?: string;
-  onComplete?: (chatHistory: Message[]) => void;
+  onComplete?: (messages: Message[]) => void;
   isReturningUser?: boolean;
-  initialMessages?: Message[] | null;
+  initialMessages?: Message[];
   isCompleting?: boolean;
 }
 
-const SimpleChatView: React.FC<SimpleChatViewProps> = ({ 
-  partnerName, 
+export default function SimpleChatView({
+  partnerName = "Bridge",
   onComplete, 
   isReturningUser = false,
-  initialMessages,
+  initialMessages = [],
   isCompleting = false
-}) => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages || []);
+}: SimpleChatViewProps) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [userInput, setUserInput] = useState('');
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [isChatComplete, setIsChatComplete] = useState(false);
-  const [wordCount, setWordCount] = useState(0);
   const [totalWords, setTotalWords] = useState(0);
-  const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initial greeting from Bridge (only if no existing messages)
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    if (initialMessages && initialMessages.length > 0) {
-      // Calculate word count from existing messages
-      const existingWords = initialMessages
-        .filter(msg => msg.sender === 'user')
-        .reduce((total, msg) => total + msg.text.split(' ').length, 0);
-      setTotalWords(existingWords);
-      setWordCount(existingWords);
-      return;
-    }
-
-    const greeting = isReturningUser
-      ? "Welcome back 🤗 I'm here to listen whenever you're ready to share what's on your heart 💙"
-      : "Hello there 🌸 I'm Bridge, your private counselor. I'm here to help you reflect. What's weighing on your mind today? 💭";
-    
-    setMessages([{ sender: 'bot', text: greeting }]);
-  }, [isReturningUser, initialMessages]);
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Focus input on mount
+  // Calculate total words
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  // Update word counts
-  useEffect(() => {
-    const words = userInput.trim().split(/\s+/).filter(w => w.length > 0);
-    setWordCount(words.length);
-  }, [userInput]);
-
-  useEffect(() => {
-    const userMessages = messages.filter(m => m.sender === 'user');
-    const total = userMessages.reduce((sum, msg) => {
-      const words = msg.text.trim().split(/\s+/).filter(w => w.length > 0);
+    const total = messages.reduce((sum, msg) => {
+      const words = msg.text.split(' ').filter(word => word.length > 0);
       return sum + words.length;
     }, 0);
     setTotalWords(total);
   }, [messages]);
 
+  // Initialize with greeting if no messages
+  useEffect(() => {
+    if (messages.length === 0 && !isReturningUser) {
+      const greeting = `Hi there! I'm ${partnerName}, your AI relationship counselor. I'm here to listen and help you explore your thoughts and feelings. What's on your mind today? 💙`;
+      setMessages([{ sender: 'bot', text: greeting }]);
+    }
+  }, [partnerName, isReturningUser, messages.length]);
+
   const handleSendMessage = async () => {
     const trimmed = userInput.trim();
-    if (!trimmed || isBotTyping) return;
+    if (!trimmed || isBotTyping || isCompleting) return;
 
-    const userMessage: Message = { sender: 'user', text: trimmed };
-    const updatedMessages = [...messages, userMessage];
-    
-    // Update state with user message immediately
-    setMessages(updatedMessages);
+    // Create user message
+    const userMessage: Message = { 
+      sender: 'user', 
+      text: trimmed,
+      timestamp: new Date()
+    };
+
+    // Add user message to state immediately
+    setMessages(prev => [...prev, userMessage]);
     setUserInput('');
     setIsBotTyping(true);
 
     try {
-      const response = await getChatbotResponse(updatedMessages);
+      // Get bot response
+      const response = await getChatbotResponse([...messages, userMessage]);
       
-      const botMessage: Message = { sender: 'bot', text: response };
-      // Use functional update to ensure we get the latest state
-      setMessages(prev => {
-        console.log('Adding bot message. Current messages:', prev.length);
-        console.log('Looking for user message:', trimmed);
-        
-        // Ensure we have the user message in the state
-        const hasUserMessage = prev.some(msg => 
-          msg.sender === 'user' && msg.text === trimmed
-        );
-        console.log('Has user message:', hasUserMessage);
-        
-        if (!hasUserMessage) {
-          console.log('User message missing, adding it back');
-          // If user message is missing, add it back
-          return [...prev, userMessage, botMessage];
-        }
-        console.log('User message present, adding bot message');
-        return [...prev, botMessage];
-      });
+      // Create bot message
+      const botMessage: Message = { 
+        sender: 'bot', 
+        text: response,
+        timestamp: new Date()
+      };
+
+      // Add bot message to state
+      setMessages(prev => [...prev, botMessage]);
 
       // Check if conversation is complete
       if (response.includes('[CONVERSATION_COMPLETE]')) {
@@ -119,17 +90,10 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
       console.error('Error getting bot response:', error);
       const errorMessage: Message = { 
         sender: 'bot', 
-        text: "I'm having trouble connecting right now 💙 Please try again in a moment." 
+        text: "I'm having trouble connecting right now 💙 Please try again in a moment.",
+        timestamp: new Date()
       };
-      setMessages(prev => {
-        const hasUserMessage = prev.some(msg => 
-          msg.sender === 'user' && msg.text === trimmed
-        );
-        if (!hasUserMessage) {
-          return [...prev, userMessage, errorMessage];
-        }
-        return [...prev, errorMessage];
-      });
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsBotTyping(false);
       inputRef.current?.focus();
@@ -143,222 +107,149 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
     }
   };
 
+  const startNewChat = () => {
+    setIsChatComplete(false);
+    setMessages([]);
+    setUserInput('');
+    inputRef.current?.focus();
+  };
+
+  // Show completion screen
   if (isChatComplete) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="max-w-2xl mx-auto"
-      >
-        <Card className="border-2 border-therapy-growth/30 bg-gradient-to-br from-therapy-safe/20 via-white to-therapy-growth/10 overflow-hidden">
-          {/* Celebration Header - Mobile Optimized */}
-          <div className="bg-gradient-to-r from-therapy-warmth via-therapy-growth to-therapy-calm p-4 sm:p-8 text-white text-center relative overflow-hidden">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="absolute -top-2 sm:-top-4 -right-2 sm:-right-4 text-4xl sm:text-6xl opacity-20"
-            >
-              ✨
-            </motion.div>
-            <motion.div
-              animate={{ rotate: -360 }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="absolute -bottom-2 sm:-bottom-4 -left-2 sm:-left-4 text-4xl sm:text-6xl opacity-20"
-            >
-              💝
-            </motion.div>
-            
-            <div className="relative z-10 space-y-2 sm:space-y-4">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4">
+        <div className="max-w-2xl mx-auto">
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-6 sm:p-8 text-center">
               <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
-                className="text-3xl sm:text-5xl mb-2"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", duration: 0.6 }}
+                className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg"
               >
-                🎉
+                <Heart className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
               </motion.div>
-              <h3 className="text-2xl sm:text-3xl font-bold">
-                Thank You for Sharing!
-              </h3>
-              <p className="text-white/90 text-base sm:text-lg">
-                Your reflection session is complete 💝
-              </p>
-            </div>
-          </div>
-
-          {/* Stats Section - Mobile Optimized */}
-          <CardContent className="p-4 sm:p-8 space-y-6 sm:space-y-8">
-            {/* Session Summary */}
-            <motion.div
+              
+              <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl p-4 sm:p-6 border border-therapy-calm/20 space-y-4 sm:space-y-6"
+                className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-4"
             >
-              <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-                Session Summary
-              </h4>
+                ✨ Reflection Complete
+              </motion.h2>
               
-              <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-center p-2 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200"
-                >
-                  <motion.div
-                    className="text-xl sm:text-3xl font-bold text-blue-600 mb-1"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.4, type: "spring" }}
-                  >
-                    {totalWords}
-                  </motion.div>
-                  <div className="text-xs font-medium text-gray-600">Words Shared</div>
-                </motion.div>
+                className="text-lg text-gray-600 mb-8 leading-relaxed"
+              >
+                Thank you for sharing your thoughts with me. Your reflection has been saved and will be part of your relationship journey.
+              </motion.p>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.35 }}
-                  className="text-center p-2 sm:p-4 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200"
-                >
-                  <motion.div
-                    className="text-xl sm:text-3xl font-bold text-emerald-600 mb-1"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.45, type: "spring" }}
-                  >
-                    {messages.length}
-                  </motion.div>
-                  <div className="text-xs font-medium text-gray-600">Exchanges</div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-center p-2 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200"
-                >
-                  <motion.div
-                    className="text-xl sm:text-3xl font-bold text-purple-600 mb-1"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.5, type: "spring" }}
-                  >
-                    💙
-                  </motion.div>
-                  <div className="text-xs font-medium text-gray-600">Heart Shared</div>
-                </motion.div>
-              </div>
-            </motion.div>
-
-            {/* Testimonial */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-gradient-to-r from-therapy-calm/10 to-therapy-growth/10 rounded-2xl p-6 border border-therapy-calm/20"
-            >
-              <div className="flex gap-3">
-                <div className="text-2xl">✨</div>
-                <div>
-                  <p className="text-neutral-700 font-medium mb-1">
-                    "You showed up for your relationship today."
-                  </p>
-                  <p className="text-sm text-neutral-600">
-                    That's what matters most. 💝
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Action Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="space-y-3 pt-4"
+                className="space-y-4"
             >
               <Button 
-                onClick={() => onComplete?.(messages)} 
+                  onClick={startNewChat}
                 variant="therapy" 
                 size="lg"
-                className="w-full text-lg py-6 font-semibold"
+                  className="w-full sm:w-auto px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                ✨ See Your Insights
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Start New Chat
               </Button>
               
+                {onComplete && (
               <Button 
+                    onClick={() => onComplete(messages)}
                 variant="outline"
                 size="lg"
-                className="w-full text-lg py-6 font-semibold"
-                onClick={() => {
-                  setIsChatComplete(false);
-                  setMessages([]);
-                  setUserInput('');
-                  inputRef.current?.focus();
-                }}
-              >
-                💬 Continue Reflecting
+                    className="w-full sm:w-auto px-8 py-3 text-lg font-semibold border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-all duration-300"
+                  >
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Complete Session
               </Button>
+                )}
             </motion.div>
-
-            {/* Footer Message */}
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-              className="text-center text-sm text-neutral-600 pt-4"
-            >
-              Thank you for trusting Bridge with your heart. 
-              <br/>
-              Your partner will value your openness 💝
-            </motion.p>
           </CardContent>
         </Card>
-      </motion.div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
       <CardContent className="p-0">
-        {/* Chat Header - Mobile Optimized */}
-        <div className="p-3 sm:p-4 border-b border-neutral-200 bg-therapy-safe/10">
+        {/* Chat Header */}
+            <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-cyan-50">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-therapy-calm flex-shrink-0" />
-              <span className="font-medium text-therapy-calm text-sm sm:text-base">Bridge</span>
-              <span className="text-xs text-neutral-500 hidden sm:inline">Your AI Counselor</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+                    <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">{partnerName}</h2>
+                    <p className="text-sm text-gray-600">Your AI Relationship Counselor</p>
+                  </div>
             </div>
-            <div className="text-xs sm:text-sm text-neutral-600 flex-shrink-0">
-              {totalWords} words
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-700">{totalWords} words</div>
+                  <div className="text-xs text-gray-500">{messages.length} messages</div>
             </div>
           </div>
         </div>
 
-        {/* Messages - Mobile Optimized */}
-        <div className="h-[400px] sm:h-[500px] overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-gradient-to-b from-therapy-safe/5 to-white">
+            {/* Messages Container */}
+            <div className="h-[400px] sm:h-[500px] lg:h-[600px] overflow-y-auto p-4 sm:p-6 space-y-4 bg-gradient-to-b from-white to-gray-50">
           <AnimatePresence mode="popLayout">
             {messages.map((msg, idx) => (
               <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                    key={`${msg.sender}-${idx}-${msg.timestamp?.getTime()}`}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
                 transition={{ duration: 0.3 }}
                 className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div
-                  className={`max-w-[85%] sm:max-w-[80%] p-3 sm:p-4 rounded-2xl ${
+                    <div className={`flex items-start gap-3 max-w-[85%] sm:max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                      {/* Avatar */}
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        msg.sender === 'user' 
+                          ? 'bg-gradient-to-br from-orange-400 to-pink-500' 
+                          : 'bg-gradient-to-br from-blue-400 to-cyan-500'
+                      }`}>
+                        {msg.sender === 'user' ? (
+                          <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                        ) : (
+                          <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                        )}
+                      </div>
+
+                      {/* Message Bubble */}
+                      <div className={`rounded-2xl px-4 py-3 shadow-sm ${
                     msg.sender === 'user'
-                      ? 'bg-therapy-warmth text-white rounded-br-md'
-                      : 'bg-white border border-neutral-200 text-neutral-800 rounded-bl-md shadow-sm'
-                  }`}
-                >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                          ? 'bg-gradient-to-br from-orange-400 to-pink-500 text-white rounded-br-md'
+                          : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md'
+                      }`}>
+                        <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
                     {msg.text.replace('[CONVERSATION_COMPLETE]', '')}
                   </p>
+                        {msg.timestamp && (
+                          <div className={`text-xs mt-2 ${
+                            msg.sender === 'user' ? 'text-orange-100' : 'text-gray-500'
+                          }`}>
+                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        )}
+                      </div>
                 </div>
               </motion.div>
             ))}
@@ -369,89 +260,78 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex justify-start"
-            >
-              <div className="bg-white border border-neutral-200 p-4 rounded-2xl rounded-bl-md shadow-sm">
-                <div className="flex items-center space-x-2">
-                  <div className="flex space-x-1">
-                    {[0, 1, 2].map((i) => (
-                      <motion.div
-                        key={i}
-                        className="w-2 h-2 bg-therapy-calm rounded-full"
-                        animate={{ scale: [1, 1.3, 1] }}
-                        transition={{
-                          duration: 0.8,
-                          repeat: Infinity,
-                          delay: i * 0.2,
-                        }}
-                      />
-                    ))}
+                  className="flex items-start gap-3"
+                >
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
-                  <span className="text-xs text-neutral-500">Bridge is thinking...</span>
+                  <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                    <div className="flex items-center gap-1">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                      <span className="text-sm text-gray-500 ml-2">Bridge is typing...</span>
                 </div>
               </div>
             </motion.div>
           )}
 
-          <div ref={chatEndRef} />
+              <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area - Mobile Optimized */}
-        <div className="p-3 sm:p-4 border-t border-neutral-200 bg-white">
-          <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
-            {userInput.trim() && (
-              <div className="flex justify-between items-center text-xs text-neutral-500 mb-2">
-                <span>{wordCount} words</span>
-                <span className="text-therapy-calm flex items-center gap-1">
-                  <Heart className="w-3 h-3" />
-                  <span className="hidden sm:inline">Every word matters</span>
-                  <span className="sm:hidden">Matters</span>
-                </span>
-              </div>
-            )}
-            
-            <div className="flex gap-2">
-              <input
+        {/* Input Area */}
+            <div className="p-4 sm:p-6 border-t border-gray-200 bg-white">
+              <div className="flex gap-3">
+                <Input
                 ref={inputRef}
-                type="text"
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={isCompleting ? "Completing reflection..." : isBotTyping ? "Bridge is typing..." : "Share what's on your mind... 💭"}
-                disabled={isBotTyping || isCompleting}
-                className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-therapy-calm/20 rounded-xl focus:outline-none focus:border-therapy-calm focus:ring-2 focus:ring-therapy-calm/20 transition-all duration-200 disabled:bg-neutral-100 disabled:cursor-not-allowed text-sm sm:text-base"
+                  placeholder={isCompleting ? "Completing reflection..." : isBotTyping ? "Bridge is typing..." : "Share what's on your mind... 💭"}
+                  disabled={isBotTyping || isCompleting}
+                  className="flex-1 text-base sm:text-lg py-3 px-4 border-2 border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 rounded-xl transition-all duration-200"
               />
               <Button
-                type="submit"
-                disabled={isBotTyping || !userInput.trim() || isCompleting}
+                  onClick={handleSendMessage}
+                  disabled={isBotTyping || !userInput.trim() || isCompleting}
                 variant="therapy"
                 size="lg"
-                className="px-4 sm:px-6 min-h-[40px] sm:min-h-[44px]"
+                  className="px-4 sm:px-6 py-3 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Send className="w-5 h-5" />
               </Button>
             </div>
-          </form>
-          
-          {/* Manual Completion Button */}
-          {messages.length > 2 && !isChatComplete && (
-            <div className="mt-4 pt-4 border-t border-therapy-calm/20">
-              <Button
-                onClick={() => onComplete?.(messages)}
-                variant="outline"
-                size="sm"
-                className="w-full text-therapy-calm border-therapy-calm hover:bg-therapy-calm hover:text-white"
-                disabled={isCompleting}
-              >
-                {isCompleting ? "Completing..." : "✨ Complete My Reflection"}
-              </Button>
-            </div>
-          )}
+
+              {/* Manual Completion Button */}
+              {messages.length > 2 && !isChatComplete && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <Button
+                    onClick={() => onComplete?.(messages)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 transition-all duration-200"
+                    disabled={isCompleting}
+                  >
+                    {isCompleting ? (
+                      <>
+                        <Clock className="w-4 h-4 mr-2 animate-spin" />
+                        Completing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Complete My Reflection
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
         </div>
       </CardContent>
     </Card>
+      </div>
+    </div>
   );
-};
-
-export default SimpleChatView;
-
+}
