@@ -38,8 +38,6 @@ const PersistentChatView: React.FC<PersistentChatViewProps> = ({
   onBackToSessions, 
   onSessionUpdate 
 }) => {
-  console.log('🔥 PersistentChatView RENDERED - This is the NEW redesigned component!');
-  
   const [session, setSession] = useState<ChatSession | null>(null);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -308,9 +306,9 @@ const PersistentChatView: React.FC<PersistentChatViewProps> = ({
                           <div className={`text-xs mt-2 ${
                             msg.sender === 'user' ? 'text-orange-100' : 'text-gray-500'
                           }`}>
-                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                )}
+                            {(msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        )}
                         
                         {/* Message Actions */}
                         <div className={`absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity ${
