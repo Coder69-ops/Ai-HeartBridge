@@ -89,7 +89,7 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
       const response = await getChatbotResponse(updatedMessages);
       
       const botMessage: Message = { sender: 'bot', text: response };
-      setMessages(prev => [...prev, botMessage]);
+      setMessages(updatedMessages.concat(botMessage));
 
       // Check if conversation is complete
       if (response.includes('[CONVERSATION_COMPLETE]')) {
@@ -101,7 +101,7 @@ const SimpleChatView: React.FC<SimpleChatViewProps> = ({
         sender: 'bot', 
         text: "I'm having trouble connecting right now 💙 Please try again in a moment." 
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(updatedMessages.concat(errorMessage));
     } finally {
       setIsBotTyping(false);
       inputRef.current?.focus();
