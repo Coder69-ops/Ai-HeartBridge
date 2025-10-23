@@ -390,7 +390,7 @@ export const AppContent: React.FC = () => {
                             duration: 0.4,
                             ease: "easeInOut"
                         }}
-                        className="pt-16"
+                        className={isLoading || authLoading ? "" : "pt-16"}
                     >
                         {renderContent()}
                     </motion.div>
