@@ -41,7 +41,7 @@ const ChatManager: React.FC<ChatManagerProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-therapy-safe/20 to-therapy-calm/10 p-4">
+    <div className="h-screen bg-gradient-to-br from-therapy-safe/20 to-therapy-calm/10 p-4 pt-20 overflow-y-auto">
       <AnimatePresence mode="wait">
         {currentView === 'sessions' ? (
           <motion.div

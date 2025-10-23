@@ -226,7 +226,7 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
 
   // Main menu view
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4">
+    <div className="h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4 pt-20 overflow-y-auto">
       {/* Notification */}
       {notification && (
         <JournalNotification
@@ -242,41 +242,41 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
       )}
       
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
+        {/* Header - Mobile Optimized */}
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <Button
               variant="ghost"
               size="icon"
               onClick={onBack}
-              className="hover:bg-white/50"
+              className="hover:bg-white/50 flex-shrink-0"
             >
-              <Icon name="arrow-left" className="w-5 h-5" />
+              <Icon name="arrow-left" className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">Journal</h1>
-              <p className="text-gray-600">Reflect together and grow stronger</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 truncate">Journal</h1>
+              <p className="text-sm sm:text-base text-gray-600 truncate">Reflect together and grow stronger</p>
             </div>
           </div>
         </div>
 
-        {/* Active Session Card */}
+        {/* Active Session Card - Mobile Optimized */}
         {activeSession && (
-          <Card className="mb-6 border-2 border-emerald-200 bg-emerald-50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-emerald-100 rounded-full">
-                    <Icon name="book-open" className="w-6 h-6 text-emerald-600" />
+          <Card className="mb-4 sm:mb-6 border-2 border-emerald-200 bg-emerald-50">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                  <div className="p-2 sm:p-3 bg-emerald-100 rounded-full flex-shrink-0">
+                    <Icon name="book-open" className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">Active Journal Session</h3>
-                    <p className="text-sm text-gray-600">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 truncate">Active Journal Session</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">
                       {getSessionStatusInfo(activeSession.status).text}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-shrink-0">
                   <Button
                     onClick={() => {
                       console.log('View Insights button clicked');

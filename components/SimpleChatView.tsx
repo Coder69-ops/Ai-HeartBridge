@@ -117,10 +117,10 @@ export default function SimpleChatView({
   // Show completion screen
   if (isChatComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-3 sm:p-4">
         <div className="max-w-2xl mx-auto">
           <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-            <CardContent className="p-6 sm:p-8 text-center">
+            <CardContent className="p-4 sm:p-6 lg:p-8 text-center">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -134,7 +134,7 @@ export default function SimpleChatView({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-                className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-4"
+                className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-3 sm:mb-4"
             >
                 ✨ Reflection Complete
               </motion.h2>
@@ -143,7 +143,7 @@ export default function SimpleChatView({
                 initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                className="text-lg text-gray-600 mb-8 leading-relaxed"
+                className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 leading-relaxed px-2"
               >
                 Thank you for sharing your thoughts with me. Your reflection has been saved and will be part of your relationship journey.
               </motion.p>
@@ -188,22 +188,27 @@ export default function SimpleChatView({
       <div className="max-w-4xl mx-auto">
         <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
       <CardContent className="p-0">
-        {/* Chat Header */}
-            <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-cyan-50">
+        {/* Chat Header - Mobile Optimized */}
+            <div className="p-3 sm:p-4 lg:p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-cyan-50">
           <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <Bot className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
                   </div>
-                  <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">{partnerName}</h2>
-                    <p className="text-sm text-gray-600">Your AI Relationship Counselor</p>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-800 truncate">{partnerName}</h2>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">Your AI Relationship Counselor</p>
                   </div>
             </div>
-                <div className="text-right">
+                <div className="text-right hidden sm:block flex-shrink-0">
                   <div className="text-sm font-medium text-gray-700">{totalWords} words</div>
                   <div className="text-xs text-gray-500">{messages.length} messages</div>
             </div>
+          </div>
+          {/* Mobile Stats */}
+          <div className="sm:hidden mt-2 flex items-center justify-between text-xs text-gray-500">
+            <span>{totalWords} words</span>
+            <span>{messages.length} messages</span>
           </div>
         </div>
 
@@ -219,9 +224,9 @@ export default function SimpleChatView({
                 transition={{ duration: 0.3 }}
                 className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                    <div className={`flex items-start gap-3 max-w-[85%] sm:max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                      {/* Avatar */}
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    <div className={`flex items-start gap-2 sm:gap-3 max-w-[90%] sm:max-w-[85%] lg:max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                      {/* Avatar - Mobile Optimized */}
+                      <div className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                         msg.sender === 'user' 
                           ? 'bg-gradient-to-br from-orange-400 to-pink-500' 
                           : 'bg-gradient-to-br from-blue-400 to-cyan-500'
@@ -233,17 +238,17 @@ export default function SimpleChatView({
                         )}
                       </div>
 
-                      {/* Message Bubble */}
-                      <div className={`rounded-2xl px-4 py-3 shadow-sm ${
+                      {/* Message Bubble - Mobile Optimized */}
+                      <div className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-sm group relative ${
                     msg.sender === 'user'
                           ? 'bg-gradient-to-br from-orange-400 to-pink-500 text-white rounded-br-md'
                           : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md'
                       }`}>
-                        <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
+                        <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
                     {msg.text.replace('[CONVERSATION_COMPLETE]', '')}
                   </p>
                         {msg.timestamp && (
-                          <div className={`text-xs mt-2 ${
+                          <div className={`text-xs mt-1 sm:mt-2 ${
                             msg.sender === 'user' ? 'text-orange-100' : 'text-gray-500'
                           }`}>
                             {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -281,9 +286,9 @@ export default function SimpleChatView({
               <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-            <div className="p-4 sm:p-6 border-t border-gray-200 bg-white">
-              <div className="flex gap-3">
+            {/* Input Area - Mobile Optimized */}
+            <div className="p-3 sm:p-4 lg:p-6 border-t border-gray-200 bg-white">
+              <div className="flex gap-2 sm:gap-3">
                 <Input
                 ref={inputRef}
                 value={userInput}
@@ -291,16 +296,16 @@ export default function SimpleChatView({
                 onKeyPress={handleKeyPress}
                   placeholder={isCompleting ? "Completing reflection..." : isBotTyping ? "Bridge is typing..." : "Share what's on your mind... 💭"}
                   disabled={isBotTyping || isCompleting}
-                  className="flex-1 text-base sm:text-lg py-3 px-4 border-2 border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 rounded-xl transition-all duration-200"
+                  className="flex-1 text-sm sm:text-base lg:text-lg py-2 sm:py-3 px-3 sm:px-4 border-2 border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 rounded-xl transition-all duration-200 min-h-[44px]"
               />
               <Button
                   onClick={handleSendMessage}
                   disabled={isBotTyping || !userInput.trim() || isCompleting}
                 variant="therapy"
                 size="lg"
-                  className="px-4 sm:px-6 py-3 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]"
               >
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             </div>
 

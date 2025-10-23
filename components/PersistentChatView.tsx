@@ -211,9 +211,9 @@ const PersistentChatView: React.FC<PersistentChatViewProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 pt-16">
       <div className="max-w-4xl mx-auto">
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm h-screen flex flex-col">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm h-[calc(100vh-4rem)] flex flex-col">
           <CardContent className="p-0 flex flex-col h-full">
             {/* Chat Header - Mobile Optimized */}
             <div className="p-3 sm:p-4 lg:p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-cyan-50 flex-shrink-0">

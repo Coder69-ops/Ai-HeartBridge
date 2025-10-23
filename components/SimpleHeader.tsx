@@ -87,7 +87,7 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
 
   return (
     <motion.header 
-      className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-lg border-b border-emerald-100"
+      className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-lg border-b border-emerald-100"
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}

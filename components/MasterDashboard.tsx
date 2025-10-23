@@ -123,7 +123,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
   ];
 
   return (
-    <div className="min-h-screen pt-16 sm:pt-20">
+    <div className="h-screen overflow-y-auto pt-16">
       {/* Mobile-First Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
         

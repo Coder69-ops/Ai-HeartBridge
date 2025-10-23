@@ -183,7 +183,7 @@ export const GorgeousLoader: React.FC<GorgeousLoaderProps> = ({
   const config = configs[type];
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${config.bgColor} flex items-center justify-center p-3 sm:p-4 lg:p-6`}>
+    <div className={`h-screen bg-gradient-to-br ${config.bgColor} flex items-center justify-center p-3 sm:p-4 lg:p-6 pt-20`}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
