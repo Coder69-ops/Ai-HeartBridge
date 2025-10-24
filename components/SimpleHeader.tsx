@@ -150,15 +150,17 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
 
           {/* Right Actions */}
           <div className="flex items-center space-x-2">
-            {/* Safety Button */}
+            {/* Safety Button - Always visible */}
             <Button
               variant="ghost"
-              onClick={() => onShowSafetyModal()}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2"
+              size="icon"
+              onClick={onShowSafetyModal}
+              className="text-red-500 hover:text-red-600 hover:bg-red-50"
               title="Safety Center"
             >
               <Shield className="w-5 h-5" />
             </Button>
+
             {/* Desktop Notification Badge - Hidden on mobile */}
             <div className="hidden md:block">
               <NotificationBadge
@@ -168,16 +170,6 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
                 onNotificationClick={onNotificationClick || (() => {})}
               />
             </div>
-
-            {/* Safety Button - Always visible */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onShowSafetyModal}
-              className="text-red-500 hover:text-red-600 hover:bg-red-50"
-            >
-              <Shield className="w-5 h-5" />
-            </Button>
 
             {/* User Menu - Desktop only */}
             <div className="hidden md:block relative" ref={userMenuRef}>
