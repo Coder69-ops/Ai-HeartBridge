@@ -71,6 +71,24 @@ const JournalingView: React.FC<JournalingViewProps> = ({
         });
     }, [sessionStatus, userChat, isCurrentUserPartner1]);
 
+    // Poll for status updates when analysis is pending
+    useEffect(() => {
+        if (sessionStatus === JournalSessionStatus.ANALYSIS_PENDING || 
+            (sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE && !insights)) {
+            console.log('JournalingView - Starting status polling for insights');
+            const interval = setInterval(() => {
+                console.log('JournalingView - Polling for status updates...');
+                // Trigger a refresh by calling onComplete
+                onComplete({ partner1Chat: userChat || [], partner2Chat: partnerChat || [] });
+            }, 5000); // Poll every 5 seconds
+
+            return () => {
+                clearInterval(interval);
+                console.log('JournalingView - Stopped status polling');
+            };
+        }
+    }, [sessionStatus, insights, userChat, partnerChat, onComplete]);
+
     const getPartnerDisplayName = () => {
         if (!partner) return '';
         if (partner.profile?.firstName) {
@@ -210,6 +228,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
         bothTrue: sessionStatus === JournalSessionStatus.INSIGHTS_READY && insights
     });
     
+    // Show insights if they are ready
     if (sessionStatus === JournalSessionStatus.INSIGHTS_READY && insights) {
         console.log('JournalingView - Showing insights view');
         return (
@@ -217,6 +236,34 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                 insights={insights}
                 onContinue={() => onComplete({ partner1Chat: userChat || [], partner2Chat: partnerChat || [] })}
             />
+        );
+    }
+    
+    // Show analysis pending screen if both partners completed but insights not ready
+    if (sessionStatus === JournalSessionStatus.ANALYSIS_PENDING || 
+        (sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE && !insights)) {
+        console.log('JournalingView - Showing analysis pending screen');
+        return (
+            <div className="max-w-2xl mx-auto p-4 sm:p-6">
+                <Card variant="therapy" className="text-center animate-fade-in">
+                    <CardHeader className="p-4 sm:p-6">
+                        <div className="mx-auto mb-3 sm:mb-4 p-3 sm:p-4 bg-blue-100 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
+                            <Icon name="brain" className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
+                        </div>
+                        <CardTitle className="text-xl sm:text-2xl text-therapy-calm">
+                            🧠 Generating Insights
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+                        <p className="text-neutral-600 leading-relaxed text-sm sm:text-base">
+                            Both partners have completed their reflections. Our AI is analyzing your relationship patterns and generating personalized insights. This may take a few moments.
+                        </p>
+                        <div className="flex justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-therapy-calm"></div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
         );
     }
     
