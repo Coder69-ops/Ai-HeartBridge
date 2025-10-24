@@ -21,7 +21,7 @@ import {
 
 interface MasterCheckInViewProps {
   coupleId: string;
-  journalId: string;
+  journalId?: string;
   onNavigate: (view: string) => void;
 }
 
@@ -38,6 +38,13 @@ const MasterCheckInView: React.FC<MasterCheckInViewProps> = ({
   useEffect(() => {
     const getAnalysis = async () => {
       try {
+        if (!journalId) {
+          // If no journal ID, show a message that journaling is required first
+          setError("Please complete a journaling session first to get personalized insights.");
+          setLoading(false);
+          return;
+        }
+        
         const result = await analyzeEntries(coupleId, journalId);
         setAnalysis(result);
       } catch (err) {
@@ -65,15 +72,32 @@ const MasterCheckInView: React.FC<MasterCheckInViewProps> = ({
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-600" />
+            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-amber-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Analysis Failed</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              {error.includes("journaling session") ? "Journaling Required" : "Analysis Failed"}
+            </h2>
             <p className="text-gray-600 mb-6">{error}</p>
-            <Button onClick={() => onNavigate('dashboard')} className="bg-gradient-to-r from-emerald-500 to-cyan-500">
-              <Home className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Button>
+            <div className="space-y-3">
+              {error.includes("journaling session") && (
+                <Button 
+                  onClick={() => onNavigate('journal')} 
+                  className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500"
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  Start Journaling
+                </Button>
+              )}
+              <Button 
+                onClick={() => onNavigate('dashboard')} 
+                variant="outline"
+                className="w-full"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

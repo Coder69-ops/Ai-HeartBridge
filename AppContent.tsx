@@ -311,6 +311,7 @@ export const AppContent: React.FC = () => {
                 return (
                     <MasterCheckInView 
                         coupleId={couple?.id || ''} 
+                        journalId={undefined}
                         onNavigate={handleNavigate} 
                     />
                 );
