@@ -227,7 +227,7 @@ export default function SimpleChatView({
           <AnimatePresence mode="popLayout">
             {messages.map((msg, idx) => (
               <motion.div
-                    key={`${msg.sender}-${idx}-${msg.timestamp?.getTime()}`}
+                    key={`${msg.sender}-${idx}-${msg.timestamp ? (msg.timestamp instanceof Date ? msg.timestamp.getTime() : new Date(msg.timestamp).getTime()) : Date.now()}`}
                     initial={{ opacity: 0, y: 20, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.95 }}
