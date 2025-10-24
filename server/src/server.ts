@@ -60,6 +60,9 @@ app.use(helmet({
   }
 }));
 
+// Trust proxy for Railway deployment
+app.set('trust proxy', 1);
+
 app.use(cors({
   origin: true,  // Allow all origins temporarily
   credentials: true
@@ -71,8 +74,7 @@ const limiter = rateLimit({
   max: process.env.NODE_ENV === 'production' ? 100 : 10000, // Very permissive in development
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
-  legacyHeaders: false,
-  trustProxy: true // Trust proxy headers for Railway deployment
+  legacyHeaders: false
 });
 
 // Only apply general rate limiting in production
@@ -86,8 +88,7 @@ const authLimiter = rateLimit({
   max: process.env.NODE_ENV === 'production' ? 5 : 100, // More permissive in development
   message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
-  legacyHeaders: false,
-  trustProxy: true // Trust proxy headers for Railway deployment
+  legacyHeaders: false
 });
 
 app.use(express.json({ limit: '10mb' }));
