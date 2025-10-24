@@ -494,6 +494,9 @@ router.post('/:sessionId/complete-reflection', [
     // Determine which partner is completing
     const isPartner1 = couple.partner1Id.equals(user._id);
     const partnerId = isPartner1 ? couple.partner2Id : couple.partner1Id;
+    
+    console.log('Complete reflection - session status before update:', session.status);
+    console.log('Complete reflection - isPartner1:', isPartner1);
 
     // Update the appropriate chat
     if (isPartner1) {
@@ -503,6 +506,7 @@ router.post('/:sessionId/complete-reflection', [
       // Update status
       if (session.status === JournalSessionStatus.CREATED) {
         session.status = JournalSessionStatus.PARTNER1_COMPLETE;
+        console.log('Updated status to PARTNER1_COMPLETE for session:', sessionId);
       }
     } else {
       session.partner2Chat = chatHistory;
@@ -511,10 +515,12 @@ router.post('/:sessionId/complete-reflection', [
       // Update status
       if (session.status === JournalSessionStatus.PARTNER1_COMPLETE) {
         session.status = JournalSessionStatus.PARTNER2_COMPLETE;
+        console.log('Updated status to PARTNER2_COMPLETE for session:', sessionId);
       }
     }
 
     await session.save();
+    console.log('Session saved with status:', session.status);
 
     // Send notification to partner
     if (isPartner1 && !session.notificationSent.partner1Complete) {
@@ -560,6 +566,7 @@ router.post('/:sessionId/complete-reflection', [
       }
     }
 
+    console.log('Returning response with status:', session.status);
     res.json({
       message: 'Reflection completed successfully',
       session: {

@@ -308,30 +308,6 @@ export default function SimpleChatView({
               </Button>
             </div>
 
-              {/* Manual Completion Button */}
-              {messages.length > 2 && !isChatComplete && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <Button
-                    onClick={() => onComplete?.(messages)}
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 transition-all duration-200"
-                    disabled={isCompleting}
-                  >
-                    {isCompleting ? (
-                      <>
-                        <Clock className="w-4 h-4 mr-2 animate-spin" />
-                        Completing...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Complete My Reflection
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
         </div>
       </CardContent>
     </Card>

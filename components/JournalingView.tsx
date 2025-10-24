@@ -51,14 +51,15 @@ const JournalingView: React.FC<JournalingViewProps> = ({
     const [sessionStartTime] = useState<Date>(new Date());
     const [isCompleting, setIsCompleting] = useState(false);
     const [sessionStatus, setSessionStatus] = useState<JournalSessionStatus>(initialSessionStatus || JournalSessionStatus.CREATED);
+    const [hasManuallySetStatus, setHasManuallySetStatus] = useState(false);
     
-    // Sync local sessionStatus with prop changes
+    // Sync local sessionStatus with prop changes, but don't override if we've manually set a status
     useEffect(() => {
-        if (initialSessionStatus) {
+        if (initialSessionStatus && !hasManuallySetStatus) {
             console.log('JournalingView - Updating sessionStatus from', sessionStatus, 'to', initialSessionStatus);
             setSessionStatus(initialSessionStatus);
         }
-    }, [initialSessionStatus]);
+    }, [initialSessionStatus, hasManuallySetStatus, sessionStatus]);
 
     // Debug effect to track status changes
     useEffect(() => {
@@ -131,6 +132,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             
             console.log('JournalingView - Setting status to:', expectedStatus);
             setSessionStatus(expectedStatus);
+            setHasManuallySetStatus(true);
 
             // Add a small delay to ensure state updates are processed
             setTimeout(() => {
