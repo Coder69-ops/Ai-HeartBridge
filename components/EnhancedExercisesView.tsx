@@ -150,7 +150,12 @@ const EnhancedExercisesView: React.FC<EnhancedExercisesViewProps> = ({ onBack })
   };
 
   const handleCompleteExercise = async () => {
-    if (!selectedExercise) return;
+    if (!selectedExercise) {
+      console.error('No exercise selected for completion');
+      return;
+    }
+    
+    console.log('Completing exercise:', selectedExercise.id, selectedExercise.title);
     
     try {
       setIsCompleting(true);
@@ -356,6 +361,7 @@ const EnhancedExercisesView: React.FC<EnhancedExercisesViewProps> = ({ onBack })
                         <Card 
                           className="h-full hover:shadow-xl transition-all duration-300 cursor-pointer group overflow-hidden"
                           onClick={() => {
+                            console.log('Selecting exercise:', exercise.id, exercise.title);
                             setSelectedExercise(exercise);
                             setCurrentView('tracking');
                           }}

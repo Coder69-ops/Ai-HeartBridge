@@ -19,7 +19,13 @@ router.get('/', async (req: AuthRequest, res) => {
 
     const exercises = await Exercise.find(filter).sort({ category: 1, title: 1 });
 
-    res.json({ exercises });
+    // Transform _id to id for frontend compatibility
+    const transformedExercises = exercises.map(exercise => ({
+      ...exercise.toObject(),
+      id: exercise._id.toString()
+    }));
+
+    res.json({ exercises: transformedExercises });
 
   } catch (error) {
     console.error('Get exercises error:', error);
@@ -55,8 +61,14 @@ router.get('/:exerciseId', async (req: AuthRequest, res) => {
       }).sort({ dateCompleted: -1 });
     }
 
+    // Transform _id to id for frontend compatibility
+    const transformedExercise = {
+      ...exercise.toObject(),
+      id: exercise._id.toString()
+    };
+
     res.json({ 
-      exercise,
+      exercise: transformedExercise,
       progress
     });
 
@@ -170,8 +182,14 @@ router.get('/couple/progress', async (req: AuthRequest, res) => {
       coupleId: user.coupleId 
     });
 
+    // Transform _id to id for frontend compatibility
+    const transformedProgress = progress.map(item => ({
+      ...item.toObject(),
+      id: item._id.toString()
+    }));
+
     res.json({
-      progress,
+      progress: transformedProgress,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(total / limit),
