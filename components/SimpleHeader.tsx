@@ -63,12 +63,9 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, view: 'dashboard' },
     { id: 'chat', label: 'AI Chat', icon: MessageCircle, view: 'chat' },
-    { id: 'partner-chat', label: 'Partner Chat', icon: Heart, view: 'partner-chat' },
     { id: 'journal', label: 'Journal', icon: Target, view: 'journal' },
-    { id: 'checkin', label: 'Check-in', icon: Activity, view: 'checkin' },
     { id: 'exercises', label: 'Exercises', icon: BookOpen, view: 'exercises' },
-    { id: 'trends', label: 'Insights', icon: TrendingUp, view: 'trends' },
-    { id: 'profile', label: 'Profile', icon: User, view: 'profile' }
+    { id: 'trends', label: 'Insights', icon: TrendingUp, view: 'trends' }
   ];
 
   const getUserDisplayName = () => {
@@ -218,6 +215,28 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
                       <span>Profile & Settings</span>
                     </button>
                     
+                    <button
+                      onClick={() => {
+                        handleNavClick('checkin');
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                    >
+                      <Activity className="w-4 h-4" />
+                      <span>Check-in</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        handleNavClick('partner-chat');
+                        setUserMenuOpen(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                    >
+                      <Heart className="w-4 h-4" />
+                      <span>Partner Chat</span>
+                    </button>
+                    
                     <div className="border-t border-gray-100 my-1"></div>
                     
                     <button
@@ -301,6 +320,28 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
               })}
               
               <div className="border-t border-gray-200 my-3"></div>
+              
+              <button
+                onClick={() => {
+                  handleNavClick('checkin');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center space-x-3 px-4 py-3 text-base text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 rounded-lg transition-all touch-manipulation"
+              >
+                <Activity className="w-6 h-6" />
+                <span>Check-in</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  handleNavClick('partner-chat');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center space-x-3 px-4 py-3 text-base text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 rounded-lg transition-all touch-manipulation"
+              >
+                <Heart className="w-6 h-6" />
+                <span>Partner Chat</span>
+              </button>
               
               <button
                 onClick={() => {
