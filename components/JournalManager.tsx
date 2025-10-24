@@ -115,9 +115,11 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
   };
 
   const handleJournalComplete = async (entry: { partner1Chat: any[], partner2Chat: any[] }) => {
+    console.log('JournalManager - handleJournalComplete called, refreshing data...');
     // Refresh data after completion
     await loadJournalData();
-    setCurrentView('menu');
+    // Don't navigate away - stay in the journal view to show updated status
+    console.log('JournalManager - Data refreshed, staying in journal view');
   };
 
   const getSessionStatusInfo = (status: JournalSessionStatus) => {
