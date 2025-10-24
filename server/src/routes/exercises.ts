@@ -25,7 +25,7 @@ router.get('/', async (req: AuthRequest, res) => {
     console.error('Get exercises error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
     });
   }
 });
@@ -172,7 +172,7 @@ router.get('/couple/progress', async (req: AuthRequest, res) => {
     console.error('Exercise progress error:', error);
     res.status(500).json({ 
       error: 'Internal server error',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
     });
   }
 });
