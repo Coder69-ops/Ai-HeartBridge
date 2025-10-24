@@ -30,6 +30,7 @@ import { toast } from '../src/components/ui/enhanced/ModernToast';
 import { getRelationshipTrends, getHealthScore } from '../services/analyticsService';
 import { getJournalSessionHistory } from '../services/journalSessionService';
 import { getCoupleCheckInHistory } from '../services/checkInService';
+import { getCoupleExerciseProgress } from '../services/exerciseService';
 import ContextualLoader from './shared/ContextualLoader';
 
 interface MasterDashboardProps {
@@ -70,10 +71,11 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
         setLoading(true);
         
         // Load all dashboard data in parallel
-        const [healthScore, journalSessions, checkInHistory, trends] = await Promise.all([
+        const [healthScore, journalSessions, checkInHistory, exerciseProgress, trends] = await Promise.all([
           getHealthScore().catch(() => ({ overallScore: 0 })),
           getJournalSessionHistory().catch(() => []),
           getCoupleCheckInHistory().catch(() => []),
+          getCoupleExerciseProgress(1, 100).catch(() => ({ progress: [] })),
           getRelationshipTrends('3months').catch(() => null)
         ]);
 
@@ -98,11 +100,20 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
           }
         });
 
+        // Add exercise progress to active days
+        const exercises = exerciseProgress.progress || [];
+        exercises.forEach((exercise: any) => {
+          const exerciseDate = new Date(exercise.dateCompleted);
+          if (exerciseDate >= thirtyDaysAgo) {
+            activeDays.add(exerciseDate.toDateString());
+          }
+        });
+
         setDashboardData({
           healthScore: (healthScore as any)?.overallScore || 0,
           checkInCount: (checkIns || []).length,
           journalSessions: (journalSessions || []).length,
-          exerciseCount: 0, // TODO: Implement exercise tracking
+          exerciseCount: (exercises || []).length,
           daysActive: activeDays.size,
           recentInsights: (journalSessions || []).find((s: any) => s?.insights) || null,
           relationshipTrends: trends

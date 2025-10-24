@@ -17,6 +17,7 @@ import MasterCheckInView from './components/MasterCheckInView';
 import StandaloneCheckInView from './components/StandaloneCheckInView';
 import MasterExercisesView from './components/MasterExercisesView';
 import MasterExerciseDetailView from './components/MasterExerciseDetailView';
+import EnhancedExercisesView from './components/EnhancedExercisesView';
 import MasterTrendsView from './components/MasterTrendsView';
 import MasterProfileView from './components/MasterProfileView';
 import EnhancedProfileView from './components/EnhancedProfileView';
@@ -317,18 +318,9 @@ export const AppContent: React.FC = () => {
                     />
                 );
             case 'exercises':
-                if (selectedExercise) {
-                    return (
-                        <MasterExerciseDetailView 
-                            exercise={selectedExercise} 
-                            onNavigate={handleNavigate} 
-                        />
-                    );
-                }
                 return (
-                    <MasterExercisesView 
-                        exercises={exercisesList} 
-                        onSelectExercise={handleSelectExercise} 
+                    <EnhancedExercisesView 
+                        onBack={() => setCurrentView('dashboard')} 
                     />
                 );
             case 'trends':
