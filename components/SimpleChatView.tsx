@@ -89,6 +89,7 @@ export default function SimpleChatView({
 
       // Check if conversation is complete
       if (response.includes('[CONVERSATION_COMPLETE]')) {
+        console.log('SimpleChatView - AI completed conversation, showing completion screen');
         setIsChatComplete(true);
       }
     } catch (error) {
@@ -121,6 +122,7 @@ export default function SimpleChatView({
 
   // Show completion screen
   if (isChatComplete) {
+    console.log('SimpleChatView - Rendering completion screen');
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-3 sm:p-4">
         <div className="max-w-2xl mx-auto">
@@ -171,7 +173,10 @@ export default function SimpleChatView({
               
                 {onComplete && (
               <Button 
-                    onClick={() => onComplete(messages)}
+                    onClick={() => {
+                      console.log('SimpleChatView - Complete Session button clicked');
+                      onComplete(messages);
+                    }}
                 variant="outline"
                 size="lg"
                     className="w-full sm:w-auto px-8 py-3 text-lg font-semibold border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-all duration-300"
