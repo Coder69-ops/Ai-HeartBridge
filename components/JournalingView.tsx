@@ -120,18 +120,27 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                 sessionId,
                 isCurrentUserPartner1,
                 responseStatus: response.session.status,
-                userChatLength: chatHistory.length
+                userChatLength: chatHistory.length,
+                expectedStatus: isCurrentUserPartner1 ? 'PARTNER1_COMPLETE' : 'PARTNER2_COMPLETE'
             });
             
             // Update status based on which partner completed
-            if (isCurrentUserPartner1) {
-              setSessionStatus(JournalSessionStatus.PARTNER1_COMPLETE);
+            // Use the backend response status if it's more advanced than our expected status
+            const expectedStatus = isCurrentUserPartner1 
+              ? JournalSessionStatus.PARTNER1_COMPLETE 
+              : JournalSessionStatus.PARTNER2_COMPLETE;
+            
+            // Only update if backend response is more advanced or if it's the same as expected
+            if (response.session.status === expectedStatus || 
+                response.session.status === JournalSessionStatus.ANALYSIS_PENDING ||
+                response.session.status === JournalSessionStatus.INSIGHTS_READY) {
+              console.log('JournalingView - Using backend status:', response.session.status);
+              setSessionStatus(response.session.status);
             } else {
-              setSessionStatus(JournalSessionStatus.PARTNER2_COMPLETE);
+              // Use our expected status if backend response seems incorrect
+              console.log('JournalingView - Backend status seems incorrect, using expected status:', expectedStatus);
+              setSessionStatus(expectedStatus);
             }
-
-            // Update session status from response
-            setSessionStatus(response.session.status);
 
             // Add a small delay to ensure state updates are processed
             setTimeout(() => {
