@@ -89,7 +89,11 @@ export default function SimpleChatView({
 
       // Check if conversation is complete
       if (response.includes('[CONVERSATION_COMPLETE]')) {
-        console.log('SimpleChatView - AI completed conversation, showing completion screen');
+        console.log('SimpleChatView - AI completed conversation, automatically completing session');
+        // Automatically complete the session without showing manual button
+        if (onComplete) {
+          onComplete([...messages, userMessage, botMessage]);
+        }
         setIsChatComplete(true);
       }
     } catch (error) {
@@ -152,7 +156,7 @@ export default function SimpleChatView({
                   transition={{ delay: 0.3 }}
                 className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 leading-relaxed px-2"
               >
-                Thank you for sharing your thoughts with me. Your reflection has been saved and will be part of your relationship journey.
+                Thank you for sharing your thoughts with me. Your reflection has been automatically saved and will be part of your relationship journey.
               </motion.p>
 
             <motion.div
@@ -170,21 +174,6 @@ export default function SimpleChatView({
                   <MessageSquare className="w-5 h-5 mr-2" />
                   Start New Chat
               </Button>
-              
-                {onComplete && (
-              <Button 
-                    onClick={() => {
-                      console.log('SimpleChatView - Complete Session button clicked');
-                      onComplete(messages);
-                    }}
-                variant="outline"
-                size="lg"
-                    className="w-full sm:w-auto px-8 py-3 text-lg font-semibold border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-all duration-300"
-                  >
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    Complete Session
-              </Button>
-                )}
             </motion.div>
           </CardContent>
         </Card>
