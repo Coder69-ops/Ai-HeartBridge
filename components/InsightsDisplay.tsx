@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import { Button } from './shared/Button';
+import ContextualLoader from './shared/ContextualLoader';
 import { 
   Heart, 
   TrendingUp, 
@@ -22,13 +23,19 @@ interface InsightsDisplayProps {
   insights: string;
   onBack?: () => void;
   onContinue?: () => void;
+  loading?: boolean;
 }
 
 const InsightsDisplay: React.FC<InsightsDisplayProps> = ({ 
   insights, 
   onBack, 
-  onContinue 
+  onContinue,
+  loading = false
 }) => {
+  // Show loading state if insights are being processed
+  if (loading || !insights) {
+    return <ContextualLoader type="insights" message="Analyzing your relationship insights..." />;
+  }
   // Parse the insights text to extract structured data
   const parseInsights = (text: string) => {
     const sections = {

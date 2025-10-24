@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import Icon from './shared/Icon';
 import { completeJournalReflection, JournalSessionStatus } from '../services/journalSessionService';
 import InsightsDisplay from './InsightsDisplay';
+import ContextualLoader from './shared/ContextualLoader';
 
 interface JournalingViewProps {
   user: User;

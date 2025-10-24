@@ -6,6 +6,7 @@ import { getJournalSessionHistory, JournalSession } from '../services/journalSes
 import { Card, CardContent } from './shared/Card';
 import { Button } from './shared/Button';
 import { GorgeousLoader } from './shared/GorgeousLoader';
+import ContextualLoader from './shared/ContextualLoader';
 import { 
   TrendingUp,
   TrendingDown,
@@ -64,13 +65,7 @@ const MasterTrendsView: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <GorgeousLoader 
-        message="Loading your relationship insights..."
-        type="sync"
-        size="lg"
-      />
-    );
+    return <ContextualLoader type="analytics" message="Loading your relationship insights..." />;
   }
 
   if (error) {

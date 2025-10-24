@@ -6,6 +6,7 @@ import { analyzeEntries } from '../services/geminiService';
 import { Card, CardContent } from './shared/Card';
 import { Button } from './shared/Button';
 import { GorgeousLoader } from './shared/GorgeousLoader';
+import ContextualLoader from './shared/ContextualLoader';
 import { 
   Sparkles,
   Heart,
@@ -58,13 +59,7 @@ const MasterCheckInView: React.FC<MasterCheckInViewProps> = ({
   }, [coupleId, journalId]);
 
   if (loading) {
-    return (
-      <GorgeousLoader 
-        message="Creating personalized insights..."
-        type="analysis"
-        size="lg"
-      />
-    );
+    return <ContextualLoader type="checkin" message="Preparing your relationship assessment..." />;
   }
 
   if (error) {
