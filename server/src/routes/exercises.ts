@@ -34,7 +34,11 @@ router.get('/', async (req: AuthRequest, res) => {
 router.get('/:exerciseId', async (req: AuthRequest, res) => {
   try {
     const { exerciseId } = req.params;
-    const user = req.user!;
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
     const exercise = await Exercise.findById(exerciseId);
     
@@ -66,7 +70,11 @@ router.post('/:exerciseId/complete', async (req: AuthRequest, res) => {
   try {
     const { exerciseId } = req.params;
     const { rating, feedback, timeSpent } = req.body;
-    const user = req.user!;
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
     if (!user.coupleId) {
       return res.status(400).json({ error: 'Must be paired to complete exercises' });
@@ -136,7 +144,11 @@ router.get('/meta/categories', async (req: AuthRequest, res) => {
 // Get couple's exercise history
 router.get('/couple/progress', async (req: AuthRequest, res) => {
   try {
-    const user = req.user!;
+    const user = req.user;
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
     
     if (!user.coupleId) {
       return res.status(400).json({ error: 'Must be paired to view exercise progress' });

@@ -99,7 +99,7 @@ app.use('/api/journals', authenticateToken, journalRoutes);
 app.use('/api/journal-sessions', authenticateToken, journalSessionRoutes);
 app.use('/api/chat-sessions', authenticateToken, chatSessionRoutes);
 app.use('/api/partner-chat', authenticateToken, partnerChatRoutes);
-app.use('/api/exercises', exerciseRoutes); // Public endpoint - no auth required for exercises
+app.use('/api/exercises', authenticateToken, exerciseRoutes); // Protected endpoint - auth required for exercises
 app.use('/api/checkins', authenticateToken, checkInRoutes);
 app.use('/api/analytics', authenticateToken, analyticsRoutes);
 
