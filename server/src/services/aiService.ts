@@ -355,7 +355,11 @@ ${JSON.stringify(analysisSchema, null, 2)}`;
       // Use Google Gemini API for analysis
       const analysisPrompt = `You are a relationship counselor AI. You MUST respond with ONLY valid JSON. Do not include any markdown formatting, code blocks, or explanatory text. Just return the raw JSON object.
 
-${prompt}`;
+CRITICAL: Your response must be valid JSON that can be parsed by JSON.parse(). Do not include any text before or after the JSON object. Do not use markdown code blocks. Do not include explanations or comments. Only return the JSON object.
+
+${prompt}
+
+Remember: Return ONLY the JSON object, nothing else.`;
       
       const response = await ai.models.generateContent({
         model: MODEL,
@@ -386,8 +390,44 @@ ${prompt}`;
         jsonText = jsonText.substring(jsonStart, jsonEnd);
       }
       
+      // Additional cleaning for common JSON issues
+      jsonText = jsonText
+        .replace(/,\s*}/g, '}') // Remove trailing commas before closing braces
+        .replace(/,\s*]/g, ']') // Remove trailing commas before closing brackets
+        .replace(/\n/g, ' ') // Replace newlines with spaces
+        .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+        .trim();
+      
       console.log('Cleaned JSON text:', jsonText);
-    return JSON.parse(jsonText) as IAnalysisResult;
+      
+      // Try to parse the JSON
+      try {
+        return JSON.parse(jsonText) as IAnalysisResult;
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        console.error('Problematic JSON text:', jsonText);
+        
+        // Try to fix common JSON issues
+        let fixedJson = jsonText;
+        
+        // Fix unescaped quotes in strings
+        fixedJson = fixedJson.replace(/"([^"]*)"([^"]*)"([^"]*)"/g, (match, p1, p2, p3) => {
+          return `"${p1}\\"${p2}\\"${p3}"`;
+        });
+        
+        // Fix missing quotes around keys
+        fixedJson = fixedJson.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+        
+        console.log('Attempting to fix JSON:', fixedJson);
+        
+        try {
+          return JSON.parse(fixedJson) as IAnalysisResult;
+        } catch (secondError) {
+          console.error('Second JSON parse attempt failed:', secondError);
+          console.error('Final attempt with fallback insights');
+          return generateFallbackInsights(journalEntry);
+        }
+      }
 
   } catch (error) {
       console.error(`Gemini analysis attempt ${attempt} failed:`, error);

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getRelationshipTrends, getHealthScore, RelationshipTrends, HealthScore } from '../services/analyticsService';
+import { getJournalSessionHistory, JournalSession } from '../services/journalSessionService';
 import { Card, CardContent } from './shared/Card';
 import { Button } from './shared/Button';
 import { GorgeousLoader } from './shared/GorgeousLoader';
@@ -17,13 +18,15 @@ import {
   Sparkles,
   Check,
   X,
-  Info
+  Info,
+  Brain
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
 const MasterTrendsView: React.FC = () => {
   const [trends, setTrends] = useState<RelationshipTrends | null>(null);
   const [healthScore, setHealthScore] = useState<HealthScore | null>(null);
+  const [journalSessions, setJournalSessions] = useState<JournalSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeframe, setTimeframe] = useState('6months');
@@ -37,13 +40,15 @@ const MasterTrendsView: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const [trendsData, healthData] = await Promise.all([
+      const [trendsData, healthData, sessionsData] = await Promise.all([
         getRelationshipTrends(timeframe),
-        getHealthScore()
+        getHealthScore(),
+        getJournalSessionHistory().catch(() => [])
       ]);
       
       setTrends(trendsData);
       setHealthScore(healthData);
+      setJournalSessions(sessionsData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load analytics');
     } finally {
@@ -87,14 +92,14 @@ const MasterTrendsView: React.FC = () => {
     );
   }
 
-  const csiChartData = trends?.csiScores.map(score => ({
+  const csiChartData = trends?.csiScores?.map(score => ({
     date: new Date(score.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     score: score.averageScore,
     partner1: score.partner1Score,
     partner2: score.partner2Score
   })) || [];
 
-  const horsemenData = trends ? [
+  const horsemenData = trends?.fourHorsemenStats ? [
     { name: 'Criticism', count: trends.fourHorsemenStats.criticism, color: '#ef4444' },
     { name: 'Contempt', count: trends.fourHorsemenStats.contempt, color: '#f97316' },
     { name: 'Defensiveness', count: trends.fourHorsemenStats.defensiveness, color: '#eab308' },
@@ -175,7 +180,7 @@ const MasterTrendsView: React.FC = () => {
               </div>
 
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {healthScore && Object.entries(healthScore.categoryScores).map(([key, value], index) => (
+                {healthScore && healthScore.categoryScores && Object.entries(healthScore.categoryScores).map(([key, value], index) => (
                   <div key={key} className="text-center">
                     <div className="text-2xl font-bold text-gray-800">{value}</div>
                     <div className="text-xs text-gray-600 capitalize">{key}</div>
@@ -314,7 +319,7 @@ const MasterTrendsView: React.FC = () => {
                   </div>
                 )}
 
-                {trends && trends.checkInStreak > 7 && (
+                {trends && trends.checkInStreak && trends.checkInStreak > 7 && (
                   <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl flex items-start gap-3">
                     <TrendingUp className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
                     <div>
@@ -329,6 +334,85 @@ const MasterTrendsView: React.FC = () => {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Previous Insights from Journal Sessions */}
+        {journalSessions.filter(session => session.insights).length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-6"
+          >
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-purple-600" />
+                  Previous Journal Insights
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  AI-generated insights from your past journaling sessions
+                </p>
+
+                <div className="space-y-4">
+                  {journalSessions
+                    .filter(session => session.insights)
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .slice(0, 5) // Show only the 5 most recent
+                    .map((session, index) => (
+                      <motion.div
+                        key={session.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-semibold text-gray-800 mb-1">
+                              {session.title || `Session on ${new Date(session.createdAt).toLocaleDateString()}`}
+                            </h4>
+                            <div className="flex items-center gap-4 text-xs text-gray-600">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {new Date(session.createdAt).toLocaleDateString()}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <MessageCircle className="w-3 h-3" />
+                                {session.messageCount} messages
+                              </span>
+                              {session.mood && (
+                                <span className="flex items-center gap-1">
+                                  😊 {session.mood}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                            <Brain className="w-3 h-3" />
+                            <span>AI Insights</span>
+                          </div>
+                        </div>
+                        
+                        <div className="prose prose-sm max-w-none">
+                          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            {session.insights}
+                          </p>
+                        </div>
+                      </motion.div>
+                    ))}
+                </div>
+
+                {journalSessions.filter(session => session.insights).length > 5 && (
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-gray-500">
+                      Showing 5 of {journalSessions.filter(session => session.insights).length} insights
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
 
       <style>{`
