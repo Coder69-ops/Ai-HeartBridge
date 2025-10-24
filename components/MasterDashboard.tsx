@@ -1,5 +1,5 @@
 // AI HeartBridge - Masterpiece Mobile-First Dashboard
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Heart, 
@@ -17,7 +17,9 @@ import {
   CheckCircle,
   HeartHandshake,
   AlertCircle,
-  Loader2
+  Loader2,
+  BarChart3,
+  Shield
 } from 'lucide-react';
 import { User } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
@@ -25,6 +27,10 @@ import { Button } from './shared/Button';
 import { pairUsers } from '../services/authService';
 import { useToast } from '../src/components/ui/enhanced/ModernToast';
 import { toast } from '../src/components/ui/enhanced/ModernToast';
+import { getRelationshipTrends, getHealthScore } from '../services/analyticsService';
+import { getJournalSessionHistory } from '../services/journalSessionService';
+import { getCoupleCheckInHistory } from '../services/checkInService';
+import ContextualLoader from './shared/ContextualLoader';
 
 interface MasterDashboardProps {
   user: User;
@@ -45,7 +51,71 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
   const [showPairing, setShowPairing] = useState(!partner);
   const [isPairing, setIsPairing] = useState(false);
   const [pairingError, setPairingError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    healthScore: 0,
+    checkInCount: 0,
+    journalSessions: 0,
+    exerciseCount: 0,
+    daysActive: 0,
+    recentInsights: null as any,
+    relationshipTrends: null as any
+  });
   const { showToast } = useToast();
+
+  // Load dashboard data
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load all dashboard data in parallel
+        const [healthScore, journalSessions, checkInHistory, trends] = await Promise.all([
+          getHealthScore().catch(() => ({ overallScore: 0 })),
+          getJournalSessionHistory().catch(() => []),
+          getCoupleCheckInHistory().catch(() => []),
+          getRelationshipTrends('3months').catch(() => null)
+        ]);
+
+        // Calculate days active (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const activeDays = new Set();
+        journalSessions.forEach((session: any) => {
+          const sessionDate = new Date(session.createdAt);
+          if (sessionDate >= thirtyDaysAgo) {
+            activeDays.add(sessionDate.toDateString());
+          }
+        });
+        
+        // Handle checkInHistory structure
+        const checkIns = Array.isArray(checkInHistory) ? checkInHistory : checkInHistory.checkIns || [];
+        checkIns.forEach((checkIn: any) => {
+          const checkInDate = new Date(checkIn.createdAt);
+          if (checkInDate >= thirtyDaysAgo) {
+            activeDays.add(checkInDate.toDateString());
+          }
+        });
+
+        setDashboardData({
+          healthScore: (healthScore as any).overallScore || 0,
+          checkInCount: checkIns.length,
+          journalSessions: journalSessions.length,
+          exerciseCount: 0, // TODO: Implement exercise tracking
+          daysActive: activeDays.size,
+          recentInsights: journalSessions.find((s: any) => s.insights) || null,
+          relationshipTrends: trends
+        });
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [user.id, partner?.id]);
 
   const getPartnerDisplayName = () => {
     if (!partner) return '';
@@ -86,7 +156,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
   const quickActions = [
     {
       icon: <MessageCircle className="w-6 h-6" />,
-      title: 'Chat with AI',
+      title: 'AI Chat',
       description: 'Private reflection space',
       color: 'from-blue-500 to-cyan-500',
       action: () => onNavigate('chat'),
@@ -101,10 +171,10 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
     },
     {
       icon: <Activity className="w-6 h-6" />,
-      title: 'Daily Check-in',
-      description: 'Track your mood',
+      title: 'Check-in',
+      description: 'Track your relationship',
       color: 'from-emerald-500 to-teal-500',
-      action: () => onNavigate('mood'),
+      action: () => onNavigate('checkin'),
     },
     {
       icon: <Target className="w-6 h-6" />,
@@ -113,14 +183,53 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       color: 'from-orange-500 to-amber-500',
       action: () => onNavigate('exercises'),
     },
+    {
+      icon: <BarChart3 className="w-6 h-6" />,
+      title: 'Insights',
+      description: 'View your analytics',
+      color: 'from-indigo-500 to-purple-500',
+      action: () => onNavigate('trends'),
+    },
+    {
+      icon: <Shield className="w-6 h-6" />,
+      title: 'Safety',
+      description: 'Crisis resources',
+      color: 'from-red-500 to-rose-500',
+      action: () => onNavigate('safety'),
+    },
   ];
 
   const stats = [
-    { label: 'Check-ins', value: '12', icon: <CheckCircle className="w-5 h-5" />, color: 'text-emerald-600' },
-    { label: 'Sessions', value: '8', icon: <MessageCircle className="w-5 h-5" />, color: 'text-blue-600' },
-    { label: 'Exercises', value: '5', icon: <Award className="w-5 h-5" />, color: 'text-purple-600' },
-    { label: 'Days Active', value: '14', icon: <Calendar className="w-5 h-5" />, color: 'text-amber-600' },
+    { 
+      label: 'Check-ins', 
+      value: dashboardData.checkInCount.toString(), 
+      icon: <CheckCircle className="w-5 h-5" />, 
+      color: 'text-emerald-600' 
+    },
+    { 
+      label: 'Sessions', 
+      value: dashboardData.journalSessions.toString(), 
+      icon: <MessageCircle className="w-5 h-5" />, 
+      color: 'text-blue-600' 
+    },
+    { 
+      label: 'Exercises', 
+      value: dashboardData.exerciseCount.toString(), 
+      icon: <Award className="w-5 h-5" />, 
+      color: 'text-purple-600' 
+    },
+    { 
+      label: 'Days Active', 
+      value: dashboardData.daysActive.toString(), 
+      icon: <Calendar className="w-5 h-5" />, 
+      color: 'text-amber-600' 
+    },
   ];
+
+  // Show loading state
+  if (loading) {
+    return <ContextualLoader type="dashboard" message="Loading your relationship dashboard..." />;
+  }
 
   return (
     <div className="h-screen overflow-y-auto pt-16">
@@ -261,6 +370,61 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Health Score Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-0 shadow-lg">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1">Relationship Health</h3>
+                  <p className="text-sm text-gray-600">Based on your recent activity</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl sm:text-3xl font-bold text-emerald-600">
+                    {dashboardData.healthScore}
+                  </div>
+                  <div className="text-sm text-gray-500">/ 100</div>
+                </div>
+              </div>
+              
+              {/* Health Score Bar */}
+              <div className="mt-4">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${dashboardData.healthScore}%` }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                    className={`h-2 rounded-full ${
+                      dashboardData.healthScore >= 80 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                      dashboardData.healthScore >= 60 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
+                      dashboardData.healthScore >= 40 ? 'bg-gradient-to-r from-orange-500 to-red-500' :
+                      'bg-gradient-to-r from-red-500 to-rose-500'
+                    }`}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Needs Work</span>
+                  <span>Excellent</span>
+                </div>
+              </div>
+
+              {/* Health Score Message */}
+              <div className="mt-3 p-3 bg-white/60 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  {dashboardData.healthScore >= 80 && "🌟 Your relationship is thriving! Keep up the great work."}
+                  {dashboardData.healthScore >= 60 && dashboardData.healthScore < 80 && "💪 Good progress! Continue building your connection."}
+                  {dashboardData.healthScore >= 40 && dashboardData.healthScore < 60 && "🌱 Room for growth. Try more check-ins and exercises."}
+                  {dashboardData.healthScore < 40 && "💝 Every relationship can grow. Start with daily check-ins."}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Quick Stats Grid - Mobile Responsive */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
