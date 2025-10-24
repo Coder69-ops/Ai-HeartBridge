@@ -11,7 +11,8 @@ import {
   BookOpen, 
   TrendingUp, 
   Target,
-  Shield
+  Shield,
+  Activity
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { Button } from './shared/Button';
@@ -63,9 +64,11 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
     { id: 'dashboard', label: 'Dashboard', icon: Home, view: 'dashboard' },
     { id: 'chat', label: 'AI Chat', icon: MessageCircle, view: 'chat' },
     { id: 'partner-chat', label: 'Partner Chat', icon: Heart, view: 'partner-chat' },
+    { id: 'journal', label: 'Journal', icon: Target, view: 'journal' },
+    { id: 'checkin', label: 'Check-in', icon: Activity, view: 'checkin' },
     { id: 'exercises', label: 'Exercises', icon: BookOpen, view: 'exercises' },
     { id: 'trends', label: 'Insights', icon: TrendingUp, view: 'trends' },
-    { id: 'journal', label: 'Journal', icon: Target, view: 'journal' }
+    { id: 'profile', label: 'Profile', icon: User, view: 'profile' }
   ];
 
   const getUserDisplayName = () => {
@@ -150,6 +153,15 @@ const SimpleHeader: React.FC<SimpleHeaderProps> = ({
 
           {/* Right Actions */}
           <div className="flex items-center space-x-2">
+            {/* Safety Button */}
+            <Button
+              variant="ghost"
+              onClick={() => onShowSafetyModal()}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2"
+              title="Safety Center"
+            >
+              <Shield className="w-5 h-5" />
+            </Button>
             {/* Desktop Notification Badge - Hidden on mobile */}
             <div className="hidden md:block">
               <NotificationBadge

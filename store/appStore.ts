@@ -61,7 +61,7 @@ interface AppState {
   goals: Goal[];
   
   // UI State
-  currentView: 'dashboard' | 'journal' | 'exercises' | 'mood' | 'goals' | 'profile' | 'chat' | 'partner-chat';
+  currentView: 'dashboard' | 'journal' | 'exercises' | 'checkin' | 'trends' | 'profile' | 'chat' | 'partner-chat' | 'pairing' | 'safety';
   isLoading: boolean;
   error: string | null;
   

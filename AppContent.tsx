@@ -20,6 +20,8 @@ import MasterTrendsView from './components/MasterTrendsView';
 import MasterProfileView from './components/MasterProfileView';
 import EnhancedPartnerChat from './components/EnhancedPartnerChat';
 import MasterSafetyModal from './components/MasterSafetyModal';
+import MasterPartnerPairingView from './components/MasterPartnerPairingView';
+import MasterSafetyCenter from './components/MasterSafetyCenter';
 import { GorgeousLoader } from './components/shared/GorgeousLoader';
 import { exercises, loadExercises } from './data/exercises';
 
@@ -172,7 +174,7 @@ export const AppContent: React.FC = () => {
     
     const handleNavigate = (newView: string) => {
         // Ensure the view is a valid string-based view
-        const validViews = ['dashboard', 'journal', 'mood', 'exercises', 'goals', 'profile', 'chat', 'partner-chat'];
+        const validViews = ['dashboard', 'journal', 'checkin', 'exercises', 'trends', 'profile', 'chat', 'partner-chat', 'pairing', 'safety'];
         if (validViews.includes(newView)) {
             setCurrentView(newView as any);
         } else {
@@ -209,7 +211,7 @@ export const AppContent: React.FC = () => {
         if (!currentJournalId) return;
         try {
             await authService.updateJournalEntry(currentJournalId, entry);
-            setCurrentView('mood');
+            setCurrentView('dashboard');
         } catch (error) {
             console.error('Error updating journal entry:', error);
         }
@@ -294,7 +296,7 @@ export const AppContent: React.FC = () => {
                         </div>
                     </div>
                 );
-            case 'mood':
+            case 'checkin':
                 // If coming from journaling, use the current journal ID
                 if (couple && currentJournalId) {
                     return (
@@ -305,30 +307,12 @@ export const AppContent: React.FC = () => {
                         />
                     );
                 }
-                // If navigating directly to mood, show mood tracker without requiring a journal
+                // If navigating directly to check-in, show check-in without requiring a journal
                 return (
-                    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4">
-                        <div className="max-w-2xl mx-auto">
-                            <button 
-                                onClick={() => setCurrentView('dashboard')}
-                                className="mb-6 text-emerald-600 hover:text-emerald-700 font-medium"
-                            >
-                                ← Back to Dashboard
-                            </button>
-                            <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4">Check-In</h2>
-                                <p className="text-gray-600 mb-6">
-                                    Complete a journaling session first to check in on your mood and get personalized insights.
-                                </p>
-                                <button 
-                                    onClick={() => handleStartJournaling()}
-                                    className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
-                                >
-                                    Start Journaling
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <MasterCheckInView 
+                        coupleId={couple?.id || ''} 
+                        onNavigate={handleNavigate} 
+                    />
                 );
             case 'exercises':
                 if (selectedExercise) {
@@ -345,7 +329,7 @@ export const AppContent: React.FC = () => {
                         onSelectExercise={handleSelectExercise} 
                     />
                 );
-            case 'goals':
+            case 'trends':
                 return <MasterTrendsView />;
             case 'profile':
                 return <MasterProfileView onBack={() => setCurrentView('dashboard')} />;
@@ -353,6 +337,16 @@ export const AppContent: React.FC = () => {
                 return <ChatManager onBack={() => setCurrentView('dashboard')} />;
             case 'partner-chat':
                 return <EnhancedPartnerChat onBack={() => setCurrentView('dashboard')} />;
+            case 'pairing':
+                return (
+                    <MasterPartnerPairingView 
+                        user={user} 
+                        onPairingSuccess={handlePairingSuccess} 
+                        onBack={() => setCurrentView('dashboard')} 
+                    />
+                );
+            case 'safety':
+                return <MasterSafetyCenter onBack={() => setCurrentView('dashboard')} />;
             default:
                 return (
                     <div className="text-center p-8">
@@ -398,7 +392,13 @@ export const AppContent: React.FC = () => {
 
                 <AnimatePresence>
                     {showSafetyModal && (
-                        <MasterSafetyModal onClose={() => setShowSafetyModal(false)} />
+                        <MasterSafetyModal 
+                            onClose={() => setShowSafetyModal(false)} 
+                            onNavigateToSafetyCenter={() => {
+                                setShowSafetyModal(false);
+                                setCurrentView('safety');
+                            }}
+                        />
                     )}
                 </AnimatePresence>
             </div>

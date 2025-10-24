@@ -16,9 +16,10 @@ import {
 
 interface MasterSafetyModalProps {
   onClose: () => void;
+  onNavigateToSafetyCenter?: () => void;
 }
 
-const MasterSafetyModal: React.FC<MasterSafetyModalProps> = ({ onClose }) => {
+const MasterSafetyModal: React.FC<MasterSafetyModalProps> = ({ onClose, onNavigateToSafetyCenter }) => {
   return (
     <AnimatePresence>
       <motion.div
