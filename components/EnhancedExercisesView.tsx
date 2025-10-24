@@ -88,7 +88,7 @@ const EnhancedExercisesView: React.FC<EnhancedExercisesViewProps> = ({ onBack })
         setIsLoading(true);
         const [exercisesData, progressData] = await Promise.all([
           getExercises(),
-          getCoupleExerciseProgress(1, 100) // Get more progress data for stats
+          getCoupleExerciseProgress(1, 100).catch(() => ({ progress: [] })) // Fallback for unpaired users
         ]);
         
         setExercises(exercisesData);
@@ -164,7 +164,7 @@ const EnhancedExercisesView: React.FC<EnhancedExercisesViewProps> = ({ onBack })
       setCompletionData({ rating: 0, feedback: '', timeSpent: 0 });
       
       // Reload progress data
-      const progressData = await getCoupleExerciseProgress(1, 100);
+      const progressData = await getCoupleExerciseProgress(1, 100).catch(() => ({ progress: [] }));
       setExerciseProgress(progressData.progress);
       
       // Update stats
@@ -206,9 +206,9 @@ const EnhancedExercisesView: React.FC<EnhancedExercisesViewProps> = ({ onBack })
 
   const getDifficultyColor = (difficulty: Exercise['difficulty']) => {
     switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-700 border-green-200';
-      case 'Intermediate': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'Advanced': return 'bg-red-100 text-red-700 border-red-200';
+      case 'beginner': return 'bg-green-100 text-green-700 border-green-200';
+      case 'intermediate': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'advanced': return 'bg-red-100 text-red-700 border-red-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };

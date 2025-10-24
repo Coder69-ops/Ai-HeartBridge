@@ -68,7 +68,7 @@ const MasterExercisesView: React.FC<MasterExercisesViewProps> = ({
   };
 
   // Get difficulty color
-  const getDifficultyColor = (difficulty: Exercise['difficulty']) => {
+  const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Beginner': return 'bg-green-100 text-green-700 border-green-200';
       case 'Intermediate': return 'bg-amber-100 text-amber-700 border-amber-200';

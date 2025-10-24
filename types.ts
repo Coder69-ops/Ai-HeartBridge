@@ -202,7 +202,14 @@ export interface Exercise {
   id: string;
   title: string;
   category: string;
-  icon: IconName;
+  icon: string;
   description: string;
   steps: string[];
+  duration?: number; // in minutes
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  tags?: string[];
+  framework?: 'Gottman' | 'NVC' | 'EFT' | 'General';
+  isActive?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

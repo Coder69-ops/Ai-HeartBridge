@@ -22,7 +22,11 @@ router.get('/', async (req: AuthRequest, res) => {
     res.json({ exercises });
 
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Get exercises error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -165,7 +169,11 @@ router.get('/couple/progress', async (req: AuthRequest, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Exercise progress error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
