@@ -59,7 +59,7 @@ export default function SimpleChatView({
 
   const handleSendMessage = async () => {
     const trimmed = userInput.trim();
-    if (!trimmed || isBotTyping || isCompleting) return;
+    if (!trimmed || isBotTyping || isCompleting || isChatComplete) return;
 
     // Create user message
     const userMessage: Message = { 
@@ -84,18 +84,32 @@ export default function SimpleChatView({
         timestamp: new Date()
       };
 
-      // Add bot message to state
-      setMessages(prev => [...prev, botMessage]);
-
-      // Check if conversation is complete
+      // Check if conversation is complete before adding bot message
       if (response.includes('[CONVERSATION_COMPLETE]')) {
         console.log('SimpleChatView - AI completed conversation, automatically completing session');
-        // Automatically complete the session without showing manual button
+        // Remove the [CONVERSATION_COMPLETE] marker from the response
+        const cleanResponse = response.replace('[CONVERSATION_COMPLETE]', '').trim();
+        
+        // Create clean bot message
+        const cleanBotMessage: Message = { 
+          sender: 'bot', 
+          text: cleanResponse,
+          timestamp: new Date()
+        };
+        
+        // Add the clean bot message to state
+        setMessages(prev => [...prev, cleanBotMessage]);
+        
+        // Automatically complete the session
         if (onComplete) {
-          onComplete([...messages, userMessage, botMessage]);
+          onComplete([...messages, userMessage, cleanBotMessage]);
         }
         setIsChatComplete(true);
+        return; // Exit early to prevent further processing
       }
+
+      // Add bot message to state (only if not completed)
+      setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error getting bot response:', error);
       const errorMessage: Message = { 
@@ -293,13 +307,13 @@ export default function SimpleChatView({
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                  placeholder={isCompleting ? "Completing reflection..." : isBotTyping ? "Bridge is typing..." : "Share what's on your mind... 💭"}
-                  disabled={isBotTyping || isCompleting}
+                  placeholder={isChatComplete ? "Conversation completed" : isCompleting ? "Completing reflection..." : isBotTyping ? "Bridge is typing..." : "Share what's on your mind... 💭"}
+                  disabled={isBotTyping || isCompleting || isChatComplete}
                   className="flex-1 text-sm sm:text-base lg:text-lg py-2 sm:py-3 px-3 sm:px-4 border-2 border-gray-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 rounded-xl transition-all duration-200 min-h-[44px]"
               />
               <Button
                   onClick={handleSendMessage}
-                  disabled={isBotTyping || !userInput.trim() || isCompleting}
+                  disabled={isBotTyping || !userInput.trim() || isCompleting || isChatComplete}
                 variant="therapy"
                 size="lg"
                   className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px]"

@@ -521,6 +521,10 @@ router.post('/:sessionId/complete-reflection', [
 
     await session.save();
     console.log('Session saved with status:', session.status);
+    
+    // Verify the status was actually saved by refetching from database
+    const savedSession = await JournalSession.findById(sessionId);
+    console.log('Verified saved session status:', savedSession?.status);
 
     // Send notification to partner
     if (isPartner1 && !session.notificationSent.partner1Complete) {
