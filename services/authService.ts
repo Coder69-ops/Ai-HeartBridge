@@ -152,3 +152,46 @@ export const updateJournalEntry = async (journalId: string, data: { partner1Chat
         throw new Error(error.response?.data?.error || 'Failed to update journal entry');
     }
 };
+
+// --- Profile Management Functions ---
+
+export const updateProfile = async (profileData: { name?: string, email?: string, avatar?: string }): Promise<User> => {
+    try {
+        const response = await api.patch('/users/profile', profileData);
+        const updatedUser = response.data.user;
+        
+        // Update stored user data
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+        
+        return updatedUser;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.error || 'Failed to update profile');
+    }
+};
+
+export const unpairPartner = async (): Promise<void> => {
+    try {
+        await api.delete('/couples/unpair');
+        
+        // Get updated user data
+        const response = await api.get('/users/profile');
+        const updatedUser = response.data.user;
+        
+        // Update stored user data
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    } catch (error: any) {
+        throw new Error(error.response?.data?.error || 'Failed to unpair partner');
+    }
+};
+
+export const deactivateAccount = async (): Promise<void> => {
+    try {
+        await api.delete('/users/account');
+        
+        // Clear stored data
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+    } catch (error: any) {
+        throw new Error(error.response?.data?.error || 'Failed to deactivate account');
+    }
+};

@@ -19,6 +19,7 @@ import MasterExercisesView from './components/MasterExercisesView';
 import MasterExerciseDetailView from './components/MasterExerciseDetailView';
 import MasterTrendsView from './components/MasterTrendsView';
 import MasterProfileView from './components/MasterProfileView';
+import EnhancedProfileView from './components/EnhancedProfileView';
 import EnhancedPartnerChat from './components/EnhancedPartnerChat';
 import MasterSafetyModal from './components/MasterSafetyModal';
 import MasterPartnerPairingView from './components/MasterPartnerPairingView';
@@ -333,7 +334,7 @@ export const AppContent: React.FC = () => {
             case 'trends':
                 return <MasterTrendsView />;
             case 'profile':
-                return <MasterProfileView onBack={() => setCurrentView('dashboard')} />;
+                return <EnhancedProfileView onBack={() => setCurrentView('dashboard')} />;
             case 'chat':
                 return <ChatManager onBack={() => setCurrentView('dashboard')} />;
             case 'partner-chat':
