@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from './shared/Card';
 import { Button } from './shared/Button';
 import { Input } from './shared/Input';
+import ContextualLoader from './shared/ContextualLoader';
 import { 
   getChatSession, 
   sendMessage, 
@@ -175,16 +176,7 @@ const PersistentChatView: React.FC<PersistentChatViewProps> = ({
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full mx-auto mb-4 flex items-center justify-center animate-pulse">
-            <Bot className="w-8 h-8 text-white" />
-          </div>
-          <p className="text-lg text-gray-600">Loading your conversation...</p>
-        </div>
-      </div>
-    );
+    return <ContextualLoader type="chat" message="Loading your conversation..." />;
   }
 
   if (!sessionId || !session) {

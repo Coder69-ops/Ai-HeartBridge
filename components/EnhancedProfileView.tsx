@@ -54,7 +54,7 @@ interface EnhancedProfileViewProps {
 type ProfileSection = 'profile' | 'partner' | 'notifications' | 'privacy' | 'appearance' | 'danger';
 
 const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => {
-  const { user, setUser, logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [partner, setPartner] = useState<User | null>(null);
   const [couple, setCouple] = useState<Couple | null>(null);
   const [activeSection, setActiveSection] = useState<ProfileSection>('profile');
@@ -103,25 +103,32 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
         
         // Load partner and couple data
         if (user?.coupleId) {
-          const [partnerData, coupleData] = await Promise.all([
-            authService.getPartner(user),
-            authService.getCouple(user.coupleId)
-          ]);
-          setPartner(partnerData);
-          setCouple(coupleData);
+          try {
+            const [partnerData, coupleData] = await Promise.all([
+              authService.getPartner(user),
+              authService.getCouple(user.coupleId)
+            ]);
+            setPartner(partnerData);
+            setCouple(coupleData);
+          } catch (error) {
+            console.error('Failed to load partner/couple data:', error);
+            // Set to null to show "no partner" state
+            setPartner(null);
+            setCouple(null);
+          }
         }
 
         // Load user statistics
         if (user?.coupleId) {
           try {
             const [checkInHistory, journalHistory, healthScore] = await Promise.all([
-              getCoupleCheckInHistory(user.coupleId),
-              getJournalSessionHistory(user.coupleId),
-              getHealthScore(user.coupleId)
+              getCoupleCheckInHistory(),
+              getJournalSessionHistory(),
+              getHealthScore()
             ]);
 
-            const checkIns = Array.isArray(checkInHistory) ? checkInHistory : checkInHistory.checkIns || [];
-            const journalSessions = Array.isArray(journalHistory) ? journalHistory : journalHistory.sessions || [];
+            const checkIns = Array.isArray(checkInHistory) ? checkInHistory : (checkInHistory as any)?.checkIns || [];
+            const journalSessions = Array.isArray(journalHistory) ? journalHistory : (journalHistory as any)?.sessions || [];
             
             // Calculate days active (last 30 days)
             const thirtyDaysAgo = new Date();
@@ -163,13 +170,14 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const updatedUser = await authService.updateProfile({
+      await authService.updateProfile({
         name: formData.name,
         email: formData.email,
         avatar: formData.avatar
       });
       
-      setUser(updatedUser);
+      // Refresh user data by reloading the page or updating local state
+      window.location.reload();
       setSaveSuccess(true);
       setIsEditing(false);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -217,7 +225,8 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
     }
   };
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined | null) => {
+    if (!name) return '??';
     return name
       .split(' ')
       .map(n => n[0])
@@ -272,30 +281,31 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-4 sm:px-6 lg:px-8 pt-6 pb-20">
+      <div className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-16 sm:pb-20">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl mx-auto"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold mb-2">Profile & Settings</h1>
-              <p className="text-white/80">Manage your account and preferences</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 truncate">Profile & Settings</h1>
+              <p className="text-white/80 text-sm sm:text-base">Manage your account and preferences</p>
             </div>
             <Button
               onClick={onBack}
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              size="sm"
+              className="text-white hover:bg-white/20 flex-shrink-0 ml-2"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </div>
         </motion.div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 pb-8">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 -mt-12 sm:-mt-16 pb-6 sm:pb-8">
         {/* Profile Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -305,12 +315,12 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
           <Card className="mb-6 overflow-hidden shadow-xl">
             <div className="bg-gradient-to-r from-emerald-500 to-cyan-500 h-24" />
             
-            <CardContent className="p-6 -mt-12">
+            <CardContent className="p-4 sm:p-6 -mt-8 sm:-mt-12">
               {/* Avatar and Basic Info */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-xl border-4 border-white">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
+                <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center text-white text-lg sm:text-2xl lg:text-3xl font-bold shadow-xl border-4 border-white">
                       {formData.avatar ? (
                         <img 
                           src={formData.avatar} 
@@ -322,23 +332,23 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                       )}
                     </div>
                     {isEditing && (
-                      <button className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 transition-colors">
-                        <Camera className="w-4 h-4" />
+                      <button className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full shadow-lg flex items-center justify-center border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 transition-colors">
+                        <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
                       </button>
                     )}
                   </div>
 
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1">
-                      {formData.name || 'Your Name'}
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1 truncate">
+                      {formData.name || user?.name || 'Your Name'}
                     </h2>
-                    <p className="text-gray-600 flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      {formData.email}
+                    <p className="text-gray-600 flex items-center gap-2 text-sm sm:text-base truncate">
+                      <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <span className="truncate">{formData.email}</span>
                     </p>
                     {partner && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        Partnered with {partner.name}
+                      <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">
+                        Partnered with {partner.name || 'Unknown Partner'}
                       </p>
                     )}
                   </div>
@@ -349,7 +359,8 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                   <Button
                     variant="outline"
                     onClick={() => setIsEditing(true)}
-                    className="w-full sm:w-auto"
+                    size="sm"
+                    className="w-full sm:w-auto flex-shrink-0"
                   >
                     <Edit3 className="w-4 h-4 mr-2" />
                     Edit Profile
@@ -381,7 +392,7 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                     exit={{ opacity: 0, height: 0 }}
                     className="space-y-4 mb-6"
                   >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Full Name
@@ -390,7 +401,7 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                           type="text"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all"
                           placeholder="Enter your full name"
                         />
                       </div>
@@ -403,7 +414,7 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                           type="email"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all"
                           placeholder="your@email.com"
                         />
                       </div>
@@ -417,7 +428,7 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                         type="url"
                         value={formData.avatar}
                         onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all"
                         placeholder="https://example.com/avatar.jpg"
                       />
                     </div>
@@ -426,6 +437,7 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                       <Button
                         onClick={handleSave}
                         disabled={isSaving}
+                        size="sm"
                         className="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
                       >
                         {isSaving ? (
@@ -450,6 +462,7 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                         variant="outline"
                         onClick={handleCancel}
                         disabled={isSaving}
+                        size="sm"
                         className="flex-1"
                       >
                         <X className="w-4 h-4 mr-2" />
@@ -465,36 +478,36 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6"
+                className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6"
               >
                 <Card className="text-center">
-                  <CardContent className="p-4">
-                    <div className="text-2xl font-bold text-emerald-600 mb-1">{userStats.checkIns}</div>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="text-xl sm:text-2xl font-bold text-emerald-600 mb-1">{userStats.checkIns}</div>
                     <div className="text-xs text-gray-600 font-medium">Check-ins</div>
                   </CardContent>
                 </Card>
                 <Card className="text-center">
-                  <CardContent className="p-4">
-                    <div className="text-2xl font-bold text-blue-600 mb-1">{userStats.journalSessions}</div>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600 mb-1">{userStats.journalSessions}</div>
                     <div className="text-xs text-gray-600 font-medium">Journal Sessions</div>
                   </CardContent>
                 </Card>
                 <Card className="text-center">
-                  <CardContent className="p-4">
-                    <div className="text-2xl font-bold text-purple-600 mb-1">{userStats.healthScore}</div>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="text-xl sm:text-2xl font-bold text-purple-600 mb-1">{userStats.healthScore}</div>
                     <div className="text-xs text-gray-600 font-medium">Health Score</div>
                   </CardContent>
                 </Card>
                 <Card className="text-center">
-                  <CardContent className="p-4">
-                    <div className="text-2xl font-bold text-orange-600 mb-1">{userStats.daysActive}</div>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="text-xl sm:text-2xl font-bold text-orange-600 mb-1">{userStats.daysActive}</div>
                     <div className="text-xs text-gray-600 font-medium">Days Active</div>
                   </CardContent>
                 </Card>
               </motion.div>
 
               {/* Settings Sections */}
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {sections.map((section, index) => (
                   <motion.button
                     key={section.id}
@@ -502,17 +515,17 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 + index * 0.05 }}
                     onClick={() => setActiveSection(section.id)}
-                    className={`w-full text-left p-4 rounded-2xl border-2 transition-all duration-300 flex items-center gap-3 min-h-[60px] ${
+                    className={`w-full text-left p-3 sm:p-4 rounded-2xl border-2 transition-all duration-300 flex items-center gap-3 min-h-[56px] sm:min-h-[60px] ${
                       activeSection === section.id
                         ? `bg-gradient-to-r ${section.color} text-white border-transparent shadow-lg`
                         : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
                     }`}
                   >
-                    <div className={`p-2 rounded-lg ${activeSection === section.id ? 'bg-white/20' : 'bg-gray-100'}`}>
+                    <div className={`p-2 rounded-lg flex-shrink-0 ${activeSection === section.id ? 'bg-white/20' : 'bg-gray-100'}`}>
                       {section.icon}
                     </div>
-                    <span className="font-medium flex-1">{section.label}</span>
-                    <ChevronRight className={`w-5 h-5 transition-transform ${activeSection === section.id ? 'rotate-90' : ''}`} />
+                    <span className="font-medium flex-1 text-sm sm:text-base">{section.label}</span>
+                    <ChevronRight className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform flex-shrink-0 ${activeSection === section.id ? 'rotate-90' : ''}`} />
                   </motion.button>
                 ))}
               </div>
@@ -525,18 +538,18 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="mt-6 p-6 bg-white rounded-2xl border-2 border-gray-200"
+                    className="mt-4 sm:mt-6 p-4 sm:p-6 bg-white rounded-2xl border-2 border-gray-200"
                   >
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Account Information</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-700"><strong>Name:</strong> {user?.name}</span>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Account Information</h3>
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm sm:text-base text-gray-700"><strong>Name:</strong> {user?.name}</span>
                       </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-700"><strong>Email:</strong> {user?.email}</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm sm:text-base text-gray-700"><strong>Email:</strong> {user?.email}</span>
                       </div>
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-700"><strong>Member Since:</strong> {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}</span>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm sm:text-base text-gray-700"><strong>Member Since:</strong> {user?.id ? 'Active User' : 'Unknown'}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -548,24 +561,25 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="mt-6 p-6 bg-white rounded-2xl border-2 border-gray-200"
+                    className="mt-4 sm:mt-6 p-4 sm:p-6 bg-white rounded-2xl border-2 border-gray-200"
                   >
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Partner Information</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">Partner Information</h3>
                     {partner ? (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-xl">
-                          <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full flex items-center justify-center text-white font-bold">
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-r from-pink-50 to-rose-50 rounded-xl">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
                             {getInitials(partner.name)}
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-800">{partner.name}</h4>
-                            <p className="text-sm text-gray-600">{partner.email}</p>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-gray-800 text-sm sm:text-base truncate">{partner.name || 'Unknown Partner'}</h4>
+                            <p className="text-xs sm:text-sm text-gray-600 truncate">{partner.email || 'No email available'}</p>
                           </div>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-3">
                           <Button
                             onClick={() => setShowUnpairConfirm(true)}
                             variant="outline"
+                            size="sm"
                             className="flex-1 border-red-200 text-red-600 hover:bg-red-50"
                           >
                             <UserX className="w-4 h-4 mr-2" />
@@ -574,12 +588,13 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h4 className="text-lg font-semibold text-gray-800 mb-2">No Partner Connected</h4>
-                        <p className="text-gray-600 mb-4">Connect with your partner to start your journey together</p>
+                      <div className="text-center py-6 sm:py-8">
+                        <Heart className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">No Partner Connected</h4>
+                        <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">Connect with your partner to start your journey together</p>
                         <Button
                           onClick={() => {/* Navigate to pairing */}}
+                          size="sm"
                           className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600"
                         >
                           <LinkIcon className="w-4 h-4 mr-2" />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GorgeousLoader } from './shared/GorgeousLoader';
+import ContextualLoader from './shared/ContextualLoader';
 import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import { Button } from './shared/Button';
 import { JournalSession, JournalSessionStatus, getJournalSessions, deleteJournalSession } from '../services/journalSessionService';
@@ -144,13 +144,7 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
   });
 
   if (isLoading) {
-    return (
-      <GorgeousLoader 
-        message="Loading your journal sessions..." 
-        type="therapy"
-        size="lg"
-      />
-    );
+    return <ContextualLoader type="journal" message="Loading your journal sessions..." />;
   }
 
   return (

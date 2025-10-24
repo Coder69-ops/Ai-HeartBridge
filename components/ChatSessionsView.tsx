@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import { Button } from './shared/Button';
 import Icon from './shared/Icon';
-import { Loader } from './shared/Loader';
+import ContextualLoader from './shared/ContextualLoader';
 import { 
   getChatSessions, 
   createChatSession, 
@@ -143,11 +143,7 @@ const ChatSessionsView: React.FC<ChatSessionsViewProps> = ({ onSessionSelect, on
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader />
-      </div>
-    );
+    return <ContextualLoader type="chat" message="Loading your chat sessions..." />;
   }
 
   return (
