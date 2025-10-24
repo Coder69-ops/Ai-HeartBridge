@@ -14,6 +14,7 @@ import SimpleHeader from './components/SimpleHeader';
 import JournalingView from './components/JournalingView';
 import JournalManager from './components/JournalManager';
 import MasterCheckInView from './components/MasterCheckInView';
+import StandaloneCheckInView from './components/StandaloneCheckInView';
 import MasterExercisesView from './components/MasterExercisesView';
 import MasterExerciseDetailView from './components/MasterExerciseDetailView';
 import MasterTrendsView from './components/MasterTrendsView';
@@ -297,7 +298,7 @@ export const AppContent: React.FC = () => {
                     </div>
                 );
             case 'checkin':
-                // If coming from journaling, use the current journal ID
+                // If coming from journaling, use the current journal ID for analysis
                 if (couple && currentJournalId) {
                     return (
                         <MasterCheckInView 
@@ -307,11 +308,10 @@ export const AppContent: React.FC = () => {
                         />
                     );
                 }
-                // If navigating directly to check-in, show check-in without requiring a journal
+                // If navigating directly to check-in, show standalone check-in
                 return (
-                    <MasterCheckInView 
+                    <StandaloneCheckInView 
                         coupleId={couple?.id || ''} 
-                        journalId={undefined}
                         onNavigate={handleNavigate} 
                     />
                 );
