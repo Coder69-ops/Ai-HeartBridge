@@ -513,7 +513,12 @@ router.post('/:sessionId/complete-reflection', [
       session.partner2CompletedAt = new Date();
       
       // Update status
-      if (session.status === JournalSessionStatus.PARTNER1_COMPLETE) {
+      if (session.status === JournalSessionStatus.CREATED) {
+        // Partner 2 completing while partner 1 hasn't started yet
+        session.status = JournalSessionStatus.PARTNER2_COMPLETE;
+        console.log('Updated status to PARTNER2_COMPLETE for session (partner 2 first):', sessionId);
+      } else if (session.status === JournalSessionStatus.PARTNER1_COMPLETE) {
+        // Both partners completed
         session.status = JournalSessionStatus.PARTNER2_COMPLETE;
         console.log('Updated status to PARTNER2_COMPLETE for session:', sessionId);
       }
