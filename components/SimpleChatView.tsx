@@ -261,7 +261,7 @@ export default function SimpleChatView({
                           <div className={`text-xs mt-1 sm:mt-2 ${
                             msg.sender === 'user' ? 'text-orange-100' : 'text-gray-500'
                           }`}>
-                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {(msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         )}
                       </div>

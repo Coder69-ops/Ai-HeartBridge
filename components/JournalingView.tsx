@@ -142,11 +142,8 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                 });
             }, 100);
 
-            // If both partners have completed, show results
-            if (response.session.status === JournalSessionStatus.ANALYSIS_PENDING || 
-                response.session.status === JournalSessionStatus.INSIGHTS_READY) {
-                onComplete({ partner1Chat: userChat || [], partner2Chat: partnerChat || [] });
-            }
+            // Always call onComplete to refresh session data
+            onComplete({ partner1Chat: userChat || [], partner2Chat: partnerChat || [] });
         } catch (error) {
             console.error('Error completing reflection:', error);
         } finally {
