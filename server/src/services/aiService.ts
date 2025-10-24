@@ -66,60 +66,60 @@ Style: Think supportive best friend who knows their story, not clinical therapis
 
 const analysisSystemInstruction = `You are an expert relationship analyst trained in the Gottman Method, Nonviolent Communication, and Emotionally Focused Therapy. You will receive two separate, private chat transcripts from a couple describing the same recent event from their own perspective, along with their personal context and relationship background.
 
-Your task is to analyze these conversations and provide a neutral, constructive, and actionable summary. Use the provided user context to:
-- Understand their relationship history, duration, and dynamics
-- Consider their stated goals and known challenges
-- Reference their communication styles and preferences
-- Account for their life circumstances (children, living situation, etc.)
-- Consider their values, interests, and support systems
-- Tailor repair strategies to their specific situation
+CRITICAL PRIVACY REQUIREMENT: You must NEVER quote, reference, or reveal specific details from either partner's private journal entries. Your analysis must be completely general and focus only on relationship patterns, communication styles, and growth opportunities without exposing any private content.
 
-Do not take sides. Focus on identifying patterns, underlying needs, and opportunities for connection that are specific to this couple's unique circumstances.
+Your task is to analyze these conversations and provide a neutral, constructive, and actionable summary that focuses on:
+- General relationship communication patterns
+- Common relationship challenges and opportunities
+- Evidence-based relationship improvement strategies
+- Communication skill development
+- Emotional intelligence growth areas
 
-SAFETY PRIORITY: If you detect any signs of intimate partner violence, abuse, threats, coercion, or dangerous escalation patterns, you MUST set safetyMode to true and include specific risk flags. Look for patterns like:
-- Threats of violence or harm
-- Controlling or coercive language
-- Extreme jealousy or possessiveness
-- Verbal abuse or degradation
-- Descriptions of physical violence
-- Intimidation tactics
+IMPORTANT: 
+- Do NOT quote specific statements from either partner
+- Do NOT reference specific incidents or details
+- Do NOT reveal what one partner said about the other
+- Focus on general relationship dynamics and patterns
+- Provide universal relationship advice and strategies
+
+SAFETY PRIORITY: If you detect any signs of intimate partner violence, abuse, threats, coercion, or dangerous escalation patterns, you MUST set safetyMode to true and include general risk flags without revealing specific details.
 
 Provide your analysis ONLY in the specified JSON format.`;
 
 const analysisSchema = {
-  summary: "A neutral, 1-2 paragraph summary of the core issue from both perspectives.",
-  strengths: "A list of 2-3 specific communication strengths observed (e.g., using 'I' statements, expressing vulnerability).",
-  opportunities: "A list of 2-3 specific opportunities for growth (e.g., areas where defensiveness occurred, chances for validation).",
+  summary: "A general, neutral summary of the relationship dynamics observed, without revealing specific private content.",
+  strengths: "General communication strengths that could benefit any couple (e.g., expressing feelings, seeking understanding).",
+  opportunities: "Universal relationship growth opportunities (e.g., improving communication, building trust, enhancing connection).",
   fourHorsemen: {
-    criticism: "Is there criticism (attacking character) vs. complaining (specific issue)?",
-    contempt: "Is there contempt (sarcasm, name-calling, eye-rolling, disrespect)?",
-    defensiveness: "Is there defensiveness (victimizing self, not taking responsibility)?",
-    stonewalling: "Is there stonewalling (shutting down, refusing to engage)?"
+    criticism: "General assessment of criticism patterns without specific examples",
+    contempt: "General assessment of contempt patterns without specific examples", 
+    defensiveness: "General assessment of defensiveness patterns without specific examples",
+    stonewalling: "General assessment of stonewalling patterns without specific examples"
   },
   emotionalIntelligence: {
-    empathyLevel: "High/Medium/Low empathy demonstrated by both partners",
-    emotionalRegulation: "How well emotions were managed during the conversation",
-    communicationStyle: "Assertive/Passive/Aggressive patterns observed",
-    emotionalValidation: "How well partners validated each other's emotions"
+    empathyLevel: "General empathy level assessment",
+    emotionalRegulation: "General emotional regulation assessment",
+    communicationStyle: "General communication style patterns",
+    emotionalValidation: "General emotional validation assessment"
   },
   attachmentPatterns: {
-    secure: "Secure attachment behaviors observed (e.g., seeking comfort, providing support)",
-    anxious: "Anxious attachment patterns (e.g., seeking reassurance, fear of abandonment)",
-    avoidant: "Avoidant attachment patterns (e.g., emotional distance, self-reliance)"
+    secure: "General secure attachment behaviors",
+    anxious: "General anxious attachment patterns",
+    avoidant: "General avoidant attachment patterns"
   },
   conflictResolution: {
-    style: "Collaborative/Competitive/Avoidant/Accommodating approach to conflict",
-    effectiveness: "How well conflicts were resolved or managed",
-    repairAttempts: "Successful repair attempts and connection bids identified"
+    style: "General conflict resolution approach",
+    effectiveness: "General conflict resolution effectiveness",
+    repairAttempts: "General repair attempt patterns"
   },
   relationshipSatisfaction: {
-    overallScore: "1-10 relationship satisfaction based on the conversation",
-    keyFactors: "Main factors affecting relationship satisfaction",
-    improvementAreas: "Specific areas for relationship growth and improvement"
+    overallScore: "1-10 relationship satisfaction score",
+    keyFactors: "General factors affecting relationship satisfaction",
+    improvementAreas: "General areas for relationship growth"
   },
-  repairPlan: "A concrete, 3-step actionable repair plan for the couple to reconnect on this issue.",
-  riskFlags: "List any specific safety concerns or abuse patterns detected. Leave empty if none found.",
-  safetyMode: "Set to true if any intimate partner violence, abuse, or serious safety concerns are detected."
+  repairPlan: "Universal, evidence-based relationship improvement strategies that any couple can implement.",
+  riskFlags: "General risk factors without specific details",
+  safetyMode: "Boolean indicating if safety concerns require immediate attention"
 };
 
 const formatUserContext = (user: IUser): string => {
@@ -350,7 +350,9 @@ ${formattedPartner2Chat}
 --- END TRANSCRIPT 2 ---
 
 Please provide your analysis as a JSON object with this structure:
-${JSON.stringify(analysisSchema, null, 2)}`;
+${JSON.stringify(analysisSchema, null, 2)}
+
+REMEMBER: Your analysis must be completely general and never reveal what either partner said privately. Focus on universal relationship advice and patterns, not specific details or quotes.`;
 
       // Use Google Gemini API for analysis
       const analysisPrompt = `You are a relationship counselor AI. You MUST respond with ONLY valid JSON. Do not include any markdown formatting, code blocks, or explanatory text. Just return the raw JSON object.

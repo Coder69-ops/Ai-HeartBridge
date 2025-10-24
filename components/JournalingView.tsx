@@ -6,6 +6,7 @@ import { Button } from './shared/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import Icon from './shared/Icon';
 import { completeJournalReflection, JournalSessionStatus } from '../services/journalSessionService';
+import InsightsDisplay from './InsightsDisplay';
 
 interface JournalingViewProps {
   user: User;
@@ -187,84 +188,10 @@ const JournalingView: React.FC<JournalingViewProps> = ({
     if (sessionStatus === JournalSessionStatus.INSIGHTS_READY && insights) {
         console.log('JournalingView - Showing insights view');
         return (
-            <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4 sm:p-6">
-                <div className="max-w-4xl mx-auto">
-                    {/* Header Section */}
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full mb-6 shadow-lg">
-                            <Icon name="lightbulb" className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-3">
-                            ✨ Your Shared Insights
-                        </h1>
-                        <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                            AI-powered analysis of your relationship reflection session
-                        </p>
-                        <div className="flex items-center justify-center gap-4 mt-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-2">
-                                <Icon name="users" className="w-4 h-4" />
-                                <span>2 perspectives analyzed</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Icon name="brain" className="w-4 h-4" />
-                                <span>AI-powered insights</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Icon name="clock" className="w-4 h-4" />
-                                <span>{Math.floor((Date.now() - sessionStartTime.getTime()) / 1000 / 60)} min session</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Insights Content */}
-                    <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-                        <CardContent className="p-6 sm:p-8">
-                            <div 
-                                className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
-                                dangerouslySetInnerHTML={{ 
-                                    __html: insights
-                                        .replace(/## /g, '<h2 class="text-2xl font-bold text-emerald-700 mt-8 mb-4 pb-2 border-b-2 border-emerald-100">')
-                                        .replace(/### /g, '<h3 class="text-xl font-semibold text-cyan-700 mt-6 mb-3">')
-                                        .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-800">$1</strong>')
-                                        .replace(/- (.*?)(?=\n|$)/g, '<li class="flex items-start gap-3 mb-2"><span class="w-2 h-2 bg-emerald-400 rounded-full mt-2 flex-shrink-0"></span><span>$1</span></li>')
-                                        .replace(/✅/g, '<span class="inline-flex items-center justify-center w-5 h-5 bg-green-100 text-green-600 rounded-full text-xs mr-2">✓</span>')
-                                        .replace(/\n/g, '<br/>')
-                                }}
-                            />
-                        </CardContent>
-                    </Card>
-
-                    {/* Action Buttons */}
-                    <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button
-                            onClick={() => onComplete({ partner1Chat: userChat || [], partner2Chat: partnerChat || [] })}
-                            variant="therapy"
-                            size="lg"
-                            className="px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                        >
-                            <Icon name="check" className="w-5 h-5 mr-2" />
-                            Complete Session
-                        </Button>
-                        <Button
-                            onClick={() => window.print()}
-                            variant="outline"
-                            size="lg"
-                            className="px-8 py-3 text-lg font-semibold border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-all duration-300"
-                        >
-                            <Icon name="download" className="w-5 h-5 mr-2" />
-                            Save Insights
-                        </Button>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="mt-12 text-center">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 rounded-full text-sm text-gray-600">
-                            <Icon name="heart" className="w-4 h-4 text-red-500" />
-                            <span>Powered by AI HeartBridge</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <InsightsDisplay 
+                insights={insights}
+                onContinue={() => onComplete({ partner1Chat: userChat || [], partner2Chat: partnerChat || [] })}
+            />
         );
     }
     
