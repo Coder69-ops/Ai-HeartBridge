@@ -139,13 +139,15 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             } else {
               // Use our expected status if backend response seems incorrect
               console.log('JournalingView - Backend status seems incorrect, using expected status:', expectedStatus);
+              console.log('JournalingView - Setting sessionStatus to:', expectedStatus);
               setSessionStatus(expectedStatus);
+              console.log('JournalingView - setSessionStatus called with:', expectedStatus);
             }
 
             // Add a small delay to ensure state updates are processed
             setTimeout(() => {
                 console.log('JournalingView - After status update (delayed):', {
-                    sessionStatus: response.session.status,
+                    sessionStatus: sessionStatus,
                     userChatLength: userChat?.length || 0,
                     shouldShowWaiting: shouldShowWaitingScreen()
                 });
