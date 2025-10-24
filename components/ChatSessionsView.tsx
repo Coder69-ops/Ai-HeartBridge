@@ -241,7 +241,7 @@ const ChatSessionsView: React.FC<ChatSessionsViewProps> = ({ onSessionSelect, on
       {/* Sessions List */}
       <div className="space-y-3">
         <AnimatePresence>
-          {sessions.length === 0 ? (
+          {(sessions || []).length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

@@ -99,12 +99,12 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
         });
 
         setDashboardData({
-          healthScore: (healthScore as any).overallScore || 0,
-          checkInCount: checkIns.length,
-          journalSessions: journalSessions.length,
+          healthScore: (healthScore as any)?.overallScore || 0,
+          checkInCount: (checkIns || []).length,
+          journalSessions: (journalSessions || []).length,
           exerciseCount: 0, // TODO: Implement exercise tracking
           daysActive: activeDays.size,
-          recentInsights: journalSessions.find((s: any) => s.insights) || null,
+          recentInsights: (journalSessions || []).find((s: any) => s?.insights) || null,
           relationshipTrends: trends
         });
       } catch (error) {

@@ -119,7 +119,7 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
     }
   };
 
-  const filteredSessions = sessions.filter(session => {
+  const filteredSessions = (sessions || []).filter(session => {
     const matchesSearch = session.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          session.summary?.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -189,9 +189,9 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
             <Card>
               <CardContent className="p-3 sm:p-4 text-center">
                 <div className="text-xl sm:text-3xl font-bold text-emerald-600 mb-1">
-                  {sessions.filter(s => s.status === JournalSessionStatus.CREATED || 
-                                       s.status === JournalSessionStatus.PARTNER1_COMPLETE ||
-                                       s.status === JournalSessionStatus.PARTNER2_COMPLETE).length}
+                  {(sessions || []).filter(s => s?.status === JournalSessionStatus.CREATED || 
+                                       s?.status === JournalSessionStatus.PARTNER1_COMPLETE ||
+                                       s?.status === JournalSessionStatus.PARTNER2_COMPLETE).length}
                 </div>
                 <div className="text-xs text-gray-600">Active</div>
               </CardContent>
@@ -199,7 +199,7 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
             <Card>
               <CardContent className="p-3 sm:p-4 text-center">
                 <div className="text-xl sm:text-3xl font-bold text-purple-600 mb-1">
-                  {sessions.filter(s => s.status === JournalSessionStatus.INSIGHTS_READY).length}
+                  {(sessions || []).filter(s => s?.status === JournalSessionStatus.INSIGHTS_READY).length}
                 </div>
                 <div className="text-xs text-gray-600">Insights Ready</div>
               </CardContent>
@@ -207,7 +207,7 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
             <Card>
               <CardContent className="p-3 sm:p-4 text-center">
                 <div className="text-xl sm:text-3xl font-bold text-cyan-600 mb-1">
-                  {sessions.filter(s => s.status === JournalSessionStatus.CLOSED).length}
+                  {(sessions || []).filter(s => s?.status === JournalSessionStatus.CLOSED).length}
                 </div>
                 <div className="text-xs text-gray-600">Completed</div>
               </CardContent>

@@ -135,19 +135,19 @@ const EnhancedProfileView: React.FC<EnhancedProfileViewProps> = ({ onBack }) => 
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
             
             const recentActivity = [
-              ...checkIns.filter((checkIn: any) => new Date(checkIn.createdAt) >= thirtyDaysAgo),
-              ...journalSessions.filter((session: any) => new Date(session.createdAt) >= thirtyDaysAgo)
+              ...(checkIns || []).filter((checkIn: any) => checkIn?.createdAt && new Date(checkIn.createdAt) >= thirtyDaysAgo),
+              ...(journalSessions || []).filter((session: any) => session?.createdAt && new Date(session.createdAt) >= thirtyDaysAgo)
             ];
             
             const uniqueDays = new Set(
               recentActivity.map((item: any) => 
-                new Date(item.createdAt).toDateString()
-              )
+                item?.createdAt ? new Date(item.createdAt).toDateString() : ''
+              ).filter(day => day !== '')
             ).size;
 
             setUserStats({
-              checkIns: checkIns.length,
-              journalSessions: journalSessions.length,
+              checkIns: (checkIns || []).length,
+              journalSessions: (journalSessions || []).length,
               healthScore: (healthScore as any)?.overallScore || 0,
               daysActive: uniqueDays
             });
