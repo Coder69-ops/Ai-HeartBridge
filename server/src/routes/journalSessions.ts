@@ -11,18 +11,27 @@ import { IAnalysisResult } from '../models/JournalEntry';
 
 const router = express.Router();
 
+// Helper function to handle both string and array formats
+const formatList = (items: string | string[]): string => {
+  if (typeof items === 'string') {
+    return items;
+  }
+  return items.map((item: string) => `- ${item}`).join('\n');
+};
+
 // Helper function to format analysis result as readable text
 function formatAnalysisAsText(analysis: IAnalysisResult): string {
+
   return `# Relationship Insights
 
 ## Summary
 ${analysis.summary}
 
 ## Strengths
-${analysis.strengths.map((strength: string) => `- ${strength}`).join('\n')}
+${formatList(analysis.strengths)}
 
 ## Growth Opportunities
-${analysis.opportunities.map((opportunity: string) => `- ${opportunity}`).join('\n')}
+${formatList(analysis.opportunities)}
 
 ## Four Horsemen Assessment
 - **Criticism**: ${analysis.fourHorsemen.criticism ? '⚠️ Present' : '✅ Not detected'}
@@ -31,10 +40,10 @@ ${analysis.opportunities.map((opportunity: string) => `- ${opportunity}`).join('
 - **Stonewalling**: ${analysis.fourHorsemen.stonewalling ? '⚠️ Present' : '✅ Not detected'}
 
 ## Repair Plan
-${typeof analysis.repairPlan === 'string' ? analysis.repairPlan : analysis.repairPlan.map((plan: string) => `- ${plan}`).join('\n')}
+${formatList(analysis.repairPlan)}
 
-${analysis.riskFlags.length > 0 ? `## Safety Considerations
-${analysis.riskFlags.map((flag: string) => `- ⚠️ ${flag}`).join('\n')}` : ''}
+${analysis.riskFlags && analysis.riskFlags.length > 0 ? `## Safety Considerations
+${formatList(analysis.riskFlags)}` : ''}
 
 ${analysis.safetyMode ? `## Safety Mode Activated
 This session has been flagged for safety review. Please prioritize emotional safety and consider professional support.` : ''}`;
@@ -734,10 +743,10 @@ router.get('/:sessionId/insights', async (req: AuthRequest, res: Response) => {
 **Summary:** ${analysis.summary}
 
 **Strengths:**
-${analysis.strengths.map((s: string) => `• ${s}`).join('\n')}
+${formatList(analysis.strengths).split('\n').map(line => line.startsWith('- ') ? `• ${line.substring(2)}` : line).join('\n')}
 
 **Growth Opportunities:**
-${analysis.opportunities.map((o: string) => `• ${o}`).join('\n')}
+${formatList(analysis.opportunities).split('\n').map(line => line.startsWith('- ') ? `• ${line.substring(2)}` : line).join('\n')}
 
 **Communication Patterns:**
 • Criticism: ${analysis.fourHorsemen.criticism ? 'Present' : 'Not detected'}
@@ -767,9 +776,9 @@ ${analysis.opportunities.map((o: string) => `• ${o}`).join('\n')}
 • Improvement Areas: ${analysis.relationshipSatisfaction?.improvementAreas || 'Not identified'}
 
 **Repair Plan:**
-${typeof analysis.repairPlan === 'string' ? analysis.repairPlan : analysis.repairPlan.map((r: string) => `• ${r}`).join('\n')}
+${formatList(analysis.repairPlan).split('\n').map(line => line.startsWith('- ') ? `• ${line.substring(2)}` : line).join('\n')}
 
-${analysis.safetyMode ? `\n⚠️ **Safety Notice:** ${analysis.riskFlags.join(', ')}` : ''}`;
+${analysis.safetyMode ? `\n⚠️ **Safety Notice:** ${formatList(analysis.riskFlags)}` : ''}`;
       
     } catch (aiError) {
       console.error('AI insights error:', aiError);

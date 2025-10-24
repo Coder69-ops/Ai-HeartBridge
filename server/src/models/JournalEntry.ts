@@ -8,16 +8,16 @@ export interface IMessage {
 
 export interface IAnalysisResult {
   summary: string;
-  strengths: string[];
-  opportunities: string[];
+  strengths: string | string[];
+  opportunities: string | string[];
   fourHorsemen: {
     criticism: boolean;
     contempt: boolean;
     defensiveness: boolean;
     stonewalling: boolean;
   };
-  repairPlan: string[];
-  riskFlags: string[];
+  repairPlan: string | string[];
+  riskFlags: string | string[];
   safetyMode: boolean;
 }
 
