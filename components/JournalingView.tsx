@@ -199,7 +199,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
     // Show waiting screen only if current user has completed their reflection
     // and the session status indicates they are waiting for their partner
     const shouldShowWaitingScreen = () => {
-      if (!userChat || userChat.length === 0) return false;
+      if (!userChat || (userChat && userChat.length === 0)) return false;
       
       const result = isCurrentUserPartner1 
         ? sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE
@@ -207,7 +207,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
       
       console.log('JournalingView - shouldShowWaitingScreen:', {
         hasUserChat: !!userChat,
-        userChatLength: userChat?.length,
+        userChatLength: userChat ? userChat.length : 0,
         isCurrentUserPartner1,
         sessionStatus,
         result
@@ -304,7 +304,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                     partnerName={getUserDisplayName()}
                     onComplete={handleReflectionComplete}
                     isReturningUser={isReturningUser}
-                    initialMessages={userChat}
+                    initialMessages={userChat || []}
                     isCompleting={isCompleting}
                 />
             </div>

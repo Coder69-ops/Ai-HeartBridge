@@ -22,7 +22,7 @@ export default function SimpleChatView({
   initialMessages = [],
   isCompleting = false
 }: SimpleChatViewProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [userInput, setUserInput] = useState('');
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [isChatComplete, setIsChatComplete] = useState(false);
@@ -37,6 +37,11 @@ export default function SimpleChatView({
 
   // Calculate total words
   useEffect(() => {
+    if (!messages || messages.length === 0) {
+      setTotalWords(0);
+      return;
+    }
+    
     const total = messages.reduce((sum, msg) => {
       const words = msg.text.split(' ').filter(word => word.length > 0);
       return sum + words.length;
@@ -46,11 +51,11 @@ export default function SimpleChatView({
 
   // Initialize with greeting if no messages
   useEffect(() => {
-    if (messages.length === 0 && !isReturningUser) {
+    if ((!messages || messages.length === 0) && !isReturningUser) {
       const greeting = `Hi there! I'm ${partnerName}, your AI relationship counselor. I'm here to listen and help you explore your thoughts and feelings. What's on your mind today? 💙`;
       setMessages([{ sender: 'bot', text: greeting }]);
     }
-  }, [partnerName, isReturningUser, messages.length]);
+  }, [partnerName, isReturningUser, messages]);
 
   const handleSendMessage = async () => {
     const trimmed = userInput.trim();
