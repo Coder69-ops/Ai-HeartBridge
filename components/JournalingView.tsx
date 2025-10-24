@@ -137,7 +137,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             // Add a small delay to ensure state updates are processed
             setTimeout(() => {
                 console.log('JournalingView - After status update (delayed):', {
-                    sessionStatus: sessionStatus,
+                    sessionStatus: expectedStatus,
                     userChatLength: userChat?.length || 0,
                     shouldShowWaiting: shouldShowWaitingScreen()
                 });

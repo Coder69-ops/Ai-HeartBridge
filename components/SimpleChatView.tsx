@@ -105,6 +105,7 @@ export default function SimpleChatView({
           onComplete([...messages, userMessage, cleanBotMessage]);
         }
         setIsChatComplete(true);
+        setUserInput(''); // Clear input field
         return; // Exit early to prevent further processing
       }
 
