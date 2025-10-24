@@ -60,6 +60,16 @@ const JournalingView: React.FC<JournalingViewProps> = ({
         }
     }, [initialSessionStatus]);
 
+    // Debug effect to track status changes
+    useEffect(() => {
+        console.log('JournalingView - Status changed:', {
+            sessionStatus,
+            userChatLength: userChat?.length || 0,
+            isCurrentUserPartner1,
+            shouldShowWaiting: shouldShowWaitingScreen()
+        });
+    }, [sessionStatus, userChat, isCurrentUserPartner1]);
+
     const getPartnerDisplayName = () => {
         if (!partner) return '';
         if (partner.profile?.firstName) {
@@ -95,6 +105,9 @@ const JournalingView: React.FC<JournalingViewProps> = ({
         try {
             setIsCompleting(true);
             
+            // Update local state FIRST - current user completed their reflection
+            setUserChat(chatHistory);
+            
             // Complete the reflection for the current partner
             const journalMessages = chatHistory.map(msg => ({
                 sender: msg.sender as 'user' | 'bot',
@@ -103,8 +116,12 @@ const JournalingView: React.FC<JournalingViewProps> = ({
             }));
             const response = await completeJournalReflection(sessionId, journalMessages);
             
-            // Update local state - current user completed their reflection
-            setUserChat(chatHistory);
+            console.log('JournalingView - Reflection completed:', {
+                sessionId,
+                isCurrentUserPartner1,
+                responseStatus: response.session.status,
+                userChatLength: chatHistory.length
+            });
             
             // Update status based on which partner completed
             if (isCurrentUserPartner1) {
@@ -115,6 +132,15 @@ const JournalingView: React.FC<JournalingViewProps> = ({
 
             // Update session status from response
             setSessionStatus(response.session.status);
+
+            // Add a small delay to ensure state updates are processed
+            setTimeout(() => {
+                console.log('JournalingView - After status update (delayed):', {
+                    sessionStatus: response.session.status,
+                    userChatLength: userChat?.length || 0,
+                    shouldShowWaiting: shouldShowWaitingScreen()
+                });
+            }, 100);
 
             // If both partners have completed, show results
             if (response.session.status === JournalSessionStatus.ANALYSIS_PENDING || 
@@ -199,17 +225,23 @@ const JournalingView: React.FC<JournalingViewProps> = ({
     // Show waiting screen only if current user has completed their reflection
     // and the session status indicates they are waiting for their partner
     const shouldShowWaitingScreen = () => {
-      if (!userChat || (userChat && userChat.length === 0)) return false;
+      // Check if user has completed their reflection (has chat history)
+      const hasUserCompleted = userChat && userChat.length > 0;
       
-      const result = isCurrentUserPartner1 
+      // Check if session status indicates waiting for partner
+      const isWaitingForPartner = isCurrentUserPartner1 
         ? sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE
         : sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE;
+      
+      const result = hasUserCompleted && isWaitingForPartner;
       
       console.log('JournalingView - shouldShowWaitingScreen:', {
         hasUserChat: !!userChat,
         userChatLength: userChat ? userChat.length : 0,
         isCurrentUserPartner1,
         sessionStatus,
+        hasUserCompleted,
+        isWaitingForPartner,
         result
       });
       
