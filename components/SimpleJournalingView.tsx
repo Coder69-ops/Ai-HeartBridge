@@ -44,18 +44,24 @@ const SimpleJournalingView: React.FC<SimpleJournalingViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Determine initial state based on session status
+  // Determine current state based on session status and data
   useEffect(() => {
     if (insights) {
       setCurrentState('insights');
-    } else if (sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE && isCurrentUserPartner1) {
-      setCurrentState('waiting');
-    } else if (sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE && !isCurrentUserPartner1) {
-      setCurrentState('waiting');
     } else if (sessionStatus === JournalSessionStatus.INSIGHTS_READY) {
       setCurrentState('insights');
+    } else if (sessionStatus === JournalSessionStatus.ANALYSIS_PENDING) {
+      setCurrentState('waiting'); // Both completed, generating insights
+    } else if (sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE && isCurrentUserPartner1) {
+      setCurrentState('waiting'); // I completed, waiting for partner
+    } else if (sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE && !isCurrentUserPartner1) {
+      setCurrentState('waiting'); // I completed, waiting for partner
+    } else if (sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE && !isCurrentUserPartner1) {
+      setCurrentState('chat'); // Partner completed, I need to complete
+    } else if (sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE && isCurrentUserPartner1) {
+      setCurrentState('chat'); // Partner completed, I need to complete
     } else {
-      setCurrentState('chat');
+      setCurrentState('chat'); // Fresh session or both need to start
     }
   }, [sessionStatus, insights, isCurrentUserPartner1]);
 
@@ -69,8 +75,8 @@ const SimpleJournalingView: React.FC<SimpleJournalingViewProps> = ({
         // Complete the journal reflection
         const result = await completeJournalReflection(sessionId, messages);
         
-        if (result.insights) {
-          setSessionInsights(result.insights);
+        if (result.session.insights) {
+          setSessionInsights(result.session.insights);
           setCurrentState('insights');
         } else {
           setCurrentState('waiting');
@@ -127,32 +133,67 @@ const SimpleJournalingView: React.FC<SimpleJournalingViewProps> = ({
     );
   }
 
-  // Waiting State - User completed, waiting for partner
+  // Waiting State - User completed, waiting for partner or insights
   if (currentState === 'waiting') {
+    const getWaitingMessage = () => {
+      if (sessionStatus === JournalSessionStatus.ANALYSIS_PENDING) {
+        return {
+          title: "✨ Generating Insights",
+          message: "Both of you have completed your reflections! Our AI is now analyzing your conversations and generating personalized insights. This may take a few moments.",
+          icon: "sparkles",
+          color: "purple"
+        };
+      } else if (sessionStatus === JournalSessionStatus.PARTNER1_COMPLETE && isCurrentUserPartner1) {
+        return {
+          title: `⏳ Waiting for ${partner?.name || 'your partner'}`,
+          message: `You have completed your reflection. ${partner?.name || 'Your partner'} will be notified to complete their reflection. You'll be notified when both reflections are ready to view together.`,
+          icon: "clock",
+          color: "yellow"
+        };
+      } else if (sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE && !isCurrentUserPartner1) {
+        return {
+          title: `⏳ Waiting for ${partner?.name || 'your partner'}`,
+          message: `You have completed your reflection. ${partner?.name || 'Your partner'} will be notified to complete their reflection. You'll be notified when both reflections are ready to view together.`,
+          icon: "clock",
+          color: "yellow"
+        };
+      } else {
+        return {
+          title: "⏳ Processing",
+          message: "Your reflection is being processed. Please wait a moment.",
+          icon: "clock",
+          color: "blue"
+        };
+      }
+    };
+
+    const waitingInfo = getWaitingMessage();
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 flex items-center justify-center p-4">
         <div className="max-w-2xl mx-auto">
           <Card className="text-center shadow-xl">
             <CardHeader className="p-6">
-              <div className="mx-auto mb-4 p-4 bg-yellow-100 rounded-full w-20 h-20 flex items-center justify-center">
-                <Icon name="clock" className="w-10 h-10 text-yellow-600" />
+              <div className={`mx-auto mb-4 p-4 bg-${waitingInfo.color}-100 rounded-full w-20 h-20 flex items-center justify-center`}>
+                <Icon name={waitingInfo.icon} className={`w-10 h-10 text-${waitingInfo.color}-600`} />
               </div>
               <CardTitle className="text-2xl text-gray-800">
-                ⏳ Waiting for {partner?.name || 'your partner'}
+                {waitingInfo.title}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 p-6">
               <p className="text-gray-600 leading-relaxed">
-                You have completed your reflection. {partner?.name || 'Your partner'} will be notified to complete their reflection. 
-                You'll be notified when both reflections are ready to view together.
+                {waitingInfo.message}
               </p>
               <div className="flex justify-center space-x-4">
                 <Button variant="outline" onClick={onBack}>
                   Back to Dashboard
                 </Button>
-                <Button onClick={() => setCurrentState('chat')}>
-                  Continue Writing
-                </Button>
+                {sessionStatus !== JournalSessionStatus.ANALYSIS_PENDING && (
+                  <Button onClick={() => setCurrentState('chat')}>
+                    Continue Writing
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

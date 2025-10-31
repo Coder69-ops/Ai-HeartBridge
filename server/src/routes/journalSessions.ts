@@ -6,6 +6,7 @@ import { AuthRequest } from '../middleware/auth';
 import { JournalSession, IJournalMessage, JournalSessionStatus } from '../models/JournalSession';
 import { Couple } from '../models/Couple';
 import { User } from '../models/User';
+import { User } from '../models/User';
 import { getChatbotResponse, analyzeJournalEntry } from '../services/aiService';
 import { journalNotificationService } from '../services/notificationService';
 
@@ -535,9 +536,9 @@ router.post('/:sessionId/complete-reflection', async (req: AuthRequest, res: Res
           journalSession.status = JournalSessionStatus.PARTNER2_COMPLETE;
           console.log('Updated status to PARTNER2_COMPLETE for session (partner 2 first):', sessionId);
         } else if (journalSession.status === JournalSessionStatus.PARTNER1_COMPLETE) {
-          // Both partners completed
-          journalSession.status = JournalSessionStatus.PARTNER2_COMPLETE;
-          console.log('Updated status to PARTNER2_COMPLETE for session:', sessionId);
+          // Both partners completed - ready for analysis
+          journalSession.status = JournalSessionStatus.ANALYSIS_PENDING;
+          console.log('Updated status to ANALYSIS_PENDING for session (both completed):', sessionId);
         }
       }
 
@@ -566,8 +567,7 @@ router.post('/:sessionId/complete-reflection', async (req: AuthRequest, res: Res
       }
 
       // If both partners have completed, trigger analysis
-      if (journalSession.status === JournalSessionStatus.PARTNER2_COMPLETE) {
-        journalSession.status = JournalSessionStatus.ANALYSIS_PENDING;
+      if (journalSession.status === JournalSessionStatus.ANALYSIS_PENDING) {
         journalSession.analysisRequestedAt = new Date();
         await journalSession.save({ session });
 
