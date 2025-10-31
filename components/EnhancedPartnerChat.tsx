@@ -8,6 +8,7 @@ import {
   getPartnerChat, 
   sendPartnerMessage, 
   markMessagesAsRead,
+  checkPartnerPresence,
   formatMessageTime,
   isMyMessage,
   isMessageDeleted,
@@ -131,24 +132,42 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
       socketService.connect(user.id);
       
       // Listen for partner status changes
-      const unsubscribe = socketService.onPartnerStatusChange((partnerId, isOnline) => {
+      const unsubscribeStatus = socketService.onPartnerStatusChange((partnerId, isOnline) => {
         if (chatData?.partner.id === partnerId) {
           setPartnerOnlineStatus(isOnline);
         }
       });
       
-      // Check initial partner status
+      // Listen for new messages
+      const unsubscribeMessages = socketService.onNewPartnerMessage((messageData) => {
+        // Update query data with new message
+        queryClient.setQueryData(['partner-chat'], (oldData: PartnerChatResponse | undefined) => {
+          if (!oldData || messageData.chatId !== oldData.chat.id) return oldData;
+          return {
+            ...oldData,
+            chat: {
+              ...oldData.chat,
+              messages: [...oldData.chat.messages, messageData.message],
+              totalMessages: oldData.chat.totalMessages + 1,
+              lastMessageAt: messageData.message.timestamp
+            }
+          };
+        });
+      });
+      
+      // Check initial partner status via API
       if (chatData?.partner.id) {
-        socketService.checkPartnerStatus(chatData.partner.id).then((status) => {
-          setPartnerOnlineStatus(status.isOnline);
+        checkPartnerPresence(chatData.partner.id).then((presence) => {
+          setPartnerOnlineStatus(presence.isOnline);
         });
       }
       
       return () => {
-        unsubscribe();
+        unsubscribeStatus();
+        unsubscribeMessages();
       };
     }
-  }, [user?.id, chatData?.partner.id]);
+  }, [user?.id, chatData?.partner.id, queryClient]);
   
   // Cleanup socket on unmount
   useEffect(() => {

@@ -12,6 +12,25 @@ const sendMessageSchema = z.object({
   messageType: z.enum(['text', 'emoji', 'voice']).optional(),
 });
 
+// Check partner presence status
+router.get('/presence/:partnerId', async (req: AuthRequest, res: Response) => {
+  try {
+    const { partnerId } = req.params;
+    const onlineUsers = req.onlineUsers;
+    
+    const isOnline = onlineUsers?.has(partnerId) || false;
+    const lastSeen = onlineUsers?.get(partnerId)?.lastSeen || null;
+    
+    res.json({
+      isOnline,
+      lastSeen
+    });
+  } catch (error) {
+    console.error('Check presence error:', error);
+    res.status(500).json({ error: 'Failed to check presence' });
+  }
+});
+
 // Get partner chat conversation
 router.get('/conversation', async (req: AuthRequest, res: Response) => {
   try {
@@ -51,6 +70,11 @@ router.get('/conversation', async (req: AuthRequest, res: Response) => {
     // Get unread count for current user
     const unreadCount = isPartner1 ? partnerChat.unreadCount.partner1 : partnerChat.unreadCount.partner2;
 
+    // Check partner online status with better type safety
+    const onlineUsers = req.onlineUsers;
+    const isPartnerOnline = onlineUsers?.has(partnerId.toString()) || false;
+    const partnerLastSeen = onlineUsers?.get(partnerId.toString())?.lastSeen;
+
     res.json({
       chat: {
         id: partnerChat._id,
@@ -63,7 +87,8 @@ router.get('/conversation', async (req: AuthRequest, res: Response) => {
         id: partner._id,
         name: partner.firstName || partner.email?.split('@')[0] || 'Partner',
         email: partner.email,
-        isOnline: (req as any).onlineUsers?.has(partnerId.toString()) || false
+        isOnline: isPartnerOnline,
+        lastSeen: partnerLastSeen || null
       }
     });
 
@@ -118,6 +143,16 @@ router.post('/send', async (req: AuthRequest, res: Response) => {
 
     // Get the saved message with its ID
     const savedMessage = partnerChat.messages[partnerChat.messages.length - 1];
+    
+    // Emit real-time message to partner via socket
+    const io = req.io;
+    if (io) {
+      io.to(partnerId.toString()).emit('new_partner_message', {
+        chatId: partnerChat._id,
+        message: savedMessage,
+        senderName: user.firstName || user.email?.split('@')[0] || 'Partner'
+      });
+    }
 
     res.status(201).json({
       message: 'Message sent successfully',

@@ -88,40 +88,70 @@ router.post('/pair', async (req: AuthRequest, res: Response) => {
         console.log('Couple already active, returning existing relationship');
       }
     } else {
-      // Create new couple with consistent partner ordering (smaller ObjectId first)
+      // Create or get a new couple using an atomic upsert with consistent ordering.
+      // This reduces the chance of duplicate-key race conditions.
       const partnerId1 = currentUser._id.toString() < partner._id.toString() ? currentUser._id : partner._id;
       const partnerId2 = currentUser._id.toString() < partner._id.toString() ? partner._id : currentUser._id;
-      
+
       try {
-        couple = new Couple({
-          partner1Id: partnerId1,
-          partner2Id: partnerId2
-        });
-        await couple.save();
-        console.log('Created new couple:', couple._id);
-      } catch (duplicateError: any) {
-        // If we still get a duplicate key error, find the existing couple
-        if (duplicateError.code === 11000) {
-          console.log('Duplicate key error caught, finding existing couple...');
+        couple = await Couple.findOneAndUpdate(
+          { partner1Id: partnerId1, partner2Id: partnerId2 },
+          {
+            $setOnInsert: {
+              partner1Id: partnerId1,
+              partner2Id: partnerId2,
+              status: 'active',
+              relationshipStart: new Date()
+            }
+          },
+          { new: true, upsert: true, setDefaultsOnInsert: true }
+        ).exec();
+
+        if (!couple) {
+          // Extremely unlikely, but handle defensively by fetching existing couple
           couple = await Couple.findOne({
             $or: [
               { partner1Id: currentUser._id, partner2Id: partner._id },
               { partner1Id: partner._id, partner2Id: currentUser._id }
             ]
           });
-          
+        }
+
+        if (!couple) {
+          throw new Error('Could not find or create couple relationship');
+        }
+
+        // Ensure the couple is active
+        if (couple.status !== 'active') {
+          couple.status = 'active';
+          await couple.save();
+          console.log('Activated existing couple (post-upsert):', couple._id);
+        } else {
+          console.log('Found or created couple:', couple._id);
+        }
+      } catch (err: any) {
+        // If a duplicate-key error still bubbles up (rare), try to recover by finding
+        // the existing couple document and activating it.
+        if (err && (err.code === 11000 || err.code === '11000')) {
+          console.log('Duplicate key during upsert, fetching existing couple...');
+          couple = await Couple.findOne({
+            $or: [
+              { partner1Id: currentUser._id, partner2Id: partner._id },
+              { partner1Id: partner._id, partner2Id: currentUser._id }
+            ]
+          });
+
           if (!couple) {
-            throw new Error('Could not find or create couple relationship');
+            throw new Error('Could not find or recover couple after duplicate-key error');
           }
-          
-          // Ensure the couple is active
+
           if (couple.status !== 'active') {
             couple.status = 'active';
             await couple.save();
-            console.log('Activated existing couple after duplicate key error:', couple._id);
+            console.log('Activated existing couple after duplicate-key fallback:', couple._id);
           }
         } else {
-          throw duplicateError;
+          throw err;
         }
       }
     }

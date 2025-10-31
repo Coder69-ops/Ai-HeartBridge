@@ -26,6 +26,7 @@ export interface PartnerInfo {
   name: string;
   email: string;
   isOnline: boolean;
+  lastSeen?: Date | null;
 }
 
 export interface PartnerChatResponse {
@@ -169,6 +170,19 @@ export const isMessageDeleted = (message: PartnerMessage): boolean => {
  */
 export const isMessageEdited = (message: PartnerMessage): boolean => {
   return !!message.editedAt;
+};
+
+/**
+ * Check partner online presence
+ */
+export const checkPartnerPresence = async (partnerId: string): Promise<{ isOnline: boolean; lastSeen?: Date | null }> => {
+  try {
+    const response = await api.get(`/partner-chat/presence/${partnerId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Check partner presence error:', error);
+    return { isOnline: false, lastSeen: null }; // Return offline on error
+  }
 };
 
 /**

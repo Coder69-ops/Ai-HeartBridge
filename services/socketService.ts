@@ -10,6 +10,7 @@ class SocketService {
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private onlineStatusCallbacks: ((isOnline: boolean) => void)[] = [];
   private partnerStatusCallbacks: ((partnerId: string, isOnline: boolean) => void)[] = [];
+  private newMessageCallbacks: ((messageData: any) => void)[] = [];
 
   constructor() {
     this.socket = io(URL, {
@@ -38,6 +39,13 @@ class SocketService {
       console.log(`Partner ${userId} is now ${isOnline ? 'online' : 'offline'}`);
       this.partnerStatusCallbacks.forEach(callback => {
         callback(userId, isOnline);
+      });
+    });
+
+    this.socket.on('new_partner_message', (messageData) => {
+      console.log('Received new partner message:', messageData);
+      this.newMessageCallbacks.forEach(callback => {
+        callback(messageData);
       });
     });
   }
@@ -88,6 +96,16 @@ class SocketService {
       const index = this.partnerStatusCallbacks.indexOf(callback);
       if (index > -1) {
         this.partnerStatusCallbacks.splice(index, 1);
+      }
+    };
+  }
+
+  onNewPartnerMessage(callback: (messageData: any) => void) {
+    this.newMessageCallbacks.push(callback);
+    return () => {
+      const index = this.newMessageCallbacks.indexOf(callback);
+      if (index > -1) {
+        this.newMessageCallbacks.splice(index, 1);
       }
     };
   }

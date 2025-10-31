@@ -5,11 +5,12 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import winston from 'winston';
 
-// Extend Express Request interface to include io
+// Extend Express Request interface to include io and onlineUsers
 declare global {
   namespace Express {
     interface Request {
       io?: Server;
+      onlineUsers?: Map<string, { socketId: string; lastSeen: Date }>;
     }
   }
 }
@@ -129,7 +130,7 @@ io.on('connection', (socket) => {
   }, 60000); // Check every minute
 });
 
-// Middleware to add io to requests
+// Middleware to add io and onlineUsers to requests
 app.use((req: any, res, next) => {
   req.io = io;
   req.onlineUsers = onlineUsers;
