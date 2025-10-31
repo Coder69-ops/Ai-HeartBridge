@@ -9,6 +9,7 @@ import MasterAuthView from './components/MasterAuthView';
 import ComprehensiveOnboarding from './components/ComprehensiveOnboarding';
 import ChatManager from './components/ChatManager';
 import { OnboardingErrorBoundary } from './src/components/ErrorBoundary';
+import { JournalErrorBoundary } from './components/JournalErrorBoundary';
 import MasterDashboard from './components/MasterDashboard';
 import SimpleHeader from './components/SimpleHeader';
 import JournalingView from './components/JournalingView';
@@ -243,11 +244,15 @@ const AppContentInner: React.FC = () => {
             case 'journal':
                 if (user && partner) {
                     return (
-                        <JournalManager 
-                            user={user} 
-                            partner={partner} 
-                            onBack={() => setCurrentView('dashboard')}
-                        />
+                        <JournalErrorBoundary onBack={() => setCurrentView('dashboard')}>
+                            <React.Suspense fallback={<div className="p-8 text-center">Loading journal...</div>}>
+                                <JournalManager 
+                                    user={user} 
+                                    partner={partner} 
+                                    onBack={() => setCurrentView('dashboard')}
+                                />
+                            </React.Suspense>
+                        </JournalErrorBoundary>
                     );
                 }
                 return (
