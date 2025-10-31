@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, Couple } from '../types';
 import { getPartner } from '../services/authService';
+import api from '../services/apiClient';
 
 interface AuthState {
   user: User | null;
@@ -38,39 +39,52 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true, error: null });
           
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+          const response = await api.post('/auth/login', { email, password });
           
-          const response = await fetch(`${apiUrl}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-          });
+          // Handle non-JSON responses
+          if (typeof response.data === 'string') {
+            throw new Error('Server temporarily unavailable. Please try again later.');
+          }
+          
+          const data = response.data;
 
-          const data = await response.json();
-
-          if (!response.ok) {
+          if (!data.token || !data.user) {
             throw new Error(data.message || 'Login failed');
           }
 
           const { user, token } = data;
-          const partner = await getPartner(user);
-
+          
+          // Set basic auth state first
           set({
             user,
-            partner,
-            token: data.token,
+            token,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
 
           // Also set tokens for old authService compatibility
-          localStorage.setItem('auth_token', data.token);
+          localStorage.setItem('auth_token', token);
           localStorage.setItem('user_data', JSON.stringify(user));
+          
+          // Get partner separately to avoid blocking login
+          try {
+            const partner = await getPartner(user);
+            set({ partner });
+          } catch (partnerError) {
+            console.warn('Failed to load partner:', partnerError);
+            // Don't fail login if partner loading fails
+            set({ partner: null });
+          }
+          
         } catch (error) {
+          console.error('Login error:', error);
           set({
             error: error instanceof Error ? error.message : 'Login failed',
             isLoading: false,
+            isAuthenticated: false,
+            user: null,
+            token: null,
           });
           throw error;
         }
@@ -80,17 +94,16 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true, error: null });
           
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+          const response = await api.post('/auth/signup', userData);
           
-          const response = await fetch(`${apiUrl}/auth/signup`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData),
-          });
+          // Handle non-JSON responses
+          if (typeof response.data === 'string') {
+            throw new Error('Server temporarily unavailable. Please try again later.');
+          }
+          
+          const data = response.data;
 
-          const data = await response.json();
-
-          if (!response.ok) {
+          if (!data.token || !data.user) {
             throw new Error(data.message || 'Registration failed');
           }
 

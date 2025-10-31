@@ -26,10 +26,10 @@ import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import { Button } from './shared/Button';
 import { pairUsers } from '../services/authService';
 import { useToast } from '../src/components/ui/enhanced/ModernToast';
-import { getRelationshipTrends, getHealthScore } from '../services/analyticsService';
+import { getRelationshipTrends, getHealthScore, HealthScore } from '../services/analyticsService';
 import { getJournalSessionHistory } from '../services/journalSessionService';
-import { getCoupleCheckInHistory } from '../services/checkInService';
-import { getCoupleExerciseProgress } from '../services/exerciseService';
+import { getCoupleCheckInHistory, CheckIn } from '../services/checkInService';
+import { getCoupleExerciseProgress, ExerciseProgress } from '../services/exerciseService';
 import ContextualLoader from './shared/ContextualLoader';
 
 interface MasterDashboardProps {
@@ -63,19 +63,55 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
     relationshipTrends: null as any
   });
 
-  // Load dashboard data
+  // Load dashboard data with sequential loading to avoid rate limits
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       
-      // Load all dashboard data in parallel
-      const [healthScore, journalSessions, checkInHistory, exerciseProgress, trends] = await Promise.all([
-        getHealthScore().catch(() => ({ overallScore: 0 })),
-        getJournalSessionHistory().catch(() => []),
-        getCoupleCheckInHistory().catch(() => []),
-        getCoupleExerciseProgress(1, 100).catch(() => ({ progress: [] })),
-        getRelationshipTrends('3months').catch(() => null)
-      ]);
+      // Load dashboard data sequentially with delays to avoid rate limiting
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      
+      let healthScore: HealthScore | null = null;
+      let journalSessions: any[] = [];
+      let checkInHistory: CheckIn[] = [];
+      let exerciseProgress: { progress: ExerciseProgress[] } = { progress: [] };
+      let trends = null;
+      
+      try {
+        healthScore = await getHealthScore();
+        await delay(200); // 200ms delay between requests
+      } catch (error) {
+        console.warn('Failed to load health score:', error);
+      }
+      
+      try {
+        journalSessions = await getJournalSessionHistory();
+        await delay(200);
+      } catch (error) {
+        console.warn('Failed to load journal sessions:', error);
+      }
+      
+      try {
+        const checkInResponse = await getCoupleCheckInHistory();
+        checkInHistory = checkInResponse?.checkIns || [];
+        await delay(200);
+      } catch (error) {
+        console.warn('Failed to load check-in history:', error);
+      }
+      
+      try {
+        const exerciseResponse = await getCoupleExerciseProgress(1, 100);
+        exerciseProgress = { progress: exerciseResponse?.progress || [] };
+        await delay(200);
+      } catch (error) {
+        console.warn('Failed to load exercise progress:', error);
+      }
+      
+      try {
+        trends = await getRelationshipTrends('3months');
+      } catch (error) {
+        console.warn('Failed to load relationship trends:', error);
+      }
 
       // Calculate days active (last 30 days)
       const thirtyDaysAgo = new Date();
@@ -90,7 +126,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       });
       
       // Handle checkInHistory structure
-      const checkIns = Array.isArray(checkInHistory) ? checkInHistory : checkInHistory.checkIns || [];
+      const checkIns = Array.isArray(checkInHistory) ? checkInHistory : [];
       checkIns.forEach((checkIn: any) => {
         const checkInDate = new Date(checkIn.createdAt);
         if (checkInDate >= thirtyDaysAgo) {
@@ -108,7 +144,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       });
 
       setDashboardData({
-        healthScore: (healthScore as any)?.overallScore || 0,
+        healthScore: healthScore?.healthScore || 0,
         checkInCount: (checkIns || []).length,
         journalSessions: (journalSessions || []).length,
         exerciseCount: (exercises || []).length,
@@ -118,6 +154,21 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       });
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+      
+      // Show user-friendly error message for rate limiting
+      if (error instanceof Error && error.message.includes('429')) {
+        showToast({ 
+          type: 'warning', 
+          title: 'Server Busy', 
+          description: 'Please wait a moment before refreshing. The server is experiencing high traffic.' 
+        });
+      } else {
+        showToast({ 
+          type: 'error', 
+          title: 'Dashboard Load Failed', 
+          description: 'Some dashboard data may not be available. Please try refreshing in a moment.' 
+        });
+      }
     } finally {
       setLoading(false);
     }

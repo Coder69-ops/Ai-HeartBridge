@@ -11,6 +11,12 @@ const USER_KEY = 'user_data';
 export const signup = async (email: string, password: string): Promise<User> => {
     try {
         const response = await api.post('/auth/signup', { email, password });
+        
+        // Handle non-JSON responses
+        if (typeof response.data === 'string') {
+            throw new Error('Server temporarily unavailable. Please try again later.');
+        }
+        
         const { token, user } = response.data;
         
         localStorage.setItem(TOKEN_KEY, token);
@@ -23,9 +29,14 @@ export const signup = async (email: string, password: string): Promise<User> => 
 };
 
 export const login = async (email: string, password: string): Promise<User> => {
-    console.log('🚨 OLD AUTHSERVICE LOGIN CALLED - This should NOT appear');
     try {
         const response = await api.post('/auth/login', { email, password });
+        
+        // Handle non-JSON responses
+        if (typeof response.data === 'string') {
+            throw new Error('Server temporarily unavailable. Please try again later.');
+        }
+        
         const { token, user } = response.data;
         
         localStorage.setItem(TOKEN_KEY, token);
