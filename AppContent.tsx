@@ -368,19 +368,6 @@ const AppContentInner: React.FC = () => {
                     )}
                 </AnimatePresence>
 
-                {/* Debug overlay */}
-                <div style={{ 
-                    position: 'fixed', 
-                    top: 0, 
-                    right: 0, 
-                    background: 'rgba(0,0,0,0.8)', 
-                    color: 'white', 
-                    padding: '10px', 
-                    fontSize: '12px',
-                    zIndex: 9999 
-                }}>
-                    Debug: Loading={isLoading ? 'true' : 'false'}, Auth={isAuthenticated ? 'true' : 'false'}, View={currentView}
-                </div>
             </div>
     );
 };
