@@ -25,10 +25,23 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle auth errors
+// Response interceptor to handle auth and server rate limit errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Handle server-side rate limiting with a single retry after delay
+    if (error.response?.status === 429 && !originalRequest._retried) {
+      originalRequest._retried = true;
+      
+      // Wait 3 seconds and retry once
+      console.log('Server rate limited. Retrying in 3 seconds...');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      return api(originalRequest);
+    }
+    
     // Handle auth errors
     if (error.response?.status === 401 || error.response?.status === 403) {
       // Token expired or invalid
