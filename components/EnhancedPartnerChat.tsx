@@ -47,6 +47,7 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [partnerOnlineStatus, setPartnerOnlineStatus] = useState(false);
+  const [partnerLastSeen, setPartnerLastSeen] = useState<Date | null>(null);
 
   // Quick reaction emojis
   const quickEmojis = ['❤️', '😊', '👍', '🎉', '😂', '🤗', '💪', '✨'];
@@ -60,8 +61,10 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
   } = useQuery<PartnerChatResponse>({
     queryKey: ['partner-chat'],
     queryFn: getPartnerChat,
-    refetchInterval: 10000, // Poll every 10 seconds
-    staleTime: 5000
+    refetchInterval: 5000, // Poll every 5 seconds
+    staleTime: 2000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true
   });
 
   // Send message mutation
@@ -111,12 +114,18 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Mark as read when viewing
+  // Mark as read when viewing and update initial status
   useEffect(() => {
     if (chatData?.chat.unreadCount && chatData.chat.unreadCount > 0) {
       markReadMutation.mutate();
     }
-  }, [chatData?.chat.messages.length]);
+    
+    // Update initial partner status from API response
+    if (chatData?.partner) {
+      setPartnerOnlineStatus(chatData.partner.isOnline);
+      setPartnerLastSeen(chatData.partner.lastSeen ? new Date(chatData.partner.lastSeen) : null);
+    }
+  }, [chatData?.chat.messages.length, chatData?.partner]);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -130,11 +139,15 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
     // Connect to socket if user is available
     if (user?.id) {
       socketService.connect(user.id);
+      console.log('Socket connected for user:', user.id);
       
       // Listen for partner status changes
       const unsubscribeStatus = socketService.onPartnerStatusChange((partnerId, isOnline) => {
         if (chatData?.partner.id === partnerId) {
           setPartnerOnlineStatus(isOnline);
+          if (!isOnline) {
+            setPartnerLastSeen(new Date());
+          }
         }
       });
       
@@ -157,9 +170,22 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
       
       // Check initial partner status via API
       if (chatData?.partner.id) {
-        checkPartnerPresence(chatData.partner.id).then((presence) => {
-          setPartnerOnlineStatus(presence.isOnline);
-        });
+        const checkPresence = () => {
+          checkPartnerPresence(chatData.partner.id).then((presence) => {
+            console.log('Partner presence:', presence);
+            setPartnerOnlineStatus(presence.isOnline);
+            setPartnerLastSeen(presence.lastSeen ? new Date(presence.lastSeen) : null);
+          }).catch(err => console.error('Presence check failed:', err));
+        };
+        
+        checkPresence();
+        const presenceInterval = setInterval(checkPresence, 10000); // Check every 10 seconds
+        
+        return () => {
+          unsubscribeStatus();
+          unsubscribeMessages();
+          clearInterval(presenceInterval);
+        };
       }
       
       return () => {
@@ -197,6 +223,27 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
       e.preventDefault();
       handleSendMessage(e);
     }
+  };
+
+  // Format last seen time
+  const formatLastSeen = (lastSeen: Date | null) => {
+    if (!lastSeen) return null;
+    
+    const now = new Date();
+    const diffMs = now.getTime() - new Date(lastSeen).getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMinutes < 1) return 'just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return new Date(lastSeen).toLocaleDateString([], { 
+      month: 'short', 
+      day: 'numeric'
+    });
   };
 
   // Loading state
@@ -290,7 +337,12 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
                     ) : (
                       <>
                         <span className="w-2 h-2 bg-gray-400 rounded-full" />
-                        <span>Offline</span>
+                        <span>
+                          {partnerLastSeen || partner.lastSeen 
+                            ? `Last seen ${formatLastSeen(partnerLastSeen || partner.lastSeen)}`
+                            : 'Offline'
+                          }
+                        </span>
                       </>
                     )}
                   </p>
