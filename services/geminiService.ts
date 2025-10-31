@@ -7,7 +7,7 @@ import api from './apiClient';
  */
 export const getChatbotResponse = async (history: Message[]): Promise<string> => {
     try {
-        const response = await api.post('/journals/chat-response', { 
+        const response = await api.post('/journal-sessions/chat-response', { 
             messageHistory: history 
         });
         return response.data.message;
@@ -22,8 +22,8 @@ export const getChatbotResponse = async (history: Message[]): Promise<string> =>
  */
 export const analyzeEntries = async (coupleId: string, journalId: string): Promise<AnalysisResult> => {
     try {
-        const response = await api.post(`/journals/${journalId}/analyze`);
-        return response.data.analysis;
+        const response = await api.get(`/journal-sessions/${journalId}/insights`);
+        return response.data;
     } catch (error: any) {
         console.error('Analysis error:', error);
         throw new Error(error.response?.data?.error || 'Failed to analyze journal entry');

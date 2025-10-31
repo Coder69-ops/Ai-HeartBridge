@@ -33,6 +33,34 @@ interface IAnalysisResult {
 
 const router = express.Router();
 
+// Get chatbot response for journal chat
+router.post('/chat-response', async (req: AuthRequest, res: Response) => {
+  try {
+    const { messageHistory } = req.body;
+    const user = req.user!;
+    
+    if (!messageHistory || !Array.isArray(messageHistory)) {
+      return res.status(400).json({ error: 'Message history is required' });
+    }
+
+    // Get complete user data for AI context
+    const userData = await User.findById(user._id);
+    if (!userData) {
+      return res.status(404).json({ error: 'User data not found' });
+    }
+
+    // Get AI response with user context
+    const response = await getChatbotResponse(messageHistory, userData);
+    
+    res.json({ message: response });
+  } catch (error: any) {
+    console.error('Journal chat response error:', error);
+    res.status(500).json({ 
+      error: error.message || 'Failed to get chatbot response' 
+    });
+  }
+});
+
 // Helper function to handle both string and array formats
 const formatList = (items: string | string[]): string => {
   if (typeof items === 'string') {
