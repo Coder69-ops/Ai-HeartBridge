@@ -53,6 +53,16 @@ const AppContentInner: React.FC = () => {
         }
     }, [authLoading]);
 
+    // Force loading to complete after a timeout to prevent infinite loading
+    useEffect(() => {
+        const forceLoadTimeout = setTimeout(() => {
+            console.log('Force completing loading after timeout');
+            setIsLoading(false);
+        }, 5000); // 5 second timeout
+
+        return () => clearTimeout(forceLoadTimeout);
+    }, []);
+
 
 
 
@@ -174,6 +184,15 @@ const AppContentInner: React.FC = () => {
     };
 
     const renderContent = () => {
+        console.log('AppContent render state:', { 
+            isLoading, 
+            authLoading, 
+            isAuthenticated, 
+            hasUser: !!user, 
+            currentView,
+            userOnboardingComplete: user?.isOnboardingComplete 
+        });
+
         // Show loader while initializing or loading
         if (isLoading || authLoading) {
             return (
@@ -298,7 +317,7 @@ const AppContentInner: React.FC = () => {
     };
     
     return (
-        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50" style={{ position: 'relative' }}>
                 {isAuthenticated && user && !authLoading && (
                     <>
                         {/* Simple Header - Fully Responsive */}
@@ -326,7 +345,9 @@ const AppContentInner: React.FC = () => {
                         }}
                         className={isLoading || authLoading ? "" : "pt-16"}
                     >
-                        {renderContent()}
+                        <React.Suspense fallback={<div>Loading content...</div>}>
+                            {renderContent()}
+                        </React.Suspense>
                     </motion.div>
                 </AnimatePresence>
 
@@ -341,6 +362,20 @@ const AppContentInner: React.FC = () => {
                         />
                     )}
                 </AnimatePresence>
+
+                {/* Debug overlay */}
+                <div style={{ 
+                    position: 'fixed', 
+                    top: 0, 
+                    right: 0, 
+                    background: 'rgba(0,0,0,0.8)', 
+                    color: 'white', 
+                    padding: '10px', 
+                    fontSize: '12px',
+                    zIndex: 9999 
+                }}>
+                    Debug: Loading={isLoading ? 'true' : 'false'}, Auth={isAuthenticated ? 'true' : 'false'}, View={currentView}
+                </div>
             </div>
     );
 };
