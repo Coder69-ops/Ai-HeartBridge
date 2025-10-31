@@ -514,16 +514,20 @@ router.post('/:sessionId/complete-reflection', async (req: AuthRequest, res: Res
             journalSession.partner1Chat = chatHistory;
             journalSession.partner1CompletedAt = new Date();
             
-            // Update status
+            // Update status based on current state
             if (journalSession.status === JournalSessionStatus.CREATED) {
                 journalSession.status = JournalSessionStatus.PARTNER1_COMPLETE;
                 console.log('Updated status to PARTNER1_COMPLETE for session:', sessionId);
+            } else if (journalSession.status === JournalSessionStatus.PARTNER2_COMPLETE) {
+                // Both partners completed - ready for analysis
+                journalSession.status = JournalSessionStatus.ANALYSIS_PENDING;
+                console.log('Updated status to ANALYSIS_PENDING for session (both completed):', sessionId);
             }
         } else {
             journalSession.partner2Chat = chatHistory;
             journalSession.partner2CompletedAt = new Date();
             
-            // Update status
+            // Update status based on current state
             if (journalSession.status === JournalSessionStatus.CREATED) {
                 // Partner 2 completing while partner 1 hasn't started yet
                 journalSession.status = JournalSessionStatus.PARTNER2_COMPLETE;
