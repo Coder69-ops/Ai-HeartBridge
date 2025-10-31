@@ -141,8 +141,8 @@ const InsightsDisplay: React.FC<InsightsDisplayProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-4 sm:px-6 lg:px-8 pt-6 pb-16">
+      {/* Header - Mobile Optimized */}
+      <div className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-4 sm:px-6 lg:px-8 pt-8 pb-16 sm:pb-20">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -151,27 +151,27 @@ const InsightsDisplay: React.FC<InsightsDisplayProps> = ({
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4"
+            className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6"
           >
-            <Brain className="w-10 h-10" />
+            <Brain className="w-8 h-8 sm:w-10 sm:h-10" />
           </motion.div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3">
             ✨ Your Shared Insights
           </h1>
-          <p className="text-white/90 text-lg">
+          <p className="text-white/90 text-base sm:text-lg px-4">
             AI-powered analysis of your relationship reflection session
           </p>
-          <div className="flex items-center justify-center gap-4 mt-4 text-sm text-white/80">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mt-4 sm:mt-6 text-xs sm:text-sm text-white/80">
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
+              <Users className="w-4 h-4 flex-shrink-0" />
               <span>2 perspectives analyzed</span>
             </div>
             <div className="flex items-center gap-2">
-              <Brain className="w-4 h-4" />
+              <Brain className="w-4 h-4 flex-shrink-0" />
               <span>AI-powered insights</span>
             </div>
             <div className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
+              <MessageCircle className="w-4 h-4 flex-shrink-0" />
               <span>Relationship analysis</span>
             </div>
           </div>
@@ -203,8 +203,8 @@ const InsightsDisplay: React.FC<InsightsDisplayProps> = ({
           </motion.div>
         )}
 
-        {/* Strengths and Opportunities */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+        {/* Strengths and Opportunities - Mobile Optimized */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
           {/* Strengths */}
           {parsedInsights.strengths.length > 0 && (
             <motion.div
@@ -213,13 +213,13 @@ const InsightsDisplay: React.FC<InsightsDisplayProps> = ({
               transition={{ delay: 0.1 }}
             >
             <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-xl transition-shadow duration-300">
-              <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-t-xl">
-                <CardTitle className="text-lg lg:text-xl font-bold flex items-center gap-3">
-                  <Star className="w-5 h-5 lg:w-6 lg:h-6" />
-                  Relationship Strengths
+              <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-t-xl p-4 sm:p-6">
+                <CardTitle className="text-lg font-bold flex items-center gap-3">
+                  <Star className="w-5 h-5 flex-shrink-0" />
+                  <span>Relationship Strengths</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6 lg:p-8">
+              <CardContent className="p-4 sm:p-6">
                   <div className="space-y-3">
                     {parsedInsights.strengths.map((strength, index) => (
                       <motion.div
@@ -227,10 +227,10 @@ const InsightsDisplay: React.FC<InsightsDisplayProps> = ({
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 + index * 0.1 }}
-                        className="flex items-start gap-3 p-3 bg-white/60 rounded-lg"
+                        className="flex items-start gap-3 p-3 sm:p-4 bg-white/60 rounded-lg"
                       >
                         <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-700">{strength}</span>
+                        <span className="text-gray-700 text-sm sm:text-base leading-relaxed">{strength}</span>
                       </motion.div>
                     ))}
                   </div>
@@ -247,13 +247,13 @@ const InsightsDisplay: React.FC<InsightsDisplayProps> = ({
               transition={{ delay: 0.2 }}
             >
             <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-cyan-50 hover:shadow-xl transition-shadow duration-300">
-              <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-t-xl">
-                <CardTitle className="text-lg lg:text-xl font-bold flex items-center gap-3">
-                  <Target className="w-5 h-5 lg:w-6 lg:h-6" />
-                  Growth Opportunities
+              <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-t-xl p-4 sm:p-6">
+                <CardTitle className="text-lg font-bold flex items-center gap-3">
+                  <Target className="w-5 h-5 flex-shrink-0" />
+                  <span>Growth Opportunities</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6 lg:p-8">
+              <CardContent className="p-4 sm:p-6">
                   <div className="space-y-3">
                     {parsedInsights.opportunities.map((opportunity, index) => (
                       <motion.div
@@ -261,10 +261,10 @@ const InsightsDisplay: React.FC<InsightsDisplayProps> = ({
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.3 + index * 0.1 }}
-                        className="flex items-start gap-3 p-3 bg-white/60 rounded-lg"
+                        className="flex items-start gap-3 p-3 sm:p-4 bg-white/60 rounded-lg"
                       >
                         <TrendingUp className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-700">{opportunity}</span>
+                        <span className="text-gray-700 text-sm sm:text-base leading-relaxed">{opportunity}</span>
                       </motion.div>
                     ))}
                   </div>
@@ -289,26 +289,26 @@ const InsightsDisplay: React.FC<InsightsDisplayProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 lg:p-8">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {[
                   { key: 'criticism', label: 'Criticism', icon: MessageCircle },
                   { key: 'contempt', label: 'Contempt', icon: AlertTriangle },
                   { key: 'defensiveness', label: 'Defensiveness', icon: Shield },
                   { key: 'stonewalling', label: 'Stonewalling', icon: Users }
                 ].map(({ key, label, icon: Icon }) => (
-                  <div key={key} className="text-center p-4 rounded-lg hover:bg-white/50 transition-colors">
-                    <div className={`w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center shadow-lg ${
+                  <div key={key} className="text-center p-4 rounded-xl hover:bg-white/50 transition-colors">
+                    <div className={`w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 rounded-full flex items-center justify-center shadow-lg ${
                       parsedInsights.fourHorsemen[key as keyof typeof parsedInsights.fourHorsemen]
                         ? 'bg-red-100 text-red-600 border-2 border-red-200'
                         : 'bg-green-100 text-green-600 border-2 border-green-200'
                     }`}>
-                      <Icon className="w-8 h-8" />
+                      <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
-                    <p className="text-base font-semibold text-gray-800 mb-1">{label}</p>
-                    <p className={`text-sm font-medium ${
+                    <p className="text-sm sm:text-base font-semibold text-gray-800 mb-2">{label}</p>
+                    <p className={`text-xs sm:text-sm font-medium px-2 py-1 rounded-full ${
                       parsedInsights.fourHorsemen[key as keyof typeof parsedInsights.fourHorsemen]
-                        ? 'text-red-600'
-                        : 'text-green-600'
+                        ? 'text-red-700 bg-red-100'
+                        : 'text-green-700 bg-green-100'
                     }`}>
                       {parsedInsights.fourHorsemen[key as keyof typeof parsedInsights.fourHorsemen] ? 'Present' : 'Absent'}
                     </p>
@@ -391,30 +391,30 @@ const InsightsDisplay: React.FC<InsightsDisplayProps> = ({
           </motion.div>
         )}
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Mobile Optimized */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="flex flex-col lg:flex-row gap-4 justify-center max-w-4xl mx-auto"
+          className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-4xl mx-auto px-4"
         >
           {onBack && (
             <Button
               onClick={onBack}
               variant="outline"
-              className="w-full lg:w-auto px-8 py-4 text-lg font-semibold border-2 border-gray-300 hover:border-gray-400 transition-all duration-300"
+              className="w-full sm:w-auto min-h-[48px] px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold border-2 border-gray-300 hover:border-gray-400 transition-all duration-300"
             >
-              <ArrowRight className="w-5 h-5 mr-2 rotate-180" />
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 mr-2 rotate-180 flex-shrink-0" />
               Back to Journal
             </Button>
           )}
           {onContinue && (
             <Button
               onClick={onContinue}
-              className="w-full lg:w-auto px-8 py-4 text-lg font-semibold bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="w-full sm:w-auto min-h-[48px] px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all duration-300"
             >
               Continue to Dashboard
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0" />
             </Button>
           )}
         </motion.div>

@@ -226,8 +226,8 @@ export default function SimpleChatView({
           </div>
         </div>
 
-            {/* Messages Container */}
-            <div className="h-[400px] sm:h-[500px] lg:h-[600px] overflow-y-auto p-4 sm:p-6 space-y-4 bg-gradient-to-b from-white to-gray-50">
+            {/* Messages Container - Mobile Optimized */}
+            <div className="h-[50vh] sm:h-[500px] lg:h-[600px] overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 bg-gradient-to-b from-white to-gray-50">
           <AnimatePresence mode="popLayout">
             {messages.map((msg, idx) => (
               <motion.div
@@ -238,9 +238,9 @@ export default function SimpleChatView({
                 transition={{ duration: 0.3 }}
                 className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                    <div className={`flex items-start gap-2 sm:gap-3 max-w-[90%] sm:max-w-[85%] lg:max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div className={`flex items-start gap-2 sm:gap-3 max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                       {/* Avatar - Mobile Optimized */}
-                      <div className={`w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      <div className={`w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${
                         msg.sender === 'user' 
                           ? 'bg-gradient-to-br from-orange-400 to-pink-500' 
                           : 'bg-gradient-to-br from-blue-400 to-cyan-500'
@@ -253,7 +253,7 @@ export default function SimpleChatView({
                       </div>
 
                       {/* Message Bubble - Mobile Optimized */}
-                      <div className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-sm group relative ${
+                      <div className={`rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 shadow-md group relative ${
                     msg.sender === 'user'
                           ? 'bg-gradient-to-br from-orange-400 to-pink-500 text-white rounded-br-md'
                           : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md'
@@ -262,7 +262,7 @@ export default function SimpleChatView({
                     {msg.text.replace('[CONVERSATION_COMPLETE]', '')}
                   </p>
                         {msg.timestamp && (
-                          <div className={`text-xs mt-1 sm:mt-2 ${
+                          <div className={`text-xs mt-2 opacity-75 ${
                             msg.sender === 'user' ? 'text-orange-100' : 'text-gray-500'
                           }`}>
                             {(msg.timestamp instanceof Date ? msg.timestamp : new Date(msg.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

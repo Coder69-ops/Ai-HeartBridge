@@ -117,11 +117,15 @@ const SimpleJournalingView: React.FC<SimpleJournalingViewProps> = ({
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
         <div className="pt-4 pb-4">
           <div className="max-w-4xl mx-auto px-4">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-gray-800">Journal Session</h1>
-              <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
-                <Icon name="arrow-left" className="w-4 h-4" />
-                Back
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Journal Session</h1>
+              <Button 
+                variant="outline" 
+                onClick={onBack} 
+                className="flex items-center gap-2 min-h-[44px] px-4 py-2"
+              >
+                <Icon name="arrow-left" className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Back</span>
               </Button>
             </div>
           </div>
@@ -176,26 +180,33 @@ const SimpleJournalingView: React.FC<SimpleJournalingViewProps> = ({
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="max-w-2xl mx-auto">
+        <div className="w-full max-w-2xl mx-auto">
           <Card className="text-center shadow-xl">
-            <CardHeader className="p-6">
-              <div className={`mx-auto mb-4 p-4 bg-${waitingInfo.color}-100 rounded-full w-20 h-20 flex items-center justify-center`}>
+            <CardHeader className="p-6 sm:p-8">
+              <div className={`mx-auto mb-6 p-4 bg-${waitingInfo.color}-100 rounded-full w-20 h-20 flex items-center justify-center`}>
                 <Icon name={waitingInfo.icon as any} className={`w-10 h-10 text-${waitingInfo.color}-600`} />
               </div>
-              <CardTitle className="text-2xl text-gray-800">
+              <CardTitle className="text-xl sm:text-2xl text-gray-800 px-4">
                 {waitingInfo.title}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 p-6">
-              <p className="text-gray-600 leading-relaxed">
+            <CardContent className="space-y-6 p-6 sm:p-8">
+              <p className="text-gray-600 leading-relaxed text-base px-4">
                 {waitingInfo.message}
               </p>
-              <div className="flex justify-center space-x-4">
-                <Button variant="outline" onClick={onBack}>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-center">
+                <Button 
+                  variant="outline" 
+                  onClick={onBack}
+                  className="min-h-[48px] px-6 py-3 text-base"
+                >
                   Back to Dashboard
                 </Button>
                 {sessionStatus !== JournalSessionStatus.ANALYSIS_PENDING && (
-                  <Button onClick={() => setCurrentState('chat')}>
+                  <Button 
+                    onClick={() => setCurrentState('chat')}
+                    className="min-h-[48px] px-6 py-3 text-base"
+                  >
                     Continue Writing
                   </Button>
                 )}
@@ -242,10 +253,14 @@ const SimpleJournalingView: React.FC<SimpleJournalingViewProps> = ({
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Session Insights</h1>
-            <Button variant="outline" onClick={onBack} className="flex items-center gap-2">
-              <Icon name="arrow-left" className="w-4 h-4" />
-              Back to Dashboard
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Session Insights</h1>
+            <Button 
+              variant="outline" 
+              onClick={onBack} 
+              className="flex items-center gap-2 min-h-[44px] px-4 py-2"
+            >
+              <Icon name="arrow-left" className="w-4 h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
             </Button>
           </div>
           

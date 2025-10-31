@@ -36,8 +36,15 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
   const loadSessions = async () => {
     try {
       setIsLoading(true);
+      // Map component filter to API filter
+      const apiFilter: 'all' | 'active' | 'completed' = 
+        filter === 'insights_ready' || filter === 'waiting' ? 'all' :
+        filter === 'active' ? 'active' :
+        filter === 'completed' ? 'completed' :
+        'all';
+        
       const response = await getJournalSessions({ 
-        status: filter,
+        status: apiFilter,
         limit: 50 
       });
       setSessions(response.sessions);
@@ -156,30 +163,30 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 sm:mb-8"
         >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-4 sm:gap-0">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                {onBack && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onBack}
-                    className="hover:bg-white/50"
-                  >
-                    <Icon name="arrow-left" className="w-5 h-5" />
-                  </Button>
-                )}
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              {onBack && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onBack}
+                  className="hover:bg-white/50 flex-shrink-0 min-h-[44px] min-w-[44px] p-2"
+                >
+                  <Icon name="arrow-left" className="w-5 h-5" />
+                </Button>
+              )}
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 leading-tight">
                   📔 Journal History
                 </h1>
+                <p className="text-gray-600 text-sm sm:text-base mt-1">View and revisit your relationship reflections</p>
               </div>
-              <p className="text-gray-600 text-sm sm:text-base">View and revisit your relationship reflections</p>
             </div>
             <Button
               onClick={onNewSession}
-              className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white w-full sm:w-auto text-sm sm:text-base py-2 sm:py-2.5"
+              className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white w-full sm:w-auto text-sm sm:text-base py-3 px-6 min-h-[48px] font-medium shadow-md hover:shadow-lg transition-shadow"
             >
-              <Heart className="w-4 h-4 mr-2" />
+              <Heart className="w-4 h-4 mr-2 flex-shrink-0" />
               New Entry
             </Button>
           </div>
@@ -229,18 +236,18 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
           animate={{ opacity: 1, y: 0 }}
           className="mb-4 sm:mb-6 space-y-3 sm:space-y-4"
         >
-          <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
             {(['all', 'active', 'waiting', 'insights_ready', 'completed'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-medium transition-all text-xs sm:text-sm ${
+                className={`px-4 py-2.5 rounded-full font-medium transition-all text-sm min-h-[44px] min-w-[60px] ${
                   filter === f
-                    ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white'
-                    : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'
+                    ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-md'
+                    : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-emerald-300 hover:bg-emerald-50'
                 }`}
               >
-                {f === 'insights_ready' ? 'Insights Ready' : 
+                {f === 'insights_ready' ? 'Insights' : 
                  f === 'waiting' ? 'Waiting' :
                  f.charAt(0).toUpperCase() + f.slice(1)}
               </button>
@@ -274,43 +281,43 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
                     }`}
                     onClick={() => onSelectSession?.(session.id)}
                   >
-                    <CardContent className="p-4 sm:p-6">
-                      <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
-                        <div className="flex-1 min-w-0 w-full sm:w-auto">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-800 line-clamp-2 flex-1">
+                    <CardContent className="p-5 sm:p-6">
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold text-gray-800 line-clamp-2 mb-2">
                               {session.title || `Session on ${new Date(session.createdAt).toLocaleDateString()}`}
                             </h3>
-                            <div className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusInfo(session).bgColor} ${getStatusInfo(session).textColor}`}>
-                              {React.createElement(getStatusInfo(session).icon, { className: "w-3 h-3" })}
+                            <div className={`inline-flex px-3 py-1.5 rounded-full text-sm font-medium items-center gap-2 ${getStatusInfo(session).bgColor} ${getStatusInfo(session).textColor}`}>
+                              {React.createElement(getStatusInfo(session).icon, { className: "w-4 h-4" })}
                               <span>{getStatusInfo(session).text}</span>
                             </div>
                           </div>
-                          
-                          <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2">
-                            {session.summary || 'Relationship reflection session'}
-                          </p>
+                        </div>
+                        
+                        <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2">
+                          {session.summary || 'Relationship reflection session'}
+                        </p>
 
-                          <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                            <div className="flex items-center gap-1 sm:gap-2">
-                              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                              <span className="text-xs">{new Date(session.createdAt).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex items-center gap-1 sm:gap-2">
-                              <span className="text-xs">💬 {session.messageCount} messages</span>
-                            </div>
-                            <div className="flex items-center gap-1 sm:gap-2">
-                              <span className="text-xs">📝 {session.wordCount} words</span>
-                            </div>
-                            {session.mood && (
-                              <div className="flex items-center gap-1 sm:gap-2">
-                                <span className="text-xs">😊 {session.mood}</span>
-                              </div>
-                            )}
+                        <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="text-xs">{new Date(session.createdAt).toLocaleDateString()}</span>
                           </div>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <span className="text-xs">💬 {session.messageCount} messages</span>
+                          </div>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <span className="text-xs">📝 {session.wordCount} words</span>
+                          </div>
+                          {session.mood && (
+                            <div className="flex items-center gap-1 sm:gap-2">
+                              <span className="text-xs">😊 {session.mood}</span>
+                            </div>
+                          )}
                         </div>
 
-                        <div className="flex gap-1 sm:gap-2 flex-shrink-0 w-full sm:w-auto justify-end sm:justify-start">
+                        <div className="flex gap-2 justify-end">
                           {/* Continue button for active sessions */}
                           {(session.status === JournalSessionStatus.CREATED || 
                             session.status === JournalSessionStatus.PARTNER1_COMPLETE ||
@@ -320,10 +327,10 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
                                 e.stopPropagation();
                                 onContinueSession(session.id);
                               }}
-                              className="p-1.5 sm:p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+                              className="min-h-[44px] min-w-[44px] p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors shadow-sm hover:shadow-md flex items-center justify-center"
                               title="Continue session"
                             >
-                              <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                              <Play className="w-5 h-5" />
                             </button>
                           )}
                           
@@ -335,10 +342,10 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
                                 e.stopPropagation();
                                 onSelectSession?.(session.id);
                               }}
-                              className="p-1.5 sm:p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                              className="min-h-[44px] min-w-[44px] p-2.5 hover:bg-emerald-50 border-2 border-emerald-200 hover:border-emerald-300 rounded-xl transition-colors flex items-center justify-center"
                               title="View session"
                             >
-                              <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                              <Eye className="w-5 h-5 text-emerald-600" />
                             </button>
                           )}
                           
@@ -347,10 +354,10 @@ const JournalSessionsView: React.FC<JournalSessionsViewProps> = ({
                               e.stopPropagation();
                               handleDelete(session.id);
                             }}
-                            className="p-1.5 sm:p-2 hover:bg-red-50 rounded-lg transition-colors"
+                            className="min-h-[44px] min-w-[44px] p-2.5 hover:bg-red-50 border-2 border-red-200 hover:border-red-300 rounded-xl transition-colors flex items-center justify-center"
                             title="Delete session"
                           >
-                            <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                            <Trash2 className="w-5 h-5 text-red-600" />
                           </button>
                         </div>
                       </div>

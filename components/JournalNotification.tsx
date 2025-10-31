@@ -84,22 +84,22 @@ const JournalNotification: React.FC<JournalNotificationProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -50, scale: 0.95 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed top-4 right-4 z-50 max-w-sm w-full mx-4"
+          className="fixed top-4 left-4 right-4 sm:top-4 sm:right-4 sm:left-auto z-50 max-w-sm sm:w-full"
         >
           <Card className={`${content.color} border-2 shadow-lg`}>
-            <CardContent className="p-4">
+            <CardContent className="p-4 sm:p-5">
               <div className="flex items-start gap-3">
-                <div className={`text-2xl ${content.iconColor}`}>
+                <div className={`text-2xl sm:text-3xl ${content.iconColor} flex-shrink-0`}>
                   {content.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-800 text-sm mb-1">
+                  <h3 className="font-semibold text-gray-800 text-sm sm:text-base mb-2">
                     {content.title}
                   </h3>
-                  <p className="text-gray-600 text-xs leading-relaxed mb-3">
+                  <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-4">
                     {content.message}
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     {onAction && (
                       <Button
                         onClick={() => {
@@ -107,7 +107,7 @@ const JournalNotification: React.FC<JournalNotificationProps> = ({
                           setIsVisible(false);
                         }}
                         size="sm"
-                        className="text-xs px-3 py-1.5"
+                        className="text-xs sm:text-sm px-4 py-2 min-h-[36px] font-medium"
                       >
                         {content.actionText}
                       </Button>
@@ -119,7 +119,7 @@ const JournalNotification: React.FC<JournalNotificationProps> = ({
                       }}
                       variant="ghost"
                       size="sm"
-                      className="text-xs px-3 py-1.5 text-gray-500 hover:text-gray-700"
+                      className="text-xs sm:text-sm px-4 py-2 min-h-[36px] text-gray-500 hover:text-gray-700"
                     >
                       Dismiss
                     </Button>
@@ -130,7 +130,7 @@ const JournalNotification: React.FC<JournalNotificationProps> = ({
                     setIsVisible(false);
                     onDismiss?.();
                   }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors min-h-[44px] min-w-[44px] p-2 flex items-center justify-center flex-shrink-0"
                 >
                   <Icon name="x" className="w-4 h-4" />
                 </button>

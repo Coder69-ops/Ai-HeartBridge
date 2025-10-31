@@ -240,53 +240,51 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
       
       <div className="max-w-4xl mx-auto">
         {/* Header - Mobile Optimized */}
-        <div className="flex items-center justify-between mb-6 sm:mb-8">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 mb-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={onBack}
-              className="hover:bg-white/50 flex-shrink-0"
+              className="hover:bg-white/50 flex-shrink-0 min-h-[44px] min-w-[44px] p-2"
             >
-              <Icon name="arrow-left" className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Icon name="arrow-left" className="w-5 h-5" />
             </Button>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 truncate">Journal</h1>
-              <p className="text-sm sm:text-base text-gray-600 truncate">Reflect together and grow stronger</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Journal</h1>
+              <p className="text-sm sm:text-base text-gray-600 mt-1">Reflect together and grow stronger</p>
             </div>
           </div>
         </div>
 
         {/* Active Session Card - Mobile Optimized */}
         {activeSession && (
-          <Card className="mb-4 sm:mb-6 border-2 border-emerald-200 bg-emerald-50">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                  <div className="p-2 sm:p-3 bg-emerald-100 rounded-full flex-shrink-0">
-                    <Icon name="book-open" className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+          <Card className="mb-6 border-2 border-emerald-200 bg-emerald-50">
+            <CardContent className="p-5 sm:p-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-emerald-100 rounded-full flex-shrink-0">
+                    <Icon name="book-open" className="w-6 h-6 text-emerald-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 truncate">Active Journal Session</h3>
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
+                    <h3 className="text-lg font-semibold text-gray-800">Active Journal Session</h3>
+                    <p className="text-sm text-gray-600 mt-1">
                       {getSessionStatusInfo(activeSession.status).text}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <Button
-                    onClick={() => {
-                      console.log('View Insights button clicked');
-                      console.log('activeSession.status:', activeSession.status);
-                      console.log('activeSession.insights:', activeSession.insights);
-                      setCurrentView('active');
-                    }}
-                    variant="therapy"
-                    size="sm"
-                  >
-                    {activeSession.status === JournalSessionStatus.INSIGHTS_READY ? 'View Insights' : 'Continue'}
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => {
+                    console.log('View Insights button clicked');
+                    console.log('activeSession.status:', activeSession.status);
+                    console.log('activeSession.insights:', activeSession.insights);
+                    setCurrentView('active');
+                  }}
+                  variant="therapy"
+                  className="w-full sm:w-auto min-h-[48px] px-6 py-3 text-base font-medium"
+                >
+                  {activeSession.status === JournalSessionStatus.INSIGHTS_READY ? 'View Insights' : 'Continue Session'}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -294,22 +292,22 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
 
 
         {/* Action Cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
           {/* New Session */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group"
+            <Card className="h-full hover:shadow-lg transition-all cursor-pointer group active:scale-95"
               onClick={handleStartNewSession}
             >
               <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
                   <Icon name="plus" className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Start New Session</h3>
-                <p className="text-gray-600 text-sm">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Start New Session</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
                   Begin a fresh reflection session with your partner
                 </p>
               </CardContent>
@@ -322,15 +320,15 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group"
+            <Card className="h-full hover:shadow-lg transition-all cursor-pointer group active:scale-95"
               onClick={() => setCurrentView('history')}
             >
               <CardContent className="p-6 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-lg">
                   <Icon name="history" className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">View History</h3>
-                <p className="text-gray-600 text-sm">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">View History</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
                   Browse past sessions and insights ({sessionHistory.length} sessions)
                 </p>
               </CardContent>
