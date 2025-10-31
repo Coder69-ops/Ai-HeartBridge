@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from './store/authStore';
 import { useAppStore } from './store/appStore';
-import { User, Couple, Exercise, Message, OnboardingData } from './types';
-import { ToastProvider } from './src/components/ui/enhanced';
+import { User, Exercise, Message, OnboardingData } from './types';
+import { toast, Toaster } from 'react-hot-toast';
 import * as authService from './services/authService';
 import MasterAuthView from './components/MasterAuthView';
 import ComprehensiveOnboarding from './components/ComprehensiveOnboarding';
@@ -15,8 +15,8 @@ import JournalingView from './components/JournalingView';
 import JournalManager from './components/JournalManager';
 import MasterCheckInView from './components/MasterCheckInView';
 import StandaloneCheckInView from './components/StandaloneCheckInView';
-import MasterExercisesView from './components/MasterExercisesView';
-import MasterExerciseDetailView from './components/MasterExerciseDetailView';
+
+
 import EnhancedExercisesView from './components/EnhancedExercisesView';
 import MasterTrendsView from './components/MasterTrendsView';
 import MasterProfileView from './components/MasterProfileView';
@@ -26,91 +26,56 @@ import MasterSafetyModal from './components/MasterSafetyModal';
 import MasterPartnerPairingView from './components/MasterPartnerPairingView';
 import MasterSafetyCenter from './components/MasterSafetyCenter';
 import { GorgeousLoader } from './components/shared/GorgeousLoader';
-import { exercises, loadExercises } from './data/exercises';
+
 
 export const AppContent: React.FC = () => {
     // Zustand stores
-    const { user, isAuthenticated, isLoading: authLoading, initialize } = useAuthStore();
-    const { currentView, setCurrentView, selectedExercise, setSelectedExercise } = useAppStore();
+    const { user, partner, couple, isAuthenticated, isLoading: authLoading, initialize } = useAuthStore();
+    const { currentView, setCurrentView, showSafetyModal, toggleSafetyModal, currentJournalId, setCurrentJournalId } = useAppStore();
 
-    // Local state for legacy components (will be migrated to stores)
-    const [partner, setPartner] = useState<User | null>(null);
-    const [couple, setCouple] = useState<Couple | null>(null);
-    const [currentJournalId, setCurrentJournalId] = useState<string | null>(null);
-    const [showSafetyModal, setShowSafetyModal] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [exercisesList, setExercisesList] = useState<Exercise[]>(exercises);
+
 
 
     // Initialize auth on app startup
     useEffect(() => {
-        initialize();
+        const initializeAuth = async () => {
+            await initialize();
+        };
+        initializeAuth();
     }, [initialize]);
 
-    // Load additional data when authenticated
+    // Set local loading to false after auth loading completes
     useEffect(() => {
-        const loadUserData = async () => {
-            if (isAuthenticated && user && !authLoading) {
-                try {
-                    const userPartner = await authService.getPartner(user);
-                    const userCouple = user.coupleId ? await authService.getCouple(user.coupleId) : null;
-                    setPartner(userPartner);
-                    setCouple(userCouple);
-                } catch (error) {
-                    console.error('Error loading user data:', error);
-                }
-                setIsLoading(false);
-            } else if (!authLoading) {
-                setIsLoading(false);
-            }
-        };
+        if (!authLoading) {
+            setIsLoading(false);
+        }
+    }, [authLoading]);
 
-        loadUserData();
-    }, [isAuthenticated, user, authLoading]);
 
-    // Load exercises
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                const loadedExercises = await loadExercises();
-                setExercisesList(loadedExercises);
-            } catch (error) {
-                console.error('Failed to load exercises:', error);
-            }
-        };
-        loadData();
-    }, []);
+
+
 
     const handleOnboardingComplete = async (onboardingData: OnboardingData) => {
         const { updateProfile } = useAuthStore.getState();
         try {
-            // Format the onboarding data to match the backend User model structure
             const formattedData = {
-                // Mark onboarding as complete
                 isOnboardingComplete: true,
                 onboardingCompletedAt: new Date(),
-                
-                // Personal Information
                 firstName: onboardingData.personalInfo?.firstName,
                 lastName: onboardingData.personalInfo?.lastName,
                 age: onboardingData.personalInfo?.age,
                 gender: onboardingData.personalInfo?.gender,
                 location: onboardingData.personalInfo?.location ? 
                     `${onboardingData.personalInfo.location.city || ''}, ${onboardingData.personalInfo.location.country || ''}`.trim().replace(/^,\s*|,\s*$/g, '') : undefined,
-                
-                // Relationship Information
                 relationshipStatus: onboardingData.relationshipInfo?.relationshipStatus,
                 relationshipDuration: onboardingData.relationshipInfo?.relationshipDuration ? 
                     `${onboardingData.relationshipInfo.relationshipDuration.years || 0} years, ${onboardingData.relationshipInfo.relationshipDuration.months || 0} months` : undefined,
                 livingTogether: onboardingData.relationshipInfo?.livingTogether,
                 hasChildren: onboardingData.relationshipInfo?.hasChildren,
                 childrenAges: onboardingData.relationshipInfo?.childrenAges,
-                
-                // Goals and Challenges
                 primaryGoals: Array.isArray(onboardingData.goals) && onboardingData.goals.length > 0 ? onboardingData.goals : undefined,
                 relationshipChallenges: Array.isArray(onboardingData.challenges) && onboardingData.challenges.length > 0 ? onboardingData.challenges : undefined,
-                
-                // App Preferences
                 notificationSettings: onboardingData.preferences?.notifications !== undefined ? {
                     dailyCheckins: onboardingData.preferences.notifications,
                     exerciseReminders: onboardingData.preferences.notifications,
@@ -118,21 +83,7 @@ export const AppContent: React.FC = () => {
                     weeklyReports: onboardingData.preferences.notifications
                 } : undefined,
                 privacyLevel: onboardingData.preferences?.privacyLevel,
-                preferredTimeOfDay: onboardingData.preferences?.communicationStyle === 'gentle' ? 'evening' : 'afternoon'
-            };
-
-            // Remove undefined values to avoid overwriting existing data
-            const cleanedData = Object.fromEntries(
-                Object.entries(formattedData).filter(([_, value]) => value !== undefined)
-            );
-
-            console.log('Saving onboarding data:', cleanedData);
-            
-            // Update user profile with formatted onboarding data
-            await updateProfile(cleanedData);
-            
-            // Also update the profile nested structure for frontend consistency
-            await updateProfile({
+                preferredTimeOfDay: onboardingData.preferences?.communicationStyle === 'gentle' ? 'evening' : 'afternoon',
                 profile: {
                     ...(onboardingData.personalInfo || {}),
                     ...(onboardingData.relationshipInfo || {}),
@@ -140,29 +91,26 @@ export const AppContent: React.FC = () => {
                     relationshipChallenges: onboardingData.challenges
                 },
                 preferences: onboardingData.preferences
-            });
+            };
+
+            const cleanedData = Object.fromEntries(
+                Object.entries(formattedData).filter(([_, value]) => value !== undefined)
+            );
+
+            console.log('Saving onboarding data:', cleanedData);
+            
+            await updateProfile(cleanedData);
             
             console.log('Onboarding data saved successfully');
             setCurrentView('dashboard');
         } catch (error) {
             console.error('Failed to save onboarding data:', error);
-            // Show user the error but still proceed to avoid blocking
-            alert('There was an issue saving your onboarding data. Your progress has been saved locally and will sync when connection is restored.');
+            toast.error('There was an issue saving your onboarding data. Your progress has been saved locally and will sync when connection is restored.');
             setCurrentView('dashboard');
         }
     };
     
-    const handleLoginSuccess = async (loggedInUser: User) => {
-        try {
-            const userPartner = await authService.getPartner(loggedInUser);
-            const userCouple = loggedInUser.coupleId ? await authService.getCouple(loggedInUser.coupleId) : null;
-            setPartner(userPartner);
-            setCouple(userCouple);
-            setCurrentView('dashboard');
-        } catch (error) {
-            console.error('Error loading user data:', error);
-        }
-    };
+
     
     const handleLogout = () => {
         const { logout } = useAuthStore.getState();
@@ -170,8 +118,6 @@ export const AppContent: React.FC = () => {
         // Also clear the old auth service tokens for compatibility
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user_data');
-        setPartner(null);
-        setCouple(null);
         setCurrentView('dashboard');
     };
     
@@ -186,23 +132,12 @@ export const AppContent: React.FC = () => {
         }
     };
 
-    const handlePairingSuccess = async (updatedUser: User, newPartner: User) => {
-        setPartner(newPartner);
-        try {
-            if (updatedUser.coupleId) {
-                const userCouple = await authService.getCouple(updatedUser.coupleId);
-                setCouple(userCouple);
-            }
-        } catch (error) {
-            console.error('Error loading couple data:', error);
-        }
-        authService.setLoggedInUser(updatedUser);
-    };
+
 
     const handleStartJournaling = async () => {
-        if (!couple) return;
+        if (!user?.coupleId || !partner) return;
         try {
-            const newJournal = await authService.createJournalEntry(couple.id);
+            const newJournal = await authService.createJournalEntry(user.coupleId);
             setCurrentJournalId(newJournal.id);
             setCurrentView('journal');
         } catch (error) {
@@ -220,9 +155,17 @@ export const AppContent: React.FC = () => {
         }
     };
 
-    const handleSelectExercise = (exercise: Exercise) => {
-        setSelectedExercise(exercise);
-        setCurrentView('exercises');
+    const handlePairingSuccess = (updatedUser: User, newPartner: User) => {
+        // Update auth store directly with the fresh data from pairing response
+        useAuthStore.setState({
+            user: updatedUser,
+            partner: newPartner
+        });
+        
+        // Also update localStorage with the new user data
+        localStorage.setItem('user_data', JSON.stringify(updatedUser));
+        
+        console.log('Partner pairing successful:', { updatedUser, newPartner });
     };
 
     const renderContent = () => {
@@ -258,7 +201,7 @@ export const AppContent: React.FC = () => {
 
         // Check if user needs authentication
         if (!isAuthenticated || !user) {
-            return <MasterAuthView onLoginSuccess={handleLoginSuccess} />;
+            return <MasterAuthView />;
         }
 
         // Render main app views
@@ -324,7 +267,7 @@ export const AppContent: React.FC = () => {
                     />
                 );
             case 'trends':
-                return <MasterTrendsView />;
+                return <MasterTrendsView onBack={() => setCurrentView('dashboard')} />;
             case 'profile':
                 return <EnhancedProfileView onBack={() => setCurrentView('dashboard')} />;
             case 'chat':
@@ -335,7 +278,6 @@ export const AppContent: React.FC = () => {
                 return (
                     <MasterPartnerPairingView 
                         user={user} 
-                        onPairingSuccess={handlePairingSuccess} 
                         onBack={() => setCurrentView('dashboard')} 
                     />
                 );
@@ -351,7 +293,8 @@ export const AppContent: React.FC = () => {
     };
     
     return (
-        <ToastProvider>
+        <>
+            <Toaster />
             <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
                 {isAuthenticated && user && !authLoading && (
                     <>
@@ -359,7 +302,7 @@ export const AppContent: React.FC = () => {
                         <SimpleHeader 
                             user={user} 
                             onNavigate={handleNavigate}
-                            onShowSafetyModal={() => setShowSafetyModal(true)} 
+                            onShowSafetyModal={() => toggleSafetyModal(true)} 
                             onLogout={handleLogout}
                             currentView={currentView}
                             partner={partner}
@@ -387,15 +330,15 @@ export const AppContent: React.FC = () => {
                 <AnimatePresence>
                     {showSafetyModal && (
                         <MasterSafetyModal 
-                            onClose={() => setShowSafetyModal(false)} 
+                            onClose={() => toggleSafetyModal(false)} 
                             onNavigateToSafetyCenter={() => {
-                                setShowSafetyModal(false);
+                                toggleSafetyModal(false);
                                 setCurrentView('safety');
                             }}
                         />
                     )}
                 </AnimatePresence>
             </div>
-        </ToastProvider>
+        </>
     );
 };

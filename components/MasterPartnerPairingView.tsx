@@ -25,13 +25,11 @@ import { toast } from '../src/components/ui/enhanced/ModernToast';
 
 interface MasterPartnerPairingViewProps {
   user: User;
-  onPairingSuccess: (updatedUser: User, newPartner: User) => void;
   onBack: () => void;
 }
 
 const MasterPartnerPairingView: React.FC<MasterPartnerPairingViewProps> = ({
   user,
-  onPairingSuccess,
   onBack
 }) => {
   const [pairingCode, setPairingCode] = useState('');
@@ -50,7 +48,6 @@ const MasterPartnerPairingView: React.FC<MasterPartnerPairingViewProps> = ({
       const result = await pairUsers(user.id, pairingCode.trim());
       if (result.partner) {
         setPairingStep('connected');
-        onPairingSuccess(result.currentUser, result.partner);
         toast.success('Successfully paired with your partner! 💝');
       } else {
         setError('Failed to pair with partner');

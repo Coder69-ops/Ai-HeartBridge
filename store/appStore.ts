@@ -70,23 +70,27 @@ interface AppState {
   showExerciseModal: boolean;
   showMoodModal: boolean;
   showGoalModal: boolean;
+  showSafetyModal: boolean;
   
   // Selected items
   selectedJournalEntry: JournalEntry | null;
   selectedExercise: Exercise | null;
   selectedGoal: Goal | null;
+  currentJournalId: string | null;
   
   // Actions
   setCurrentView: (view: AppState['currentView']) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+  toggleSafetyModal: (show?: boolean) => void;
   
   // Journal actions
   addJournalEntry: (entry: Omit<JournalEntry, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateJournalEntry: (id: string, updates: Partial<JournalEntry>) => void;
   deleteJournalEntry: (id: string) => void;
   setSelectedJournalEntry: (entry: JournalEntry | null) => void;
+  setCurrentJournalId: (id: string | null) => void;
   toggleJournalModal: (show?: boolean) => void;
   
   // Exercise actions
@@ -128,17 +132,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   showExerciseModal: false,
   showMoodModal: false,
   showGoalModal: false,
+  showSafetyModal: false,
   
   // Initial selected items
   selectedJournalEntry: null,
   selectedExercise: null,
   selectedGoal: null,
+  currentJournalId: null,
   
   // Basic actions
   setCurrentView: (view) => set({ currentView: view }),
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
+  toggleSafetyModal: (show) => set((state) => ({ showSafetyModal: show !== undefined ? show : !state.showSafetyModal })),
+  
+  // Journal actions
+  setCurrentJournalId: (id) => set({ currentJournalId: id }),
   
   // Journal actions
   addJournalEntry: (entryData) => {

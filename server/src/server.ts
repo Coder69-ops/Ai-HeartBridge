@@ -10,7 +10,7 @@ import winston from 'winston';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import coupleRoutes from './routes/couples';
-import journalRoutes from './routes/journals';
+
 import journalSessionRoutes from './routes/journalSessions';
 import chatSessionRoutes from './routes/chatSessions';
 import partnerChatRoutes from './routes/partnerChat';
@@ -24,7 +24,26 @@ import { authenticateToken } from './middleware/auth';
 
 dotenv.config();
 
+import { Server } from 'socket.io';
+import http from 'http';
+
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
+
 const PORT = process.env.PORT || 3001;
 
 // Configure Winston logger
@@ -98,8 +117,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/couples', authenticateToken, coupleRoutes);
-app.use('/api/journals', authenticateToken, journalRoutes);
-app.use('/api/journal-sessions', authenticateToken, journalSessionRoutes);
+
+app.use('/api/journal-sessions', (req, res, next) => {
+  req.io = io;
+  next();
+}, authenticateToken, journalSessionRoutes);
 app.use('/api/chat-sessions', authenticateToken, chatSessionRoutes);
 app.use('/api/partner-chat', authenticateToken, partnerChatRoutes);
 app.use('/api/exercises', authenticateToken, exerciseRoutes); // Protected endpoint - auth required for exercises
@@ -134,7 +156,7 @@ const connectDB = async () => {
 const startServer = async () => {
   try {
     // Start server first, then connect to DB
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
     });
     
@@ -151,4 +173,4 @@ const startServer = async () => {
 
 startServer();
 
-export default app;
+export { app, server };

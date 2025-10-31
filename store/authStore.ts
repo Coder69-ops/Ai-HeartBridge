@@ -1,9 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User } from '../types';
+import { User, Couple } from '../types';
+import { getPartner } from '../services/authService';
 
 interface AuthState {
   user: User | null;
+  partner: User | null;
+  couple: Couple | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -24,16 +27,18 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
+      partner: null,
+      couple: null,
       token: null,
       isAuthenticated: false,
       isLoading: true, // Start with loading true for initialization
       error: null,
 
-      login: async (email: string, password: string) => {
+      login: async (email, password) => {
         try {
           set({ isLoading: true, error: null });
           
-          const apiUrl = 'https://captivating-optimism-production-fee7.up.railway.app/api';
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
           
           const response = await fetch(`${apiUrl}/auth/login`, {
             method: 'POST',
@@ -47,30 +52,12 @@ export const useAuthStore = create<AuthState>()(
             throw new Error(data.message || 'Login failed');
           }
 
-          // Ensure user has required fields with proper onboarding status
-          const user = {
-            ...data.user,
-            isOnboardingComplete: Boolean(data.user.isOnboardingComplete),
-            dateJoined: data.user.dateJoined ? new Date(data.user.dateJoined) : new Date(),
-            lastActive: data.user.lastActive ? new Date(data.user.lastActive) : new Date(),
-            // Ensure profile structure exists
-            profile: {
-              ...data.user.profile,
-              onboardingStep: data.user.isOnboardingComplete ? undefined : 0
-            },
-            preferences: {
-              theme: 'system',
-              notifications: true,
-              language: 'en',
-              timezone: 'auto',
-              communicationStyle: 'gentle',
-              privacyLevel: 'private',
-              ...data.user.preferences
-            }
-          };
+          const { user, token } = data;
+          const partner = await getPartner(user);
 
           set({
             user,
+            partner,
             token: data.token,
             isAuthenticated: true,
             isLoading: false,
@@ -129,8 +116,11 @@ export const useAuthStore = create<AuthState>()(
             }
           };
 
+          const partner = await authService.getPartner(user);
+
           set({
             user,
+            partner,
             token: data.token,
             isAuthenticated: true,
             isLoading: false,
@@ -235,7 +225,7 @@ export const useAuthStore = create<AuthState>()(
       setLoading: (loading: boolean) => set({ isLoading: loading }),
       
       // Initialize auth state on app startup
-      initialize: () => {
+      initialize: async () => {
         const token = localStorage.getItem('auth_token');
         const userData = localStorage.getItem('user_data');
         
@@ -246,8 +236,73 @@ export const useAuthStore = create<AuthState>()(
               user,
               token,
               isAuthenticated: true,
-              isLoading: false,
+              isLoading: true, // Keep loading while we fetch fresh data
             });
+
+            // Fetch fresh user data from server to get current pairing status
+            try {
+              const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+              
+              const response = await fetch(`${apiUrl}/auth/me`, {
+                headers: { 
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                const freshUser = data.user;
+                let partner = null;
+                let couple = null;
+
+                // If user has a couple, fetch partner data
+                if (freshUser.coupleId) {
+                  try {
+                    const partnerResponse = await fetch(`${apiUrl}/couples/info`, {
+                      headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                      },
+                    });
+
+                    if (partnerResponse.ok) {
+                      const coupleData = await partnerResponse.json();
+                      couple = coupleData.couple;
+                      
+                      // Find the partner (the other user in the couple)
+                      if (couple.partner1Id._id === freshUser.id) {
+                        partner = couple.partner2Id;
+                      } else {
+                        partner = couple.partner1Id;
+                      }
+                    }
+                  } catch (partnerError) {
+                    console.log('Could not fetch partner data:', partnerError);
+                  }
+                }
+
+                // Update with fresh data
+                set({
+                  user: freshUser,
+                  partner,
+                  couple,
+                  token,
+                  isAuthenticated: true,
+                  isLoading: false,
+                });
+
+                // Update localStorage with fresh data
+                localStorage.setItem('user_data', JSON.stringify(freshUser));
+              } else {
+                // Token might be invalid, use cached data but mark as loaded
+                set({ isLoading: false });
+              }
+            } catch (fetchError) {
+              console.log('Could not fetch fresh user data, using cached:', fetchError);
+              // Use cached data if server is unreachable
+              set({ isLoading: false });
+            }
           } catch (error) {
             console.error('Failed to parse user data:', error);
             // Clear corrupted data

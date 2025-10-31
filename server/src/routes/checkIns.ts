@@ -1,88 +1,48 @@
 import express, { Response } from 'express';
-import { body, validationResult } from 'express-validator';
+import { z } from 'zod';
 import { AuthRequest } from '../middleware/auth';
 import { CheckIn } from '../models/CheckIn';
 import { Couple } from '../models/Couple';
 
 const router = express.Router();
 
-// CSI-4 Questions
-const CSI_4_QUESTIONS = [
-  "Please indicate the degree of happiness, all things considered, of your relationship.",
-  "How satisfied are you with your relationship?", 
-  "How good is your relationship compared to most?",
-  "How strong is your love for your partner?"
-];
+const createCheckInSchema = z.object({
+  coupleId: z.string(),
+  journalId: z.string().optional(),
+  mood: z.number().min(1).max(5),
+  context: z.string(),
+  communicationQuality: z.number().min(1).max(5),
+  sharedMoments: z.array(z.string()),
+  privateThoughts: z.string().optional(),
+});
 
-// CSI-16 Questions (abbreviated for space)
-const CSI_16_QUESTIONS = [
-  ...CSI_4_QUESTIONS,
-  "How satisfied are you with the amount of love and affection in your relationship?",
-  "How well does your partner meet your needs?",
-  "To what extent has your relationship met your original expectations?",
-  "How much do you love your partner?",
-  "How many problems are there in your relationship?",
-  "How satisfied are you with the way you and your partner handle problems?",
-  "How satisfied are you with your partner's level of commitment?",
-  "How satisfied are you with your communication as a couple?",
-  "How satisfied are you with the amount of fun you have together?",
-  "How satisfied are you with your physical intimacy?",
-  "How satisfied are you with the amount of time you spend together?",
-  "How confident are you in the future of your relationship?"
-];
-
-// Create new check-in
-router.post('/create', [
-  body('type').isIn(['CSI-4', 'CSI-16', 'weekly', 'monthly']).withMessage('Invalid check-in type')
-], async (req: AuthRequest, res: Response) => {
+// Create a new check-in
+router.post('/', async (req: AuthRequest, res: Response) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { type } = req.body;
+    const checkInData = createCheckInSchema.parse(req.body);
     const user = req.user!;
-    
-    if (!user.coupleId) {
-      return res.status(400).json({ error: 'Must be paired to create check-ins' });
-    }
 
-    const couple = await Couple.findById(user.coupleId);
+    const couple = await Couple.findById(checkInData.coupleId);
     if (!couple) {
       return res.status(404).json({ error: 'Couple not found' });
     }
 
-    const partnerId = couple.partner1Id.equals(user._id) 
-      ? couple.partner2Id 
-      : couple.partner1Id;
-
     const checkIn = new CheckIn({
-      coupleId: user.coupleId,
-      partner1Id: couple.partner1Id,
-      partner2Id: couple.partner2Id,
-      type,
-      partner1Responses: [],
-      partner2Responses: []
+      ...checkInData,
+      userId: user._id,
     });
 
     await checkIn.save();
 
-    const questions = type === 'CSI-4' ? CSI_4_QUESTIONS : CSI_16_QUESTIONS;
-
-    res.status(201).json({
+    res.status(201).json({ 
       message: 'Check-in created successfully',
-      checkIn: {
-        id: checkIn._id,
-        type: checkIn.type,
-        questions,
-        isCompleted: checkIn.isCompleted,
-        createdAt: checkIn.createdAt
-      }
+      checkIn 
     });
 
   } catch (error) {
-    console.error('Create check-in error:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ errors: error.errors });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });

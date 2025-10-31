@@ -1,4 +1,8 @@
-import api from './apiClient';
+import apiClient from './apiClient';
+
+export const generateInsights = async (sessionId: string): Promise<void> => {
+  await apiClient.post(`/journal-sessions/${sessionId}/generate-insights`);
+};
 
 export interface JournalMessage {
   sender: 'user' | 'bot';
@@ -72,7 +76,7 @@ export interface JournalSessionResponse {
  */
 export const createJournalSession = async (): Promise<{ session: JournalSession }> => {
   try {
-    const response = await api.post('/journal-sessions/create');
+    const response = await apiClient.post('/journal-sessions/create');
     return response.data;
   } catch (error: any) {
     console.error('Create journal session error:', error);
@@ -94,7 +98,7 @@ export const getJournalSessions = async (params?: {
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.status) queryParams.append('status', params.status);
 
-    const response = await api.get(`/journal-sessions/list?${queryParams.toString()}`);
+    const response = await apiClient.get(`/journal-sessions/list?${queryParams.toString()}`);
     return response.data;
   } catch (error: any) {
     console.error('Get journal sessions error:', error);
@@ -107,7 +111,7 @@ export const getJournalSessions = async (params?: {
  */
 export const getJournalSession = async (sessionId: string): Promise<JournalSessionResponse> => {
   try {
-    const response = await api.get(`/journal-sessions/${sessionId}`);
+    const response = await apiClient.get(`/journal-sessions/${sessionId}`);
     return response.data;
   } catch (error: any) {
     console.error('Get journal session error:', error);
@@ -125,7 +129,7 @@ export const saveJournalSession = async (
   insights?: string
 ): Promise<JournalSessionResponse> => {
   try {
-    const response = await api.post(`/journal-sessions/${sessionId}/save`, {
+    const response = await apiClient.post(`/journal-sessions/${sessionId}/save`, {
       partner1Chat: partner1Messages,
       partner2Chat: partner2Messages,
       insights,
@@ -143,7 +147,7 @@ export const saveJournalSession = async (
  */
 export const closeJournalSession = async (sessionId: string): Promise<JournalSessionResponse> => {
   try {
-    const response = await api.post(`/journal-sessions/${sessionId}/close`);
+    const response = await apiClient.post(`/journal-sessions/${sessionId}/close`);
     return response.data;
   } catch (error: any) {
     console.error('Close journal session error:', error);
@@ -156,7 +160,7 @@ export const closeJournalSession = async (sessionId: string): Promise<JournalSes
  */
 export const deleteJournalSession = async (sessionId: string): Promise<{ message: string }> => {
   try {
-    const response = await api.delete(`/journal-sessions/${sessionId}`);
+    const response = await apiClient.delete(`/journal-sessions/${sessionId}`);
     return response.data;
   } catch (error: any) {
     console.error('Delete journal session error:', error);
@@ -172,7 +176,7 @@ export const completeJournalReflection = async (
   chatHistory: JournalMessage[]
 ): Promise<{ session: JournalSession }> => {
   try {
-    const response = await api.post(`/journal-sessions/${sessionId}/complete-reflection`, {
+    const response = await apiClient.post(`/journal-sessions/${sessionId}/complete-reflection`, {
       chatHistory
     });
     return response.data;
@@ -185,7 +189,7 @@ export const completeJournalReflection = async (
 // Get active journal session for the couple
 export const getActiveJournalSession = async (): Promise<JournalSession | null> => {
   try {
-    const response = await api.get('/journal-sessions/active');
+    const response = await apiClient.get('/journal-sessions/active');
     return response.data.session;
   } catch (error: any) {
     if (error.response?.status === 404) {
@@ -199,7 +203,7 @@ export const getActiveJournalSession = async (): Promise<JournalSession | null> 
 // Continue existing journal session
 export const continueJournalSession = async (sessionId: string): Promise<JournalSession> => {
   try {
-    const response = await api.get(`/journal-sessions/${sessionId}`);
+    const response = await apiClient.get(`/journal-sessions/${sessionId}`);
     return response.data.session;
   } catch (error: any) {
     console.error('Continue journal session error:', error);
@@ -210,7 +214,7 @@ export const continueJournalSession = async (sessionId: string): Promise<Journal
 // Get journal session history
 export const getJournalSessionHistory = async (): Promise<JournalSession[]> => {
   try {
-    const response = await api.get('/journal-sessions/list');
+    const response = await apiClient.get('/journal-sessions/list');
     return response.data.sessions;
   } catch (error: any) {
     console.error('Get journal history error:', error);
@@ -223,7 +227,7 @@ export const getJournalSessionHistory = async (): Promise<JournalSession[]> => {
  */
 export const getJournalInsights = async (sessionId: string): Promise<{ insights: string }> => {
   try {
-    const response = await api.get(`/journal-sessions/${sessionId}/insights`);
+    const response = await apiClient.get(`/journal-sessions/${sessionId}/insights`);
     return response.data;
   } catch (error: any) {
     console.error('Get journal insights error:', error);

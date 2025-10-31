@@ -1,27 +1,39 @@
 import express, { Response } from 'express';
-import { body, validationResult } from 'express-validator';
+import { z } from 'zod';
 import { AuthRequest } from '../middleware/auth';
 import { User } from '../models/User';
 import { Couple } from '../models/Couple';
 
 const router = express.Router();
 
-// Pair with another user
-router.post('/pair', [
-  body('pairingCode').isLength({ min: 6, max: 6 }).withMessage('Pairing code must be 6 characters')
-], async (req: AuthRequest, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+const pairSchema = z.object({
+  pairingCode: z.string().length(6, { message: 'Pairing code must be 6 characters' })
+});
 
-    const { pairingCode } = req.body;
+// Pair with another user
+router.post('/pair', async (req: AuthRequest, res: Response) => {
+  try {
+    const { pairingCode } = pairSchema.parse(req.body);
     const currentUser = req.user!;
 
-    // Check if user is already paired
+    console.log('Pairing attempt:', {
+      currentUser: currentUser.email,
+      currentUserId: currentUser._id,
+      currentUserCoupleId: currentUser.coupleId,
+      pairingCode: pairingCode
+    });
+
+    // Check if user is already in an active couple
     if (currentUser.coupleId) {
-      return res.status(400).json({ error: 'You are already paired with someone' });
+      const existingCouple = await Couple.findById(currentUser.coupleId);
+      if (existingCouple && existingCouple.status === 'active') {
+        return res.status(400).json({ error: 'You are already paired with someone' });
+      }
+      // If couple is inactive or doesn't exist, clear the reference and continue
+      if (!existingCouple || existingCouple.status !== 'active') {
+        await User.findByIdAndUpdate(currentUser._id, { $unset: { coupleId: 1 } });
+        currentUser.coupleId = undefined;
+      }
     }
 
     // Find partner by pairing code
@@ -31,26 +43,61 @@ router.post('/pair', [
     });
 
     if (!partner) {
-      return res.status(404).json({ error: 'Invalid pairing code' });
+      return res.status(404).json({ error: 'Partner not found with that pairing code' });
     }
 
-    if (partner._id.equals(currentUser._id)) {
-      return res.status(400).json({ error: 'You cannot pair with yourself' });
-    }
-
-    if (partner.coupleId) {
-      return res.status(400).json({ error: 'This user is already paired' });
-    }
-
-    // Create couple
-    const couple = new Couple({
-      partner1Id: currentUser._id,
-      partner2Id: partner._id
+    console.log('Partner found:', {
+      partner: partner.email,
+      partnerId: partner._id,
+      partnerCoupleId: partner.coupleId
     });
 
-    await couple.save();
+    if (partner._id.equals(currentUser._id)) {
+      return res.status(400).json({ error: 'Cannot pair with yourself' });
+    }
 
-    // Update both users
+    // Check if partner is already in an active couple
+    if (partner.coupleId) {
+      const partnerCouple = await Couple.findById(partner.coupleId);
+      if (partnerCouple && partnerCouple.status === 'active') {
+        return res.status(400).json({ error: 'Partner is already paired with someone else' });
+      }
+      // If partner's couple is inactive or doesn't exist, clear the reference and continue
+      if (!partnerCouple || partnerCouple.status !== 'active') {
+        await User.findByIdAndUpdate(partner._id, { $unset: { coupleId: 1 } });
+        partner.coupleId = undefined;
+      }
+    }
+
+    // Check if these two users have an existing couple (active or inactive)
+    let couple = await Couple.findOne({
+      $or: [
+        { partner1Id: currentUser._id, partner2Id: partner._id },
+        { partner1Id: partner._id, partner2Id: currentUser._id }
+      ]
+    });
+
+    if (couple) {
+      // If couple exists but is inactive, reactivate it
+      if (couple.status !== 'active') {
+        couple.status = 'active';
+        await couple.save();
+        console.log('Reactivating existing couple:', couple._id);
+      } else {
+        // This shouldn't happen due to our earlier checks, but just in case
+        return res.status(400).json({ error: 'You are already paired with this person' });
+      }
+    } else {
+      // Create new couple
+      couple = new Couple({
+        partner1Id: currentUser._id,
+        partner2Id: partner._id
+      });
+      await couple.save();
+      console.log('Created new couple:', couple._id);
+    }
+
+    // Update both users with the couple ID
     await User.updateMany(
       { _id: { $in: [currentUser._id, partner._id] } },
       { coupleId: couple._id }
@@ -69,6 +116,8 @@ router.post('/pair', [
 
   } catch (error) {
     console.error('Pairing error:', error);
+    console.error('Request body:', req.body);
+    console.error('Current user:', req.user?.email);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -97,22 +146,18 @@ router.get('/info', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Update couple goals
-router.put('/goals', [
-  body('goals').isArray().withMessage('Goals must be an array'),
-  body('goals.*').isLength({ max: 500 }).withMessage('Each goal must be under 500 characters')
-], async (req: AuthRequest, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+const updateGoalsSchema = z.object({
+  goals: z.array(z.string().max(500, { message: 'Each goal must be under 500 characters' }))
+});
 
-    const { goals } = req.body;
+// Update couple goals
+router.put('/goals', async (req: AuthRequest, res: Response) => {
+  try {
+    const { goals } = updateGoalsSchema.parse(req.body);
     const user = req.user!;
 
     if (!user.coupleId) {
-      return res.status(404).json({ error: 'No couple found' });
+      return res.status(403).json({ error: 'You are not paired with anyone' });
     }
 
     const couple = await Couple.findByIdAndUpdate(
@@ -145,17 +190,15 @@ router.delete('/unpair', async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Couple not found' });
     }
 
-    // Update couple status instead of deleting
-    await Couple.findByIdAndUpdate(
-      user.coupleId,
-      { status: 'inactive' }
-    );
-
     // Remove couple reference from both users
     await User.updateMany(
       { _id: { $in: [couple.partner1Id, couple.partner2Id] } },
       { $unset: { coupleId: 1 } }
     );
+
+    // Set couple status to inactive
+    couple.status = 'inactive';
+    await couple.save();
 
     res.json({ message: 'Successfully unpaired' });
 

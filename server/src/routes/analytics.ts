@@ -1,7 +1,7 @@
 import express from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { CheckIn } from '../models/CheckIn';
-import { JournalEntry } from '../models/JournalEntry';
+import { JournalSession } from '../models/JournalSession';
 import { ExerciseProgress } from '../models/Exercise';
 
 const router = express.Router();
@@ -46,7 +46,7 @@ router.get('/trends', async (req: AuthRequest, res) => {
     .sort({ createdAt: 1 });
 
     // Get journaling frequency
-    const journalEntries = await JournalEntry.find({
+    const journalEntries = await JournalSession.find({
       coupleId: user.coupleId,
       isCompleted: true,
       createdAt: { $gte: startDate }
@@ -137,7 +137,7 @@ router.get('/health-score', async (req: AuthRequest, res) => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const recentJournals = await JournalEntry.countDocuments({
+    const recentJournals = await JournalSession.countDocuments({
       coupleId: user.coupleId,
       isCompleted: true,
       createdAt: { $gte: thirtyDaysAgo }
@@ -167,7 +167,7 @@ router.get('/health-score', async (req: AuthRequest, res) => {
     scoreComponents.engagement = engagementScore;
 
     // Communication component (30% of score) - based on Four Horsemen absence
-    const recentAnalyses = await JournalEntry.find({
+    const recentAnalyses = await JournalSession.find({
       coupleId: user.coupleId,
       isCompleted: true,
       analysis: { $exists: true },

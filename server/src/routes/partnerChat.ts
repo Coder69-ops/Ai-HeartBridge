@@ -1,5 +1,5 @@
 import express, { Response } from 'express';
-import { body, validationResult, query } from 'express-validator';
+import { z } from 'zod';
 import { AuthRequest } from '../middleware/auth';
 import { PartnerChat, IPartnerMessage } from '../models/PartnerChat';
 import { Couple } from '../models/Couple';
@@ -7,86 +7,15 @@ import { User } from '../models/User';
 
 const router = express.Router();
 
-// Get or create partner chat for a couple
-router.get('/conversation', async (req: AuthRequest, res: Response) => {
-  try {
-    const user = req.user!;
-    
-    if (!user.coupleId) {
-      return res.status(400).json({ error: 'Must be paired to access partner chat' });
-    }
-
-    const couple = await Couple.findById(user.coupleId);
-    if (!couple) {
-      return res.status(404).json({ error: 'Couple not found' });
-    }
-
-    // Find existing chat or create new one
-    let partnerChat = await PartnerChat.findOne({ coupleId: user.coupleId });
-    
-    if (!partnerChat) {
-      partnerChat = new PartnerChat({
-        coupleId: user.coupleId,
-        partner1Id: couple.partner1Id,
-        partner2Id: couple.partner2Id,
-        messages: []
-      });
-      await partnerChat.save();
-    }
-
-    // Get partner info
-    const partnerId = couple.partner1Id.equals(user._id) ? couple.partner2Id : couple.partner1Id;
-    const partner = await User.findById(partnerId).select('firstName lastName email profile');
-
-    // Mark messages as read for current user
-    const isPartner1 = couple.partner1Id.equals(user._id);
-    let hasUnreadMessages = false;
-
-    partnerChat.messages.forEach(message => {
-      if (message.receiverId.equals(user._id) && !message.isRead) {
-        message.isRead = true;
-        hasUnreadMessages = true;
-      }
-    });
-
-    if (hasUnreadMessages) {
-      await partnerChat.save();
-    }
-
-    res.json({
-      chat: {
-        id: partnerChat._id,
-        messages: partnerChat.messages,
-        totalMessages: partnerChat.totalMessages,
-        lastMessageAt: partnerChat.lastMessageAt,
-        unreadCount: isPartner1 ? partnerChat.unreadCount.partner1 : partnerChat.unreadCount.partner2
-      },
-      partner: {
-        id: partner?._id,
-        name: partner?.firstName || 'Partner',
-        email: partner?.email,
-        isOnline: false // TODO: Implement online status
-      }
-    });
-
-  } catch (error) {
-    console.error('Get partner chat error:', error);
-    res.status(500).json({ error: 'Failed to retrieve partner chat' });
-  }
+const sendMessageSchema = z.object({
+  message: z.string().min(1).max(2000),
+  messageType: z.enum(['text', 'emoji', 'voice']).optional(),
 });
 
 // Send message to partner
-router.post('/send', [
-  body('message').isLength({ min: 1, max: 2000 }).withMessage('Message must be between 1 and 2000 characters'),
-  body('messageType').optional().isIn(['text', 'emoji', 'voice']).withMessage('Invalid message type')
-], async (req: AuthRequest, res: Response) => {
+router.post('/send', async (req: AuthRequest, res: Response) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { message, messageType = 'text' } = req.body;
+    const { message, messageType = 'text' } = sendMessageSchema.parse(req.body);
     const user = req.user!;
 
     if (!user.coupleId) {
@@ -254,18 +183,15 @@ router.delete('/message/:messageId', async (req: AuthRequest, res: Response) => 
   }
 });
 
-// Edit message
-router.put('/message/:messageId', [
-  body('text').isLength({ min: 1, max: 2000 }).withMessage('Message must be between 1 and 2000 characters')
-], async (req: AuthRequest, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+const editMessageSchema = z.object({
+  text: z.string().min(1).max(2000),
+});
 
+// Edit message
+router.put('/message/:messageId', async (req: AuthRequest, res: Response) => {
+  try {
     const { messageId } = req.params;
-    const { text } = req.body;
+    const { text } = editMessageSchema.parse(req.body);
     const user = req.user!;
 
     if (!user.coupleId) {

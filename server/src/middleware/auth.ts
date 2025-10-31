@@ -2,8 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/User';
 
+import { Server } from 'socket.io';
+
 export interface AuthRequest extends Request {
   user?: IUser;
+  io?: Server;
 }
 
 export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {

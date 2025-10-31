@@ -21,34 +21,19 @@ import { Button } from './shared/Button';
 import { Card, CardContent } from './shared/Card';
 import Logo from './shared/Logo';
 
-interface MasterAuthViewProps {
-  onLoginSuccess: (user: User) => void;
-}
-
-type AuthMode = 'login' | 'signup';
-
-const MasterAuthView: React.FC<MasterAuthViewProps> = ({ onLoginSuccess }) => {
-  const { login, register, isLoading, error, clearError, user, isAuthenticated } = useAuthStore();
-  const [mode, setMode] = useState<AuthMode>('login');
+const MasterAuthView: React.FC = () => {
+  const { login, register, error, isLoading, clearError } = useAuthStore();
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [showPassword, setShowPassword] = useState(false);
-  
-  // Form state
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
-
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-
-  // Handle successful auth
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      onLoginSuccess(user);
-    }
-  }, [isAuthenticated, user, onLoginSuccess]);
 
   // Clear error when switching modes
   useEffect(() => {

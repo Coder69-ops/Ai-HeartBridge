@@ -65,68 +65,69 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
   const { showToast } = useToast();
 
   // Load dashboard data
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load all dashboard data in parallel
+      const [healthScore, journalSessions, checkInHistory, exerciseProgress, trends] = await Promise.all([
+        getHealthScore().catch(() => ({ overallScore: 0 })),
+        getJournalSessionHistory().catch(() => []),
+        getCoupleCheckInHistory().catch(() => []),
+        getCoupleExerciseProgress(1, 100).catch(() => ({ progress: [] })),
+        getRelationshipTrends('3months').catch(() => null)
+      ]);
+
+      // Calculate days active (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const activeDays = new Set();
+      journalSessions.forEach((session: any) => {
+        const sessionDate = new Date(session.createdAt);
+        if (sessionDate >= thirtyDaysAgo) {
+          activeDays.add(sessionDate.toDateString());
+        }
+      });
+      
+      // Handle checkInHistory structure
+      const checkIns = Array.isArray(checkInHistory) ? checkInHistory : checkInHistory.checkIns || [];
+      checkIns.forEach((checkIn: any) => {
+        const checkInDate = new Date(checkIn.createdAt);
+        if (checkInDate >= thirtyDaysAgo) {
+          activeDays.add(checkInDate.toDateString());
+        }
+      });
+
+      // Add exercise progress to active days
+      const exercises = exerciseProgress.progress || [];
+      exercises.forEach((exercise: any) => {
+        const exerciseDate = new Date(exercise.dateCompleted);
+        if (exerciseDate >= thirtyDaysAgo) {
+          activeDays.add(exerciseDate.toDateString());
+        }
+      });
+
+      setDashboardData({
+        healthScore: (healthScore as any)?.overallScore || 0,
+        checkInCount: (checkIns || []).length,
+        journalSessions: (journalSessions || []).length,
+        exerciseCount: (exercises || []).length,
+        daysActive: activeDays.size,
+        recentInsights: (journalSessions || []).find((s: any) => s?.insights) || null,
+        relationshipTrends: trends
+      });
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load dashboard data
   useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-        
-        // Load all dashboard data in parallel
-        const [healthScore, journalSessions, checkInHistory, exerciseProgress, trends] = await Promise.all([
-          getHealthScore().catch(() => ({ overallScore: 0 })),
-          getJournalSessionHistory().catch(() => []),
-          getCoupleCheckInHistory().catch(() => []),
-          getCoupleExerciseProgress(1, 100).catch(() => ({ progress: [] })),
-          getRelationshipTrends('3months').catch(() => null)
-        ]);
-
-        // Calculate days active (last 30 days)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        
-        const activeDays = new Set();
-        journalSessions.forEach((session: any) => {
-          const sessionDate = new Date(session.createdAt);
-          if (sessionDate >= thirtyDaysAgo) {
-            activeDays.add(sessionDate.toDateString());
-          }
-        });
-        
-        // Handle checkInHistory structure
-        const checkIns = Array.isArray(checkInHistory) ? checkInHistory : checkInHistory.checkIns || [];
-        checkIns.forEach((checkIn: any) => {
-          const checkInDate = new Date(checkIn.createdAt);
-          if (checkInDate >= thirtyDaysAgo) {
-            activeDays.add(checkInDate.toDateString());
-          }
-        });
-
-        // Add exercise progress to active days
-        const exercises = exerciseProgress.progress || [];
-        exercises.forEach((exercise: any) => {
-          const exerciseDate = new Date(exercise.dateCompleted);
-          if (exerciseDate >= thirtyDaysAgo) {
-            activeDays.add(exerciseDate.toDateString());
-          }
-        });
-
-        setDashboardData({
-          healthScore: (healthScore as any)?.overallScore || 0,
-          checkInCount: (checkIns || []).length,
-          journalSessions: (journalSessions || []).length,
-          exerciseCount: (exercises || []).length,
-          daysActive: activeDays.size,
-          recentInsights: (journalSessions || []).find((s: any) => s?.insights) || null,
-          relationshipTrends: trends
-        });
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadDashboardData();
-  }, [user.id, partner?.id]);
+  }, []);
 
   const getPartnerDisplayName = () => {
     if (!partner) return '';
@@ -259,6 +260,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
           <p className="text-gray-600 text-base sm:text-lg">
             {getUserDisplayName()}
           </p>
+
         </motion.div>
 
         {/* Partner Connection Status - Mobile Optimized */}

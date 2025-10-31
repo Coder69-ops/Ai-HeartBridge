@@ -1,8 +1,15 @@
 import express from 'express';
+import { z } from 'zod';
 import { AuthRequest } from '../middleware/auth';
 import { Exercise, ExerciseProgress } from '../models/Exercise';
 
 const router = express.Router();
+
+const completeExerciseSchema = z.object({
+  rating: z.number().min(1).max(5).optional(),
+  feedback: z.string().optional(),
+  timeSpent: z.number().optional(),
+});
 
 // Get all exercises
 router.get('/', async (req: AuthRequest, res) => {
@@ -81,7 +88,7 @@ router.get('/:exerciseId', async (req: AuthRequest, res) => {
 router.post('/:exerciseId/complete', async (req: AuthRequest, res) => {
   try {
     const { exerciseId } = req.params;
-    const { rating, feedback, timeSpent } = req.body;
+    const { rating, feedback, timeSpent } = completeExerciseSchema.parse(req.body);
     const user = req.user;
 
     if (!user) {
@@ -131,6 +138,9 @@ router.post('/:exerciseId/complete', async (req: AuthRequest, res) => {
     });
 
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ errors: error.errors });
+    }
     console.error('Complete exercise error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }

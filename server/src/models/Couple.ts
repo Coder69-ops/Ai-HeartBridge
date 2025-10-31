@@ -39,7 +39,15 @@ const coupleSchema = new Schema<ICouple>({
   timestamps: true
 });
 
-// Ensure unique pairing
+coupleSchema.pre('save', function(next) {
+  if (this.partner1Id && this.partner2Id && this.partner1Id.toString() > this.partner2Id.toString()) {
+    // Swap them to maintain a consistent order
+    [this.partner1Id, this.partner2Id] = [this.partner2Id, this.partner1Id];
+  }
+  next();
+});
+
+// Ensure unique pairing (composite index) after sorting
 coupleSchema.index({ partner1Id: 1, partner2Id: 1 }, { unique: true });
 
 export const Couple = mongoose.model<ICouple>('Couple', coupleSchema);

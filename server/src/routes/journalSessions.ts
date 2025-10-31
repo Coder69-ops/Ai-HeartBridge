@@ -1,4 +1,5 @@
 import express, { Response } from 'express';
+import mongoose from 'mongoose';
 import { body, validationResult, query } from 'express-validator';
 import { AuthRequest } from '../middleware/auth';
 import { JournalSession, IJournalMessage, JournalSessionStatus } from '../models/JournalSession';
@@ -7,7 +8,7 @@ import { User } from '../models/User';
 import { getChatbotResponse } from '../services/aiService';
 import { journalNotificationService } from '../services/notificationService';
 import { analyzeJournalEntry } from '../services/aiService';
-import { IAnalysisResult } from '../models/JournalEntry';
+
 
 const router = express.Router();
 
@@ -50,9 +51,9 @@ This session has been flagged for safety review. Please prioritize emotional saf
 }
 
 // Helper function to generate insights for a completed session
-async function generateInsights(sessionId: string) {
+async function generateInsights(sessionId: string, io: any, retries = 3, delay = 1000) {
   try {
-    console.log('generateInsights called for session:', sessionId);
+    console.log(`generateInsights called for session: ${sessionId}, retries left: ${retries}`);
     const session = await JournalSession.findById(sessionId);
     if (!session) {
       console.error('Session not found for insights generation:', sessionId);
@@ -75,39 +76,9 @@ async function generateInsights(sessionId: string) {
       return;
     }
 
-    // Create a journal entry object for analysis
-    const journalEntry = {
-      _id: session._id,
-      coupleId: session.coupleId,
-      partner1Id: couple.partner1Id,
-      partner2Id: couple.partner2Id,
-      partner1Chat: session.partner1Chat,
-      partner2Chat: session.partner2Chat,
-      title: session.title,
-      createdAt: session.createdAt,
-      updatedAt: session.updatedAt,
-      isActive: session.isActive,
-      isClosed: session.isClosed,
-      status: session.status,
-      messageCount: session.messageCount,
-      wordCount: session.wordCount,
-      lastMessageAt: session.lastMessageAt,
-      completedAt: session.completedAt,
-      insights: session.insights,
-      partner1CompletedAt: session.partner1CompletedAt,
-      partner2CompletedAt: session.partner2CompletedAt,
-      analysisRequestedAt: session.analysisRequestedAt,
-      insightsGeneratedAt: session.insightsGeneratedAt,
-      notificationSent: session.notificationSent,
-      themes: session.themes || [],
-      summary: session.summary,
-      sessionDurationMinutes: session.sessionDurationMinutes,
-      mood: session.mood
-    } as any; // Type assertion to match IJournalEntry
-
     // Generate AI analysis
     console.log('Starting AI analysis for session:', sessionId);
-    const analysis = await analyzeJournalEntry(journalEntry, partner1, partner2);
+    const analysis = await analyzeJournalEntry(session, partner1, partner2);
     console.log('AI analysis completed for session:', sessionId);
 
     // Update session with insights (format analysis as readable text)
@@ -123,10 +94,16 @@ async function generateInsights(sessionId: string) {
 
     // Send notification to both partners
     await journalNotificationService.notifyInsightsReady(sessionId);
+    io.to(couple.partner1Id.toString()).emit('insights_ready', { insights: formattedInsights });
+    io.to(couple.partner2Id.toString()).emit('insights_ready', { insights: formattedInsights });
 
     console.log('Insights generated successfully for session:', sessionId);
   } catch (error) {
     console.error('Error generating insights:', error);
+    if (retries > 0) {
+      console.log(`Retrying insights generation for session: ${sessionId}, retries left: ${retries - 1}`);
+      setTimeout(() => generateInsights(sessionId, io, retries - 1, delay * 2), delay);
+    }
   }
 }
 
@@ -164,20 +141,20 @@ router.post('/create', async (req: AuthRequest, res: Response) => {
 
     await journalSession.save();
 
-    res.status(201).json({
-      message: 'Journal session created',
-      session: {
-        id: journalSession._id,
-        title: journalSession.title,
-        isActive: journalSession.isActive,
-        isClosed: journalSession.isClosed,
-        messageCount: journalSession.messageCount,
-        wordCount: journalSession.wordCount,
-        lastMessageAt: journalSession.lastMessageAt,
-        createdAt: journalSession.createdAt
-      }
-    });
-
+        res.status(201).json({
+          message: 'Journal session created',
+          session: {
+            id: journalSession._id,
+            title: journalSession.title,
+            isActive: journalSession.isActive,
+            isClosed: journalSession.isClosed,
+            status: journalSession.status,
+            messageCount: journalSession.messageCount,
+            wordCount: journalSession.wordCount,
+            lastMessageAt: journalSession.lastMessageAt,
+            createdAt: journalSession.createdAt
+          }
+        });
   } catch (error) {
     console.error('Create journal session error:', error);
     res.status(500).json({ error: 'Failed to create journal session' });
@@ -242,23 +219,21 @@ router.get('/active', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Get all journal sessions for couple (thread list)
-router.get('/list', [
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-  query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50'),
-  query('status').optional().isIn(['active', 'closed', 'all']).withMessage('Status must be active, closed, or all')
-], async (req: AuthRequest, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+const listSessionsSchema = z.object({
+  page: z.string().optional(),
+  limit: z.string().optional(),
+  status: z.enum(['active', 'closed', 'all']).optional(),
+});
 
+// Get all journal sessions for couple (thread list)
+router.get('/list', async (req: AuthRequest, res: Response) => {
+  try {
+    const { page, limit, status } = listSessionsSchema.parse(req.query);
     const user = req.user!;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-    const status = req.query.status as string || 'all';
-    const skip = (page - 1) * limit;
+    const pageNumber = parseInt(page || '1');
+    const limitNumber = parseInt(limit || '20');
+    const statusString = status || 'all';
+    const skip = (pageNumber - 1) * limitNumber;
 
     // Get user's couple
     const couple = await Couple.findOne({
@@ -268,8 +243,8 @@ router.get('/list', [
       ]
     });
 
-    if (!couple) {
-      return res.status(400).json({ error: 'User must be in a couple to view journal sessions' });
+    if (!couple || (!couple.partner1Id.equals(user._id) && !couple.partner2Id.equals(user._id))) {
+      return res.status(403).json({ error: 'Access denied' });
     }
 
     // Build filter
@@ -345,14 +320,9 @@ router.get('/:sessionId', async (req: AuthRequest, res: Response) => {
       ]
     });
 
-    if (!couple) {
-      return res.status(400).json({ error: 'User must be in a couple to view journal sessions' });
+    if (!couple || (!couple.partner1Id.equals(user._id) && !couple.partner2Id.equals(user._id))) {
+      return res.status(403).json({ error: 'Access denied' });
     }
-
-    const session = await JournalSession.findOne({
-      _id: sessionId,
-      coupleId: couple._id
-    });
 
     if (!session) {
       return res.status(404).json({ error: 'Journal session not found' });
@@ -394,19 +364,16 @@ router.get('/:sessionId', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Save journal session (update messages)
-router.put('/:sessionId/save', [
-  body('partner1Chat').isArray().withMessage('partner1Chat must be an array'),
-  body('partner2Chat').isArray().withMessage('partner2Chat must be an array')
-], async (req: AuthRequest, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+const saveSessionSchema = z.object({
+  partner1Chat: z.array(z.any()),
+  partner2Chat: z.array(z.any()),
+});
 
+// Save journal session (update messages)
+router.put('/:sessionId/save', async (req: AuthRequest, res: Response) => {
+  try {
     const { sessionId } = req.params;
-    const { partner1Chat, partner2Chat } = req.body;
+    const { partner1Chat, partner2Chat } = saveSessionSchema.parse(req.body);
     const user = req.user!;
 
     // Get user's couple
@@ -456,140 +423,142 @@ router.put('/:sessionId/save', [
   }
 });
 
+const completeReflectionSchema = z.object({
+  chatHistory: z.array(z.any()),
+});
+
 // Complete partner reflection (async workflow)
-router.post('/:sessionId/complete-reflection', [
-  body('chatHistory').isArray().withMessage('chatHistory must be an array')
-], async (req: AuthRequest, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+router.post('/:sessionId/complete-reflection', async (req: AuthRequest, res: Response) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const { sessionId } = req.params;
+      const { chatHistory } = completeReflectionSchema.parse(req.body);
+      const user = req.user!;
 
-    const { sessionId } = req.params;
-    const { chatHistory } = req.body;
-    const user = req.user!;
+      // Get user's couple
+      const couple = await Couple.findOne({ $or: [{ partner1Id: user._id }, { partner2Id: user._id }] }).session(session);
 
-    // Get user's couple
-    const couple = await Couple.findOne({
-      $or: [
-        { partner1Id: user._id },
-        { partner2Id: user._id }
-      ]
-    });
+      if (!couple) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(400).json({ error: 'User must be in a couple to complete reflections' });
+      }
 
-    if (!couple) {
-      return res.status(400).json({ error: 'User must be in a couple to complete reflections' });
-    }
+      const journalSession = await JournalSession.findOne({ _id: sessionId, coupleId: couple._id }).session(session);
 
-    const session = await JournalSession.findOne({
-      _id: sessionId,
-      coupleId: couple._id
-    });
+      if (!journalSession) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ error: 'Journal session not found' });
+      }
 
-    if (!session) {
-      return res.status(404).json({ error: 'Journal session not found' });
-    }
-
-    // Determine which partner is completing
-    const isPartner1 = couple.partner1Id.equals(user._id);
-    const partnerId = isPartner1 ? couple.partner2Id : couple.partner1Id;
-    
-    console.log('Complete reflection - session status before update:', session.status);
-    console.log('Complete reflection - isPartner1:', isPartner1);
-
-    // Update the appropriate chat
-    if (isPartner1) {
-      session.partner1Chat = chatHistory;
-      session.partner1CompletedAt = new Date();
+      // Determine which partner is completing
+      const isPartner1 = couple.partner1Id.equals(user._id);
+      const partnerId = isPartner1 ? couple.partner2Id : couple.partner1Id;
       
-      // Update status
-      if (session.status === JournalSessionStatus.CREATED) {
-        session.status = JournalSessionStatus.PARTNER1_COMPLETE;
-        console.log('Updated status to PARTNER1_COMPLETE for session:', sessionId);
+      console.log('Complete reflection - session status before update:', journalSession.status);
+      console.log('Complete reflection - isPartner1:', isPartner1);
+
+      // Update the appropriate chat
+      if (isPartner1) {
+        journalSession.partner1Chat = chatHistory;
+        journalSession.partner1CompletedAt = new Date();
+        
+        // Update status
+        if (journalSession.status === JournalSessionStatus.CREATED) {
+          journalSession.status = JournalSessionStatus.PARTNER1_COMPLETE;
+          console.log('Updated status to PARTNER1_COMPLETE for session:', sessionId);
+        }
+      } else {
+        journalSession.partner2Chat = chatHistory;
+        journalSession.partner2CompletedAt = new Date();
+        
+        // Update status
+        if (journalSession.status === JournalSessionStatus.CREATED) {
+          // Partner 2 completing while partner 1 hasn't started yet
+          journalSession.status = JournalSessionStatus.PARTNER2_COMPLETE;
+          console.log('Updated status to PARTNER2_COMPLETE for session (partner 2 first):', sessionId);
+        } else if (journalSession.status === JournalSessionStatus.PARTNER1_COMPLETE) {
+          // Both partners completed
+          journalSession.status = JournalSessionStatus.PARTNER2_COMPLETE;
+          console.log('Updated status to PARTNER2_COMPLETE for session:', sessionId);
+        }
       }
-    } else {
-      session.partner2Chat = chatHistory;
-      session.partner2CompletedAt = new Date();
+
+      await journalSession.save({ session });
+      console.log('Session saved with status:', journalSession.status);
       
-      // Update status
-      if (session.status === JournalSessionStatus.CREATED) {
-        // Partner 2 completing while partner 1 hasn't started yet
-        session.status = JournalSessionStatus.PARTNER2_COMPLETE;
-        console.log('Updated status to PARTNER2_COMPLETE for session (partner 2 first):', sessionId);
-      } else if (session.status === JournalSessionStatus.PARTNER1_COMPLETE) {
-        // Both partners completed
-        session.status = JournalSessionStatus.PARTNER2_COMPLETE;
-        console.log('Updated status to PARTNER2_COMPLETE for session:', sessionId);
+      // Verify the status was actually saved by refetching from database
+      const savedSession = await JournalSession.findById(sessionId).session(session);
+      console.log('Verified saved session status:', savedSession?.status);
+
+      // Send notification to partner
+      if (isPartner1 && !journalSession.notificationSent.partner1Complete) {
+        await journalNotificationService.notifyPartnerReflectionComplete(
+          sessionId,
+          user._id.toString(),
+          partnerId.toString()
+        );
+        req.io?.to(partnerId.toString()).emit('partner_completed');
+      } else if (!isPartner1 && !journalSession.notificationSent.partner2Complete) {
+        await journalNotificationService.notifyPartnerReflectionComplete(
+          sessionId,
+          user._id.toString(),
+          partnerId.toString()
+        );
+        req.io?.to(partnerId.toString()).emit('partner_completed');
       }
-    }
 
-    await session.save();
-    console.log('Session saved with status:', session.status);
-    
-    // Verify the status was actually saved by refetching from database
-    const savedSession = await JournalSession.findById(sessionId);
-    console.log('Verified saved session status:', savedSession?.status);
+      // If both partners have completed, trigger analysis
+      if (journalSession.status === JournalSessionStatus.PARTNER2_COMPLETE) {
+        journalSession.status = JournalSessionStatus.ANALYSIS_PENDING;
+        journalSession.analysisRequestedAt = new Date();
+        await journalSession.save({ session });
 
-    // Send notification to partner
-    if (isPartner1 && !session.notificationSent.partner1Complete) {
-      await journalNotificationService.notifyPartnerReflectionComplete(
-        sessionId,
-        user._id.toString(),
-        partnerId.toString()
-      );
-    } else if (!isPartner1 && !session.notificationSent.partner2Complete) {
-      await journalNotificationService.notifyPartnerReflectionComplete(
-        sessionId,
-        user._id.toString(),
-        partnerId.toString()
-      );
-    }
-
-    // If both partners have completed, trigger analysis
-    if (session.status === JournalSessionStatus.PARTNER2_COMPLETE) {
-      session.status = JournalSessionStatus.ANALYSIS_PENDING;
-      session.analysisRequestedAt = new Date();
-      await session.save();
-
-      // Trigger AI analysis (this would be done asynchronously)
-      console.log('Both partners completed, triggering insights generation for session:', sessionId);
-      
-      // Try immediate generation first, then fallback to setTimeout
-      try {
-        console.log('Attempting immediate insights generation for session:', sessionId);
-        await generateInsights(sessionId);
-        console.log('Immediate insights generation completed for session:', sessionId);
-      } catch (error) {
-        console.error('Immediate insights generation failed, trying setTimeout for session:', sessionId, error);
-        setTimeout(async () => {
-          try {
-            console.log('Starting delayed insights generation for session:', sessionId);
-            // Generate insights for the completed session
-            await generateInsights(sessionId);
-            console.log('Delayed insights generation completed for session:', sessionId);
-          } catch (error) {
-            console.error('Error generating insights for session:', sessionId, error);
-          }
-        }, 2000); // Increased delay to 2 seconds
+        // Trigger AI analysis (this would be done asynchronously)
+        console.log('Both partners completed, triggering insights generation for session:', sessionId);
+        
+        // Try immediate generation first, then fallback to setTimeout
+        try {
+          console.log('Attempting immediate insights generation for session:', sessionId);
+          await generateInsights(sessionId, req.io);
+          console.log('Immediate insights generation completed for session:', sessionId);
+        } catch (error) {
+          console.error('Immediate insights generation failed, trying setTimeout for session:', sessionId, error);
+          setTimeout(async () => {
+            try {
+              console.log('Starting delayed insights generation for session:', sessionId);
+              // Generate insights for the completed session
+              await generateInsights(sessionId, req.io);
+              console.log('Delayed insights generation completed for session:', sessionId);
+            } catch (error) {
+              console.error('Error generating insights for session:', sessionId, error);
+            }
+          }, 2000); // Increased delay to 2 seconds
+        }
       }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      console.log('Returning response with status:', journalSession.status);
+      res.json({
+        message: 'Reflection completed successfully',
+        session: {
+          id: journalSession._id,
+          status: journalSession.status,
+          partner1CompletedAt: journalSession.partner1CompletedAt,
+          partner2CompletedAt: journalSession.partner2CompletedAt
+        }
+      });
+
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      console.error('Complete reflection error:', error);
+      res.status(500).json({ error: 'Failed to complete reflection' });
     }
-
-    console.log('Returning response with status:', session.status);
-    res.json({
-      message: 'Reflection completed successfully',
-      session: {
-        id: session._id,
-        status: session.status,
-        partner1CompletedAt: session.partner1CompletedAt,
-        partner2CompletedAt: session.partner2CompletedAt
-      }
-    });
-
-  } catch (error) {
-    console.error('Complete reflection error:', error);
-    res.status(500).json({ error: 'Failed to complete reflection' });
-  }
 });
 
 // Close journal session
@@ -686,7 +655,7 @@ router.post('/:sessionId/generate-insights', async (req: AuthRequest, res: Respo
     }
 
     console.log('Manually triggering insights generation for session:', sessionId);
-    await generateInsights(sessionId);
+    await generateInsights(sessionId, req.io);
 
     // Refresh session data
     const updatedSession = await JournalSession.findById(sessionId);
@@ -740,16 +709,9 @@ router.get('/:sessionId/insights', async (req: AuthRequest, res: Response) => {
     // Generate insights using AI service
     let insights = '';
     try {
-      // Create a mock journal entry for analysis
-      const mockJournalEntry = {
-        partner1Chat: session.partner1Chat,
-        partner2Chat: session.partner2Chat,
-        coupleId: session.coupleId
-      };
-      
       // Use the existing analysis function
       const analysis = await require('../services/aiService').analyzeJournalEntry(
-        mockJournalEntry, 
+        session, 
         partner1, 
         partner2
       );
@@ -826,18 +788,15 @@ ${analysis.safetyMode ? `\n⚠️ **Safety Notice:** ${formatList(analysis.riskF
   }
 });
 
-// Update journal session title
-router.put('/:sessionId/title', [
-  body('title').isLength({ min: 1, max: 100 }).withMessage('Title must be between 1 and 100 characters')
-], async (req: AuthRequest, res: Response) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+const updateTitleSchema = z.object({
+  title: z.string().min(1).max(100),
+});
 
+// Update journal session title
+router.put('/:sessionId/title', async (req: AuthRequest, res: Response) => {
+  try {
     const { sessionId } = req.params;
-    const { title } = req.body;
+    const { title } = updateTitleSchema.parse(req.body);
     const user = req.user!;
 
     // Get user's couple
