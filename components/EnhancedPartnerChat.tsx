@@ -339,7 +339,7 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
                         <span className="w-2 h-2 bg-gray-400 rounded-full" />
                         <span>
                           {partnerLastSeen || partner.lastSeen 
-                            ? `Last seen ${formatLastSeen(partnerLastSeen || partner.lastSeen)}`
+                            ? `Last seen ${formatLastSeen(partnerLastSeen || partner.lastSeen || null)}`
                             : 'Offline'
                           }
                         </span>
