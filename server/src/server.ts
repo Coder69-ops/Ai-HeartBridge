@@ -6,6 +6,15 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import winston from 'winston';
 
+// Extend Express Request interface to include io
+declare global {
+  namespace Express {
+    interface Request {
+      io?: Server;
+    }
+  }
+}
+
 // Import routes
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';

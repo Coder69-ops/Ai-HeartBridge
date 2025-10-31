@@ -139,7 +139,7 @@ router.post('/:exerciseId/complete', async (req: AuthRequest, res) => {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ errors: error.errors });
+      return res.status(400).json({ errors: error.issues });
     }
     console.error('Complete exercise error:', error);
     res.status(500).json({ error: 'Internal server error' });

@@ -1,11 +1,32 @@
-import { IJournalEntry, IAnalysisResult } from '../models/JournalEntry';
+import { IJournalSession } from '../models/JournalSession';
 import { IUser } from '../models/User';
+
+// Define IAnalysisResult interface
+interface IAnalysisResult {
+  summary: string;
+  strengths: string[];
+  areasForImprovement: string[];
+  actionableAdvice: string[];
+  opportunities?: string[];
+  concerningPatterns?: string[];
+  fourHorsemen?: {
+    criticism: boolean;
+    contempt: boolean;
+    defensiveness: boolean;
+    stonewalling: boolean;
+  };
+  overallTone: string;
+  recommendedExercises?: string[];
+  repairPlan?: string[];
+  riskFlags?: string[];
+  safetyMode?: boolean;
+}
 
 // Helper function to sleep for a given number of milliseconds
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper function to generate fallback insights when AI is unavailable
-const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult => {
+const generateFallbackInsights = (journalEntry: IJournalSession): IAnalysisResult => {
   const { partner1Chat, partner2Chat } = journalEntry;
   const totalMessages = partner1Chat.length + partner2Chat.length;
   
@@ -15,6 +36,16 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
       'Both partners are actively engaging in reflection and communication',
       'The relationship shows signs of healthy emotional expression',
       'Open dialogue and mutual understanding are present'
+    ],
+    areasForImprovement: [
+      'Continue developing deeper emotional vulnerability',
+      'Practice active listening techniques',
+      'Explore new ways to express appreciation'
+    ],
+    actionableAdvice: [
+      'Schedule regular relationship check-ins',
+      'Practice gratitude exercises together',
+      'Set aside dedicated time for meaningful conversations'
     ],
     opportunities: [
       'Continue regular check-ins and reflections',
@@ -27,6 +58,7 @@ const generateFallbackInsights = (journalEntry: IJournalEntry): IAnalysisResult 
       defensiveness: false,
       stonewalling: false
     },
+    overallTone: 'Positive and constructive',
     repairPlan: [
       'Continue building trust through open communication',
       'Maintain regular reflection sessions',
@@ -287,7 +319,7 @@ export const getChatbotResponse = async (messageHistory: any[], user?: IUser, re
   }
 };
 
-export const analyzeJournalEntry = async (journalEntry: IJournalEntry, partner1Data?: IUser, partner2Data?: IUser): Promise<IAnalysisResult> => {
+export const analyzeJournalEntry = async (journalEntry: IJournalSession, partner1Data?: IUser, partner2Data?: IUser): Promise<IAnalysisResult> => {
   const maxRetries = 3;
   const baseDelay = 1000; // 1 second
 
@@ -301,11 +333,11 @@ export const analyzeJournalEntry = async (journalEntry: IJournalEntry, partner1D
       const limitedPartner2Chat = partner2Chat;
       
       const formattedPartner1Chat = limitedPartner1Chat
-      .map(m => `${m.sender === 'user' ? 'Partner 1' : 'Counselor'}: ${m.text}`)
+      .map((m: any) => `${m.sender === 'user' ? 'Partner 1' : 'Counselor'}: ${m.text}`)
       .join('\n');
     
       const formattedPartner2Chat = limitedPartner2Chat
-      .map(m => `${m.sender === 'user' ? 'Partner 2' : 'Counselor'}: ${m.text}`)
+      .map((m: any) => `${m.sender === 'user' ? 'Partner 2' : 'Counselor'}: ${m.text}`)
       .join('\n');
 
       // Full partner context for comprehensive analysis

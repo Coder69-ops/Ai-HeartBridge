@@ -1,10 +1,39 @@
 import express, { Response } from 'express';
 import { z } from 'zod';
+import { body, validationResult } from 'express-validator';
 import { AuthRequest } from '../middleware/auth';
 import { CheckIn } from '../models/CheckIn';
 import { Couple } from '../models/Couple';
 
 const router = express.Router();
+
+// CSI-4 Questions (Couple Satisfaction Index - Short Form)
+const CSI_4_QUESTIONS = [
+  "Please indicate the degree of happiness, all things considered, of your relationship.",
+  "In general, how often do you think that things between you and your partner are going well?",
+  "Our relationship is strong.",
+  "My relationship with my partner makes me happy."
+];
+
+// CSI-16 Questions (Couple Satisfaction Index - Extended Form)
+const CSI_16_QUESTIONS = [
+  "Please indicate the degree of happiness, all things considered, of your relationship.",
+  "In general, how often do you think that things between you and your partner are going well?",
+  "Our relationship is strong.",
+  "My relationship with my partner makes me happy.",
+  "I have a warm and comfortable relationship with my partner.",
+  "I really feel like part of a team with my partner.", 
+  "How rewarding is your relationship with your partner?",
+  "How well does your partner meet your needs?",
+  "To what extent has your relationship met your original expectations?",
+  "In general, how satisfied are you with your relationship?",
+  "For most people, how easy would it be to leave their relationship?",
+  "How many problems are there in your relationship?",
+  "How well do you and your partner discuss your relationship?",
+  "Are you satisfied with the way you and your partner handle problems?",
+  "How satisfied are you with the love and affection between you?",
+  "How satisfied are you with your partner's behavior during arguments?"
+];
 
 const createCheckInSchema = z.object({
   coupleId: z.string(),
@@ -41,7 +70,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ errors: error.errors });
+      return res.status(400).json({ errors: error.issues });
     }
     res.status(500).json({ error: 'Internal server error' });
   }

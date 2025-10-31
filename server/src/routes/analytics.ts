@@ -51,7 +51,7 @@ router.get('/trends', async (req: AuthRequest, res) => {
       isCompleted: true,
       createdAt: { $gte: startDate }
     })
-    .select('createdAt analysis.fourHorsemen')
+    .select('createdAt insights themes')
     .sort({ createdAt: 1 });
 
     // Get exercise completion stats
@@ -72,12 +72,20 @@ router.get('/trends', async (req: AuthRequest, res) => {
     };
 
     journalEntries.forEach(entry => {
-      if (entry.analysis?.fourHorsemen) {
-        const horsemen = entry.analysis.fourHorsemen;
-        if (horsemen.criticism) fourHorsemenStats.criticism++;
-        if (horsemen.contempt) fourHorsemenStats.contempt++;
-        if (horsemen.defensiveness) fourHorsemenStats.defensiveness++;
-        if (horsemen.stonewalling) fourHorsemenStats.stonewalling++;
+      // Parse insights to extract fourHorsemen data if available
+      if (entry.insights) {
+        try {
+          const insightsData = JSON.parse(entry.insights);
+          const horsemen = insightsData.fourHorsemen;
+          if (horsemen) {
+            if (horsemen.criticism) fourHorsemenStats.criticism++;
+            if (horsemen.contempt) fourHorsemenStats.contempt++;
+            if (horsemen.defensiveness) fourHorsemenStats.defensiveness++;
+            if (horsemen.stonewalling) fourHorsemenStats.stonewalling++;
+          }
+        } catch (e) {
+          // Skip if insights is not valid JSON
+        }
       }
     });
 
@@ -100,7 +108,8 @@ router.get('/trends', async (req: AuthRequest, res) => {
       csiScores,
       journalEntries: journalEntries.map(entry => ({
         date: entry.createdAt,
-        fourHorsemen: entry.analysis?.fourHorsemen || null
+        themes: entry.themes || [],
+        insights: entry.insights || null
       })),
       fourHorsemenStats,
       exerciseStats,
@@ -169,15 +178,22 @@ router.get('/health-score', async (req: AuthRequest, res) => {
     // Communication component (30% of score) - based on Four Horsemen absence
     const recentAnalyses = await JournalSession.find({
       coupleId: user.coupleId,
-      isCompleted: true,
-      analysis: { $exists: true },
+      isClosed: true,
+      insights: { $exists: true },
       createdAt: { $gte: thirtyDaysAgo }
-    }).select('analysis.fourHorsemen');
+    }).select('insights themes');
 
     if (recentAnalyses.length > 0) {
       let positiveInteractions = 0;
       recentAnalyses.forEach(entry => {
-        const horsemen = entry.analysis?.fourHorsemen;
+        let horsemen = null;
+        try {
+          const insightsData = JSON.parse(entry.insights || '{}');
+          horsemen = insightsData.fourHorsemen;
+        } catch (e) {
+          // Skip if insights is not valid JSON
+        }
+        const horsemenData = horsemen;
         if (horsemen && !horsemen.criticism && !horsemen.contempt && 
             !horsemen.defensiveness && !horsemen.stonewalling) {
           positiveInteractions++;

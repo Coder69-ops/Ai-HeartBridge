@@ -1,13 +1,34 @@
 import express, { Response } from 'express';
 import mongoose from 'mongoose';
+import { z } from 'zod';
 import { body, validationResult, query } from 'express-validator';
 import { AuthRequest } from '../middleware/auth';
 import { JournalSession, IJournalMessage, JournalSessionStatus } from '../models/JournalSession';
 import { Couple } from '../models/Couple';
 import { User } from '../models/User';
-import { getChatbotResponse } from '../services/aiService';
+import { getChatbotResponse, analyzeJournalEntry } from '../services/aiService';
 import { journalNotificationService } from '../services/notificationService';
-import { analyzeJournalEntry } from '../services/aiService';
+
+// Define IAnalysisResult interface
+interface IAnalysisResult {
+  summary: string;
+  strengths: string[];
+  areasForImprovement: string[];
+  actionableAdvice: string[];
+  opportunities?: string[];
+  concerningPatterns?: string[];
+  fourHorsemen?: {
+    criticism: boolean;
+    contempt: boolean;
+    defensiveness: boolean;
+    stonewalling: boolean;
+  };
+  overallTone: string;
+  recommendedExercises?: string[];
+  repairPlan?: string[];
+  riskFlags?: string[];
+  safetyMode?: boolean;
+}
 
 
 const router = express.Router();
@@ -32,16 +53,16 @@ ${analysis.summary}
 ${formatList(analysis.strengths)}
 
 ## Growth Opportunities
-${formatList(analysis.opportunities)}
+${formatList(analysis.opportunities || [])}
 
 ## Four Horsemen Assessment
-- **Criticism**: ${analysis.fourHorsemen.criticism ? '⚠️ Present' : '✅ Not detected'}
-- **Contempt**: ${analysis.fourHorsemen.contempt ? '⚠️ Present' : '✅ Not detected'}
-- **Defensiveness**: ${analysis.fourHorsemen.defensiveness ? '⚠️ Present' : '✅ Not detected'}
-- **Stonewalling**: ${analysis.fourHorsemen.stonewalling ? '⚠️ Present' : '✅ Not detected'}
+- **Criticism**: ${analysis.fourHorsemen?.criticism ? '⚠️ Present' : '✅ Not detected'}
+- **Contempt**: ${analysis.fourHorsemen?.contempt ? '⚠️ Present' : '✅ Not detected'}
+- **Defensiveness**: ${analysis.fourHorsemen?.defensiveness ? '⚠️ Present' : '✅ Not detected'}
+- **Stonewalling**: ${analysis.fourHorsemen?.stonewalling ? '⚠️ Present' : '✅ Not detected'}
 
 ## Repair Plan
-${formatList(analysis.repairPlan)}
+${formatList(analysis.repairPlan || [])}
 
 ${analysis.riskFlags && analysis.riskFlags.length > 0 ? `## Safety Considerations
 ${formatList(analysis.riskFlags)}` : ''}
@@ -259,7 +280,7 @@ router.get('/list', async (req: AuthRequest, res: Response) => {
     const sessions = await JournalSession.find(filter)
       .sort({ lastMessageAt: -1 })
       .skip(skip)
-      .limit(limit)
+      .limit(limitNumber)
       .select('title isActive isClosed lastMessageAt wordCount messageCount mood themes summary insights createdAt updatedAt completedAt');
 
     const total = await JournalSession.countDocuments(filter);
@@ -288,10 +309,10 @@ router.get('/list', async (req: AuthRequest, res: Response) => {
     res.json({
       sessions: formattedSessions,
       pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
+        currentPage: pageNumber,
+        totalPages: Math.ceil(total / limitNumber),
         totalItems: total,
-        itemsPerPage: limit
+        itemsPerPage: limitNumber
       },
       stats: {
         totalSessions: await JournalSession.countDocuments({ coupleId: couple._id }),
@@ -323,6 +344,12 @@ router.get('/:sessionId', async (req: AuthRequest, res: Response) => {
     if (!couple || (!couple.partner1Id.equals(user._id) && !couple.partner2Id.equals(user._id))) {
       return res.status(403).json({ error: 'Access denied' });
     }
+
+    // Get the journal session
+    const session = await JournalSession.findOne({
+      _id: sessionId,
+      coupleId: couple._id
+    });
 
     if (!session) {
       return res.status(404).json({ error: 'Journal session not found' });
