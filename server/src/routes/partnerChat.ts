@@ -12,6 +12,67 @@ const sendMessageSchema = z.object({
   messageType: z.enum(['text', 'emoji', 'voice']).optional(),
 });
 
+// Get partner chat conversation
+router.get('/conversation', async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user!;
+
+    if (!user.coupleId) {
+      return res.status(400).json({ error: 'Must be paired to access chat' });
+    }
+
+    const couple = await Couple.findById(user.coupleId);
+    if (!couple) {
+      return res.status(404).json({ error: 'Couple not found' });
+    }
+
+    // Get partner ID and info
+    const isPartner1 = couple.partner1Id.equals(user._id);
+    const partnerId = isPartner1 ? couple.partner2Id : couple.partner1Id;
+    const partner = await User.findById(partnerId);
+    
+    if (!partner) {
+      return res.status(404).json({ error: 'Partner not found' });
+    }
+
+    // Find or create partner chat
+    let partnerChat = await PartnerChat.findOne({ coupleId: user.coupleId });
+    
+    if (!partnerChat) {
+      partnerChat = new PartnerChat({
+        coupleId: user.coupleId,
+        partner1Id: couple.partner1Id,
+        partner2Id: couple.partner2Id,
+        messages: []
+      });
+      await partnerChat.save();
+    }
+
+    // Get unread count for current user
+    const unreadCount = isPartner1 ? partnerChat.unreadCount.partner1 : partnerChat.unreadCount.partner2;
+
+    res.json({
+      chat: {
+        id: partnerChat._id,
+        messages: partnerChat.messages,
+        totalMessages: partnerChat.totalMessages,
+        lastMessageAt: partnerChat.lastMessageAt,
+        unreadCount
+      },
+      partner: {
+        id: partner._id,
+        name: partner.firstName || partner.email?.split('@')[0] || 'Partner',
+        email: partner.email,
+        isOnline: true // You can implement online status tracking later
+      }
+    });
+
+  } catch (error) {
+    console.error('Get partner conversation error:', error);
+    res.status(500).json({ error: 'Failed to get conversation' });
+  }
+});
+
 // Send message to partner
 router.post('/send', async (req: AuthRequest, res: Response) => {
   try {
