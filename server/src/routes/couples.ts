@@ -85,16 +85,45 @@ router.post('/pair', async (req: AuthRequest, res: Response) => {
         console.log('Reactivating existing couple:', couple._id);
       } else {
         // This shouldn't happen due to our earlier checks, but just in case
-        return res.status(400).json({ error: 'You are already paired with this person' });
+        console.log('Couple already active, returning existing relationship');
       }
     } else {
-      // Create new couple
-      couple = new Couple({
-        partner1Id: currentUser._id,
-        partner2Id: partner._id
-      });
-      await couple.save();
-      console.log('Created new couple:', couple._id);
+      // Create new couple with consistent partner ordering (smaller ObjectId first)
+      const partnerId1 = currentUser._id.toString() < partner._id.toString() ? currentUser._id : partner._id;
+      const partnerId2 = currentUser._id.toString() < partner._id.toString() ? partner._id : currentUser._id;
+      
+      try {
+        couple = new Couple({
+          partner1Id: partnerId1,
+          partner2Id: partnerId2
+        });
+        await couple.save();
+        console.log('Created new couple:', couple._id);
+      } catch (duplicateError: any) {
+        // If we still get a duplicate key error, find the existing couple
+        if (duplicateError.code === 11000) {
+          console.log('Duplicate key error caught, finding existing couple...');
+          couple = await Couple.findOne({
+            $or: [
+              { partner1Id: currentUser._id, partner2Id: partner._id },
+              { partner1Id: partner._id, partner2Id: currentUser._id }
+            ]
+          });
+          
+          if (!couple) {
+            throw new Error('Could not find or create couple relationship');
+          }
+          
+          // Ensure the couple is active
+          if (couple.status !== 'active') {
+            couple.status = 'active';
+            await couple.save();
+            console.log('Activated existing couple after duplicate key error:', couple._id);
+          }
+        } else {
+          throw duplicateError;
+        }
+      }
     }
 
     // Update both users with the couple ID
@@ -114,11 +143,27 @@ router.post('/pair', async (req: AuthRequest, res: Response) => {
       partner: updatedPartner
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Pairing error:', error);
     console.error('Request body:', req.body);
     console.error('Current user:', req.user?.email);
-    res.status(500).json({ error: 'Internal server error' });
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ 
+        error: 'Invalid request data',
+        details: error.issues?.map((issue: any) => issue.message) || []
+      });
+    }
+    
+    // Handle MongoDB duplicate key errors (as a final fallback)
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        error: 'You are already paired with this person or a pairing is in progress. Please try again.' 
+      });
+    }
+    
+    res.status(500).json({ error: 'Internal server error during pairing' });
   }
 });
 
