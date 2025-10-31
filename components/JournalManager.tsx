@@ -13,7 +13,7 @@ import { Button } from './shared/Button';
 import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import Icon from './shared/Icon';
 import ContextualLoader from './shared/ContextualLoader';
-import JournalingView from './JournalingView';
+import SimpleJournalingView from './SimpleJournalingView';
 import JournalSessionsView from './JournalSessionsView';
 import JournalNotification from './JournalNotification';
 
@@ -166,55 +166,12 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
     console.log('JournalManager - activeSession.status:', activeSession.status);
     console.log('JournalManager - activeSession.insights:', activeSession.insights);
     
-    // Temporary fallback UI while we fix the JournalingView component
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50 p-4 pt-20">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Journal Session</h1>
-            <Button variant="outline" onClick={() => setCurrentView('menu')}>
-              Back to Menu
-            </Button>
-          </div>
-          
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Session: {activeSession.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-4">Status: {activeSession.status}</p>
-              <p className="text-gray-600 mb-4">Messages: {activeSession.messageCount || 0}</p>
-              <p className="text-gray-600 mb-4">
-                Created: {new Date(activeSession.createdAt).toLocaleString()}
-              </p>
-              
-              {activeSession.insights && (
-                <div className="mt-4 p-4 bg-emerald-50 rounded-lg">
-                  <h3 className="font-semibold text-emerald-800 mb-2">Insights</h3>
-                  <p className="text-emerald-700">{activeSession.insights}</p>
-                </div>
-              )}
-              
-              <div className="mt-6">
-                <Button 
-                  onClick={() => setCurrentView('menu')}
-                  className="bg-gradient-to-r from-emerald-500 to-cyan-500"
-                >
-                  Continue Journaling (Coming Soon)
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-    
-    /* Temporarily commented out to fix blank screen
-    return (
-      <JournalingView
+      <SimpleJournalingView
         user={user}
         partner={partner}
         onComplete={handleJournalComplete}
+        onBack={() => setCurrentView('menu')}
         isReturningUser={sessionHistory.length > 0}
         sessionId={activeSession.id}
         initialUserChat={activeSession.isCurrentUserPartner1 
@@ -245,12 +202,11 @@ const JournalManager: React.FC<JournalManagerProps> = ({ user, partner, onBack }
               timestamp: msg.timestamp
             }))
         }
-        currentUserId={user.id}
         sessionStatus={activeSession.status}
         isCurrentUserPartner1={activeSession.isCurrentUserPartner1}
         insights={activeSession.insights}
       />
-    */
+    );
   }
 
   // Show history view
