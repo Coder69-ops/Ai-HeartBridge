@@ -6,7 +6,6 @@ import { AuthRequest } from '../middleware/auth';
 import { JournalSession, IJournalMessage, JournalSessionStatus } from '../models/JournalSession';
 import { Couple } from '../models/Couple';
 import { User } from '../models/User';
-import { User } from '../models/User';
 import { getChatbotResponse, analyzeJournalEntry } from '../services/aiService';
 import { journalNotificationService } from '../services/notificationService';
 

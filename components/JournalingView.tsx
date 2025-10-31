@@ -41,23 +41,13 @@ const JournalingView: React.FC<JournalingViewProps> = ({
   isCurrentUserPartner1 = true,
   insights
 }) => {
-    const [state, send] = useMachine(journalingMachine, {
-        context: {
-            user,
-            partner,
-            sessionId,
-            userChat: initialUserChat || [],
-            partnerChat: initialPartnerChat || [],
-            insights: insights || null,
-            sessionStatus: initialSessionStatus || 'created'
-        }
-    });
+    const [state, send] = useMachine(journalingMachine);
 
     useEffect(() => {
         socket.connect();
 
         socket.on('partner_completed', () => {
-            send('PARTNER_COMPLETED');
+            send({ type: 'PARTNER_COMPLETED' });
         });
 
         socket.on('insights_ready', (data) => {
@@ -87,7 +77,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                     <Card variant="therapy" className="text-center animate-fade-in">
                         <CardHeader className="p-4 sm:p-6">
                             <div className="mx-auto mb-3 sm:mb-4 p-3 sm:p-4 bg-yellow-100 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center">
-                                <Icon name="clock" className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-600" />
+                                <Icon name="lightbulb" className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-600" />
                             </div>
                             <CardTitle className="text-xl sm:text-2xl text-therapy-calm">
                                 ⏳ Waiting for {state.context.partner?.name || 'your partner'}
@@ -144,7 +134,7 @@ const JournalingView: React.FC<JournalingViewProps> = ({
                             <p className="text-neutral-600 leading-relaxed text-sm sm:text-base">
                                 {state.context.error}
                             </p>
-                            <Button onClick={() => send('RETRY')}>Retry</Button>
+                            <Button onClick={() => send({ type: 'RETRY' })}>Retry</Button>
                         </CardContent>
                     </Card>
                 </div>

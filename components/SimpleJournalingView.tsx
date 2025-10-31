@@ -72,8 +72,13 @@ const SimpleJournalingView: React.FC<SimpleJournalingViewProps> = ({
       setCurrentState('generating');
 
       if (sessionId) {
-        // Complete the journal reflection
-        const result = await completeJournalReflection(sessionId, messages);
+        // Complete the journal reflection - convert Message[] to JournalMessage[]
+        const journalMessages = messages.map(msg => ({
+          sender: msg.sender,
+          text: msg.text,
+          timestamp: msg.timestamp || new Date()
+        }));
+        const result = await completeJournalReflection(sessionId, journalMessages);
         
         if (result.session.insights) {
           setSessionInsights(result.session.insights);
@@ -147,21 +152,21 @@ const SimpleJournalingView: React.FC<SimpleJournalingViewProps> = ({
         return {
           title: `⏳ Waiting for ${partner?.name || 'your partner'}`,
           message: `You have completed your reflection. ${partner?.name || 'Your partner'} will be notified to complete their reflection. You'll be notified when both reflections are ready to view together.`,
-          icon: "clock",
+          icon: "users",
           color: "yellow"
         };
       } else if (sessionStatus === JournalSessionStatus.PARTNER2_COMPLETE && !isCurrentUserPartner1) {
         return {
           title: `⏳ Waiting for ${partner?.name || 'your partner'}`,
           message: `You have completed your reflection. ${partner?.name || 'Your partner'} will be notified to complete their reflection. You'll be notified when both reflections are ready to view together.`,
-          icon: "clock",
+          icon: "users",
           color: "yellow"
         };
       } else {
         return {
           title: "⏳ Processing",
           message: "Your reflection is being processed. Please wait a moment.",
-          icon: "clock",
+          icon: "lightbulb",
           color: "blue"
         };
       }
@@ -175,7 +180,7 @@ const SimpleJournalingView: React.FC<SimpleJournalingViewProps> = ({
           <Card className="text-center shadow-xl">
             <CardHeader className="p-6">
               <div className={`mx-auto mb-4 p-4 bg-${waitingInfo.color}-100 rounded-full w-20 h-20 flex items-center justify-center`}>
-                <Icon name={waitingInfo.icon} className={`w-10 h-10 text-${waitingInfo.color}-600`} />
+                <Icon name={waitingInfo.icon as any} className={`w-10 h-10 text-${waitingInfo.color}-600`} />
               </div>
               <CardTitle className="text-2xl text-gray-800">
                 {waitingInfo.title}

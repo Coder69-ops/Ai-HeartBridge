@@ -296,7 +296,7 @@ const AppContentInner: React.FC = () => {
                     />
                 );
             case 'trends':
-                return <MasterTrendsView onBack={() => setCurrentView('dashboard')} />;
+                return <MasterTrendsView />;
             case 'profile':
                 return <EnhancedProfileView onBack={() => setCurrentView('dashboard')} />;
             case 'chat':
