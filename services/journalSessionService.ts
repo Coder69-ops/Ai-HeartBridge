@@ -178,6 +178,8 @@ export const completeJournalReflection = async (
   try {
     const response = await apiClient.post(`/journal-sessions/${sessionId}/complete-reflection`, {
       chatHistory
+    }, {
+      timeout: 60000 // 60 seconds timeout for journal completion
     });
     return response.data;
   } catch (error: any) {

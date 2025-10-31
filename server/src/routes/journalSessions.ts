@@ -484,134 +484,115 @@ const completeReflectionSchema = z.object({
 
 // Complete partner reflection (async workflow)
 router.post('/:sessionId/complete-reflection', async (req: AuthRequest, res: Response) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-      const { sessionId } = req.params;
-      const { chatHistory } = completeReflectionSchema.parse(req.body);
-      const user = req.user!;
+        const { sessionId } = req.params;
+        const { chatHistory } = completeReflectionSchema.parse(req.body);
+        const user = req.user!;
 
-      // Get user's couple
-      const couple = await Couple.findOne({ $or: [{ partner1Id: user._id }, { partner2Id: user._id }] }).session(session);
+        // Get user's couple
+        const couple = await Couple.findOne({ $or: [{ partner1Id: user._id }, { partner2Id: user._id }] });
 
-      if (!couple) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ error: 'User must be in a couple to complete reflections' });
-      }
-
-      const journalSession = await JournalSession.findOne({ _id: sessionId, coupleId: couple._id }).session(session);
-
-      if (!journalSession) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(404).json({ error: 'Journal session not found' });
-      }
-
-      // Determine which partner is completing
-      const isPartner1 = couple.partner1Id.equals(user._id);
-      const partnerId = isPartner1 ? couple.partner2Id : couple.partner1Id;
-      
-      console.log('Complete reflection - session status before update:', journalSession.status);
-      console.log('Complete reflection - isPartner1:', isPartner1);
-
-      // Update the appropriate chat
-      if (isPartner1) {
-        journalSession.partner1Chat = chatHistory;
-        journalSession.partner1CompletedAt = new Date();
-        
-        // Update status
-        if (journalSession.status === JournalSessionStatus.CREATED) {
-          journalSession.status = JournalSessionStatus.PARTNER1_COMPLETE;
-          console.log('Updated status to PARTNER1_COMPLETE for session:', sessionId);
+        if (!couple) {
+            return res.status(400).json({ error: 'User must be in a couple to complete reflections' });
         }
-      } else {
-        journalSession.partner2Chat = chatHistory;
-        journalSession.partner2CompletedAt = new Date();
-        
-        // Update status
-        if (journalSession.status === JournalSessionStatus.CREATED) {
-          // Partner 2 completing while partner 1 hasn't started yet
-          journalSession.status = JournalSessionStatus.PARTNER2_COMPLETE;
-          console.log('Updated status to PARTNER2_COMPLETE for session (partner 2 first):', sessionId);
-        } else if (journalSession.status === JournalSessionStatus.PARTNER1_COMPLETE) {
-          // Both partners completed - ready for analysis
-          journalSession.status = JournalSessionStatus.ANALYSIS_PENDING;
-          console.log('Updated status to ANALYSIS_PENDING for session (both completed):', sessionId);
+
+        const journalSession = await JournalSession.findOne({ _id: sessionId, coupleId: couple._id });
+
+        if (!journalSession) {
+            return res.status(404).json({ error: 'Journal session not found' });
         }
-      }
 
-      await journalSession.save({ session });
-      console.log('Session saved with status:', journalSession.status);
-      
-      // Verify the status was actually saved by refetching from database
-      const savedSession = await JournalSession.findById(sessionId).session(session);
-      console.log('Verified saved session status:', savedSession?.status);
-
-      // Send notification to partner
-      if (isPartner1 && !journalSession.notificationSent.partner1Complete) {
-        await journalNotificationService.notifyPartnerReflectionComplete(
-          sessionId,
-          user._id.toString(),
-          partnerId.toString()
-        );
-        req.io?.to(partnerId.toString()).emit('partner_completed');
-      } else if (!isPartner1 && !journalSession.notificationSent.partner2Complete) {
-        await journalNotificationService.notifyPartnerReflectionComplete(
-          sessionId,
-          user._id.toString(),
-          partnerId.toString()
-        );
-        req.io?.to(partnerId.toString()).emit('partner_completed');
-      }
-
-      // If both partners have completed, trigger analysis
-      if (journalSession.status === JournalSessionStatus.ANALYSIS_PENDING) {
-        journalSession.analysisRequestedAt = new Date();
-        await journalSession.save({ session });
-
-        // Trigger AI analysis (this would be done asynchronously)
-        console.log('Both partners completed, triggering insights generation for session:', sessionId);
+        // Determine which partner is completing
+        const isPartner1 = couple.partner1Id.equals(user._id);
+        const partnerId = isPartner1 ? couple.partner2Id : couple.partner1Id;
         
-        // Try immediate generation first, then fallback to setTimeout
-        try {
-          console.log('Attempting immediate insights generation for session:', sessionId);
-          await generateInsights(sessionId, req.io);
-          console.log('Immediate insights generation completed for session:', sessionId);
-        } catch (error) {
-          console.error('Immediate insights generation failed, trying setTimeout for session:', sessionId, error);
-          setTimeout(async () => {
-            try {
-              console.log('Starting delayed insights generation for session:', sessionId);
-              // Generate insights for the completed session
-              await generateInsights(sessionId, req.io);
-              console.log('Delayed insights generation completed for session:', sessionId);
-            } catch (error) {
-              console.error('Error generating insights for session:', sessionId, error);
+        console.log('Complete reflection - session status before update:', journalSession.status);
+        console.log('Complete reflection - isPartner1:', isPartner1);
+
+        // Update the appropriate chat
+        if (isPartner1) {
+            journalSession.partner1Chat = chatHistory;
+            journalSession.partner1CompletedAt = new Date();
+            
+            // Update status
+            if (journalSession.status === JournalSessionStatus.CREATED) {
+                journalSession.status = JournalSessionStatus.PARTNER1_COMPLETE;
+                console.log('Updated status to PARTNER1_COMPLETE for session:', sessionId);
             }
-          }, 2000); // Increased delay to 2 seconds
+        } else {
+            journalSession.partner2Chat = chatHistory;
+            journalSession.partner2CompletedAt = new Date();
+            
+            // Update status
+            if (journalSession.status === JournalSessionStatus.CREATED) {
+                // Partner 2 completing while partner 1 hasn't started yet
+                journalSession.status = JournalSessionStatus.PARTNER2_COMPLETE;
+                console.log('Updated status to PARTNER2_COMPLETE for session (partner 2 first):', sessionId);
+            } else if (journalSession.status === JournalSessionStatus.PARTNER1_COMPLETE) {
+                // Both partners completed - ready for analysis
+                journalSession.status = JournalSessionStatus.ANALYSIS_PENDING;
+                console.log('Updated status to ANALYSIS_PENDING for session (both completed):', sessionId);
+            }
         }
-      }
 
-      await session.commitTransaction();
-      session.endSession();
+        await journalSession.save();
+        console.log('Session saved with status:', journalSession.status);
+        
+        // Verify the status was actually saved by refetching from database
+        const savedSession = await JournalSession.findById(sessionId);
+        console.log('Verified saved session status:', savedSession?.status);
 
-      console.log('Returning response with status:', journalSession.status);
-      res.json({
-        message: 'Reflection completed successfully',
-        session: {
-          id: journalSession._id,
-          status: journalSession.status,
-          partner1CompletedAt: journalSession.partner1CompletedAt,
-          partner2CompletedAt: journalSession.partner2CompletedAt
+        // Send notification to partner
+        if (isPartner1 && !journalSession.notificationSent.partner1Complete) {
+            await journalNotificationService.notifyPartnerReflectionComplete(
+                sessionId,
+                user._id.toString(),
+                partnerId.toString()
+            );
+            req.io?.to(partnerId.toString()).emit('partner_completed');
+        } else if (!isPartner1 && !journalSession.notificationSent.partner2Complete) {
+            await journalNotificationService.notifyPartnerReflectionComplete(
+                sessionId,
+                user._id.toString(),
+                partnerId.toString()
+            );
+            req.io?.to(partnerId.toString()).emit('partner_completed');
         }
-      });
 
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      console.error('Complete reflection error:', error);
-      res.status(500).json({ error: 'Failed to complete reflection' });
+        // If both partners have completed, trigger analysis
+        if (journalSession.status === JournalSessionStatus.ANALYSIS_PENDING) {
+            journalSession.analysisRequestedAt = new Date();
+            await journalSession.save();
+
+            // Trigger AI analysis asynchronously (don't wait for it)
+            console.log('Both partners completed, triggering insights generation for session:', sessionId);
+            
+            // Use setTimeout to avoid blocking the response
+            setTimeout(async () => {
+                try {
+                    console.log('Starting insights generation for session:', sessionId);
+                    await generateInsights(sessionId, req.io);
+                    console.log('Insights generation completed for session:', sessionId);
+                } catch (error) {
+                    console.error('Error generating insights for session:', sessionId, error);
+                }
+            }, 2000); // 2 seconds delay
+        }
+
+        console.log('Returning response with status:', journalSession.status);
+        res.json({
+            message: 'Reflection completed successfully',
+            session: {
+                id: journalSession._id,
+                status: journalSession.status,
+                partner1CompletedAt: journalSession.partner1CompletedAt,
+                partner2CompletedAt: journalSession.partner2CompletedAt
+            }
+        });
+
+    } catch (error: any) {
+        console.error('Complete reflection error:', error);
+        res.status(500).json({ error: 'Failed to complete reflection' });
     }
 });
 
