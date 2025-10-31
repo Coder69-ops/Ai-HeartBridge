@@ -328,22 +328,16 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
                   <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">
                     {partner.name}
                   </h2>
-                  <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
+                  <p className="text-xs sm:text-sm text-gray-500">
                     {(partnerOnlineStatus || partner.isOnline) ? (
-                      <>
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                        <span>Active now</span>
-                      </>
+                      <span>Active now</span>
                     ) : (
-                      <>
-                        <span className="w-2 h-2 bg-gray-400 rounded-full" />
-                        <span>
-                          {partnerLastSeen || partner.lastSeen 
-                            ? `Last seen ${formatLastSeen(partnerLastSeen || partner.lastSeen || null)}`
-                            : 'Offline'
-                          }
-                        </span>
-                      </>
+                      <span>
+                        {partnerLastSeen || partner.lastSeen 
+                          ? `Last seen ${formatLastSeen(partnerLastSeen || partner.lastSeen || null)}`
+                          : 'Offline'
+                        }
+                      </span>
                     )}
                   </p>
                 </div>
