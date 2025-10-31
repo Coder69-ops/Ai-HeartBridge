@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { socketService } from '../services/socketService';
 import { 
   getPartnerChat, 
   sendPartnerMessage, 
@@ -44,6 +45,7 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
   const [messageText, setMessageText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  const [partnerOnlineStatus, setPartnerOnlineStatus] = useState(false);
 
   // Quick reaction emojis
   const quickEmojis = ['❤️', '😊', '👍', '🎉', '😂', '🤗', '💪', '✨'];
@@ -120,10 +122,42 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
     scrollToBottom();
   }, [chatData?.chat.messages]);
 
-  // Focus input
+  // Focus input and setup socket connection
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+    
+    // Connect to socket if user is available
+    if (user?.id) {
+      socketService.connect(user.id);
+      
+      // Listen for partner status changes
+      const unsubscribe = socketService.onPartnerStatusChange((partnerId, isOnline) => {
+        if (chatData?.partner.id === partnerId) {
+          setPartnerOnlineStatus(isOnline);
+        }
+      });
+      
+      // Check initial partner status
+      if (chatData?.partner.id) {
+        socketService.checkPartnerStatus(chatData.partner.id).then((status) => {
+          setPartnerOnlineStatus(status.isOnline);
+        });
+      }
+      
+      return () => {
+        unsubscribe();
+      };
+    }
+  }, [user?.id, chatData?.partner.id]);
+  
+  // Cleanup socket on unmount
+  useEffect(() => {
+    return () => {
+      if (user?.id) {
+        socketService.disconnect();
+      }
+    };
+  }, [user?.id]);
 
   // Handle send
   const handleSendMessage = (e: React.FormEvent) => {
@@ -218,8 +252,8 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
                     {(partner.name || 'P')[0].toUpperCase()}
                   </div>
-                  {partner.isOnline && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+                  {(partnerOnlineStatus || partner.isOnline) && (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
                   )}
                 </div>
                 
@@ -228,14 +262,17 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
                   <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">
                     {partner.name}
                   </h2>
-                  <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
-                    {partner.isOnline ? (
+                  <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
+                    {(partnerOnlineStatus || partner.isOnline) ? (
                       <>
-                        <span className="w-2 h-2 bg-emerald-500 rounded-full" />
-                        Active now
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                        <span>Active now</span>
                       </>
                     ) : (
-                      'Offline'
+                      <>
+                        <span className="w-2 h-2 bg-gray-400 rounded-full" />
+                        <span>Offline</span>
+                      </>
                     )}
                   </p>
                 </div>

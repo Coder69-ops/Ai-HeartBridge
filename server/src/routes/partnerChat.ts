@@ -63,7 +63,7 @@ router.get('/conversation', async (req: AuthRequest, res: Response) => {
         id: partner._id,
         name: partner.firstName || partner.email?.split('@')[0] || 'Partner',
         email: partner.email,
-        isOnline: true // You can implement online status tracking later
+        isOnline: (req as any).onlineUsers?.has(partnerId.toString()) || false
       }
     });
 

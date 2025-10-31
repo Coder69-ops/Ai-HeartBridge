@@ -44,12 +44,96 @@ const io = new Server(server, {
   },
 });
 
+// Online users tracking
+const onlineUsers = new Map<string, { socketId: string; lastSeen: Date }>();
+
 io.on('connection', (socket) => {
-  console.log('a user connected');
+  console.log('a user connected:', socket.id);
+
+  // User authentication and online status
+  socket.on('user_online', (userId: string) => {
+    if (userId) {
+      onlineUsers.set(userId, { 
+        socketId: socket.id, 
+        lastSeen: new Date() 
+      });
+      
+      // Join user to their personal room
+      socket.join(userId);
+      
+      // Notify partner about online status
+      socket.broadcast.emit('partner_status_changed', { 
+        userId, 
+        isOnline: true 
+      });
+      
+      console.log(`User ${userId} is now online`);
+    }
+  });
+
+  // Handle heartbeat to keep user online
+  socket.on('heartbeat', (userId: string) => {
+    if (userId && onlineUsers.has(userId)) {
+      onlineUsers.set(userId, { 
+        socketId: socket.id, 
+        lastSeen: new Date() 
+      });
+    }
+  });
+
+  // Check partner online status
+  socket.on('check_partner_status', (partnerId: string, callback) => {
+    const isOnline = onlineUsers.has(partnerId);
+    const lastSeen = onlineUsers.get(partnerId)?.lastSeen;
+    callback({ isOnline, lastSeen });
+  });
 
   socket.on('disconnect', () => {
-    console.log('user disconnected');
+    // Find and remove user from online users
+    let disconnectedUserId: string | null = null;
+    for (const [userId, userData] of onlineUsers.entries()) {
+      if (userData.socketId === socket.id) {
+        disconnectedUserId = userId;
+        onlineUsers.delete(userId);
+        break;
+      }
+    }
+    
+    if (disconnectedUserId) {
+      // Notify partner about offline status
+      socket.broadcast.emit('partner_status_changed', { 
+        userId: disconnectedUserId, 
+        isOnline: false 
+      });
+      
+      console.log(`User ${disconnectedUserId} is now offline`);
+    }
+    
+    console.log('user disconnected:', socket.id);
   });
+
+  // Periodic cleanup of stale connections
+  setInterval(() => {
+    const now = new Date();
+    const staleThreshold = 5 * 60 * 1000; // 5 minutes
+    
+    for (const [userId, userData] of onlineUsers.entries()) {
+      if (now.getTime() - userData.lastSeen.getTime() > staleThreshold) {
+        onlineUsers.delete(userId);
+        socket.broadcast.emit('partner_status_changed', { 
+          userId, 
+          isOnline: false 
+        });
+      }
+    }
+  }, 60000); // Check every minute
+});
+
+// Middleware to add io to requests
+app.use((req: any, res, next) => {
+  req.io = io;
+  req.onlineUsers = onlineUsers;
+  next();
 });
 
 const PORT = process.env.PORT || 3001;
