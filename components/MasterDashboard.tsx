@@ -63,55 +63,22 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
     relationshipTrends: null as any
   });
 
-  // Load dashboard data with sequential loading to avoid rate limits
+  // Load dashboard data
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       
-      // Load dashboard data sequentially with delays to avoid rate limiting
-      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      // Load all dashboard data in parallel
+      const [healthScore, journalSessions, checkInResponse, exerciseResponse, trends] = await Promise.all([
+        getHealthScore().catch(() => null),
+        getJournalSessionHistory().catch(() => []),
+        getCoupleCheckInHistory().catch(() => ({ checkIns: [] })),
+        getCoupleExerciseProgress(1, 100).catch(() => ({ progress: [] })),
+        getRelationshipTrends('3months').catch(() => null)
+      ]);
       
-      let healthScore: HealthScore | null = null;
-      let journalSessions: any[] = [];
-      let checkInHistory: CheckIn[] = [];
-      let exerciseProgress: { progress: ExerciseProgress[] } = { progress: [] };
-      let trends = null;
-      
-      try {
-        healthScore = await getHealthScore();
-        await delay(200); // 200ms delay between requests
-      } catch (error) {
-        console.warn('Failed to load health score:', error);
-      }
-      
-      try {
-        journalSessions = await getJournalSessionHistory();
-        await delay(200);
-      } catch (error) {
-        console.warn('Failed to load journal sessions:', error);
-      }
-      
-      try {
-        const checkInResponse = await getCoupleCheckInHistory();
-        checkInHistory = checkInResponse?.checkIns || [];
-        await delay(200);
-      } catch (error) {
-        console.warn('Failed to load check-in history:', error);
-      }
-      
-      try {
-        const exerciseResponse = await getCoupleExerciseProgress(1, 100);
-        exerciseProgress = { progress: exerciseResponse?.progress || [] };
-        await delay(200);
-      } catch (error) {
-        console.warn('Failed to load exercise progress:', error);
-      }
-      
-      try {
-        trends = await getRelationshipTrends('3months');
-      } catch (error) {
-        console.warn('Failed to load relationship trends:', error);
-      }
+      const checkInHistory = checkInResponse?.checkIns || [];
+      const exerciseProgress = { progress: exerciseResponse?.progress || [] };
 
       // Calculate days active (last 30 days)
       const thirtyDaysAgo = new Date();
@@ -126,7 +93,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       });
       
       // Handle checkInHistory structure
-      const checkIns = Array.isArray(checkInHistory) ? checkInHistory : [];
+      const checkIns = checkInHistory;
       checkIns.forEach((checkIn: any) => {
         const checkInDate = new Date(checkIn.createdAt);
         if (checkInDate >= thirtyDaysAgo) {
@@ -154,21 +121,11 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       });
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
-      
-      // Show user-friendly error message for rate limiting
-      if (error instanceof Error && error.message.includes('429')) {
-        showToast({ 
-          type: 'warning', 
-          title: 'Server Busy', 
-          description: 'Please wait a moment before refreshing. The server is experiencing high traffic.' 
-        });
-      } else {
-        showToast({ 
-          type: 'error', 
-          title: 'Dashboard Load Failed', 
-          description: 'Some dashboard data may not be available. Please try refreshing in a moment.' 
-        });
-      }
+      showToast({ 
+        type: 'error', 
+        title: 'Dashboard Load Failed', 
+        description: 'Some dashboard data may not be available. Please try refreshing.' 
+      });
     } finally {
       setLoading(false);
     }
