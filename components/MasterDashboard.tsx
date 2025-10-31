@@ -26,7 +26,6 @@ import { Card, CardContent, CardHeader, CardTitle } from './shared/Card';
 import { Button } from './shared/Button';
 import { pairUsers } from '../services/authService';
 import { useToast } from '../src/components/ui/enhanced/ModernToast';
-import { toast } from '../src/components/ui/enhanced/ModernToast';
 import { getRelationshipTrends, getHealthScore } from '../services/analyticsService';
 import { getJournalSessionHistory } from '../services/journalSessionService';
 import { getCoupleCheckInHistory } from '../services/checkInService';
@@ -48,6 +47,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
   onPairingSuccess,
   onStartJournaling,
 }) => {
+  const { showToast } = useToast();
   const [pairingCode, setPairingCode] = useState('');
   const [showPairing, setShowPairing] = useState(!partner);
   const [isPairing, setIsPairing] = useState(false);
@@ -62,7 +62,6 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
     recentInsights: null as any,
     relationshipTrends: null as any
   });
-  const { showToast } = useToast();
 
   // Load dashboard data
   const loadDashboardData = async () => {
@@ -155,11 +154,11 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       onPairingSuccess(currentUser, partner);
       setPairingCode('');
       setShowPairing(false);
-      showToast(toast.success('Partnership Connected!', 'You are now connected with your partner.'));
+      showToast({ type: 'success', title: 'Partnership Connected! You are now connected with your partner.' });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setPairingError(errorMessage);
-      showToast(toast.error('Connection Failed', errorMessage));
+      showToast({ type: 'error', title: 'Connection Failed', description: errorMessage });
     } finally {
       setIsPairing(false);
     }

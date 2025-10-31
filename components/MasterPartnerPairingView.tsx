@@ -21,7 +21,6 @@ import { Button } from './shared/Button';
 import { Input } from './shared/Input';
 import { pairUsers } from '../services/authService';
 import { useToast } from '../src/components/ui/enhanced/ModernToast';
-import { toast } from '../src/components/ui/enhanced/ModernToast';
 
 interface MasterPartnerPairingViewProps {
   user: User;
@@ -32,6 +31,7 @@ const MasterPartnerPairingView: React.FC<MasterPartnerPairingViewProps> = ({
   user,
   onBack
 }) => {
+  const { showToast } = useToast();
   const [pairingCode, setPairingCode] = useState('');
   const [isPairing, setIsPairing] = useState(false);
   const [pairingStep, setPairingStep] = useState<'waiting' | 'connected' | 'error'>('waiting');
@@ -48,7 +48,7 @@ const MasterPartnerPairingView: React.FC<MasterPartnerPairingViewProps> = ({
       const result = await pairUsers(user.id, pairingCode.trim());
       if (result.partner) {
         setPairingStep('connected');
-        toast.success('Successfully paired with your partner! 💝');
+        showToast({ type: 'success', title: 'Successfully paired with your partner! 💝' });
       } else {
         setError('Failed to pair with partner');
         setPairingStep('error');
@@ -64,7 +64,7 @@ const MasterPartnerPairingView: React.FC<MasterPartnerPairingViewProps> = ({
 
   const copyPairingCode = () => {
     navigator.clipboard.writeText(user.pairingCode || '');
-    toast.success('Pairing code copied to clipboard!');
+    showToast({ type: 'success', title: 'Pairing code copied to clipboard!' });
   };
 
   const sharePairingCode = async () => {

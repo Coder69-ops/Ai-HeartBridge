@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from './store/authStore';
 import { useAppStore } from './store/appStore';
 import { User, Exercise, Message, OnboardingData } from './types';
-import { toast, Toaster } from 'react-hot-toast';
+import { ToastProvider, useToast } from './src/components/ui/enhanced/ModernToast';
 import * as authService from './services/authService';
 import MasterAuthView from './components/MasterAuthView';
 import ComprehensiveOnboarding from './components/ComprehensiveOnboarding';
@@ -28,10 +28,11 @@ import MasterSafetyCenter from './components/MasterSafetyCenter';
 import { GorgeousLoader } from './components/shared/GorgeousLoader';
 
 
-export const AppContent: React.FC = () => {
+const AppContentInner: React.FC = () => {
     // Zustand stores
     const { user, partner, couple, isAuthenticated, isLoading: authLoading, initialize } = useAuthStore();
     const { currentView, setCurrentView, showSafetyModal, toggleSafetyModal, currentJournalId, setCurrentJournalId } = useAppStore();
+    const { showToast } = useToast();
 
     const [isLoading, setIsLoading] = useState(true);
 
@@ -105,7 +106,11 @@ export const AppContent: React.FC = () => {
             setCurrentView('dashboard');
         } catch (error) {
             console.error('Failed to save onboarding data:', error);
-            toast.error('There was an issue saving your onboarding data. Your progress has been saved locally and will sync when connection is restored.');
+            showToast({ 
+                type: 'error', 
+                title: 'Onboarding Save Failed', 
+                description: 'Your progress has been saved locally and will sync when connection is restored.' 
+            });
             setCurrentView('dashboard');
         }
     };
@@ -293,9 +298,7 @@ export const AppContent: React.FC = () => {
     };
     
     return (
-        <>
-            <Toaster />
-            <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
                 {isAuthenticated && user && !authLoading && (
                     <>
                         {/* Simple Header - Fully Responsive */}
@@ -339,6 +342,13 @@ export const AppContent: React.FC = () => {
                     )}
                 </AnimatePresence>
             </div>
-        </>
+    );
+};
+
+export const AppContent: React.FC = () => {
+    return (
+        <ToastProvider>
+            <AppContentInner />
+        </ToastProvider>
     );
 };
