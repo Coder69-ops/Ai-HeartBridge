@@ -58,6 +58,11 @@ export const getRelationshipTrends = async (timeframe = '6months'): Promise<Rela
     const response = await api.get(`/analytics/trends?timeframe=${timeframe}`);
     return response.data;
   } catch (error: any) {
+    // Don't retry for 400/404 errors (likely unpaired user)
+    if (error.response?.status === 400 || error.response?.status === 404) {
+      console.log('Relationship trends not available (likely unpaired user)');
+      throw new Error('Trends not available');
+    }
     throw new Error(error.response?.data?.error || 'Failed to fetch relationship trends');
   }
 };
@@ -68,6 +73,11 @@ export const getHealthScore = async (): Promise<HealthScore> => {
     const response = await api.get('/analytics/health-score');
     return response.data;
   } catch (error: any) {
+    // Don't retry for 400/404 errors (likely unpaired user)
+    if (error.response?.status === 400 || error.response?.status === 404) {
+      console.log('Health score not available (likely unpaired user)');
+      throw new Error('Health score not available');
+    }
     throw new Error(error.response?.data?.error || 'Failed to fetch health score');
   }
 };

@@ -67,7 +67,7 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
     refetchOnReconnect: true
   });
 
-  // Send message mutation
+  // Send message mutation with therapeutic error handling
   const sendMessageMutation = useMutation({
     mutationFn: (message: string) => sendPartnerMessage(message),
     onSuccess: (data) => {
@@ -86,10 +86,29 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
       setMessageText('');
       setShowEmojiPicker(false);
       scrollToBottom();
+      console.log('💚 Message sent with love to your partner');
+    },
+    onError: (error: any) => {
+      console.error('💔 Message couldn\'t be delivered right now, but don\'t worry - we\'ll keep trying', error);
+      
+      // Show therapeutic error message based on error type
+      let errorMessage = "Your message is important to us. We're having trouble sending it right now, but we'll keep trying. Your connection with your partner remains strong. 💚";
+      
+      if (error?.response?.status === 429) {
+        errorMessage = "You're sharing so much love! Let's take a mindful pause and try sending again in a moment. Sometimes slowing down helps us connect better. 🌱";
+      } else if (error?.response?.status === 413) {
+        errorMessage = "Your message has so much to say! Could you share your thoughts in a shorter message? Sometimes the most powerful words are the simplest ones. ✨";
+      } else if (!navigator.onLine) {
+        errorMessage = "Your internet connection stepped away for a moment. Don't worry - your message will be sent as soon as you're reconnected. Take this time to breathe. 💙";
+      }
+      
+      // You can add toast notification here with errorMessage
+      // For now, just log it therapeutically
+      console.log('🤗 Therapeutic guidance:', errorMessage);
     }
   });
 
-  // Mark messages as read
+  // Mark messages as read with gentle error handling
   const markReadMutation = useMutation({
     mutationFn: markMessagesAsRead,
     onSuccess: () => {
@@ -106,6 +125,16 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
           }
         };
       });
+      console.log('💚 Messages marked as read - your partner knows you\'re listening');
+    },
+    onError: (error: any) => {
+      console.error('🤗 Having trouble updating read status, but your connection remains strong', error);
+      // Silently retry in background without bothering the user
+      setTimeout(() => {
+        if (chatData?.chat.unreadCount && chatData.chat.unreadCount > 0) {
+          markReadMutation.mutate();
+        }
+      }, 3000);
     }
   });
 
@@ -136,46 +165,65 @@ const EnhancedPartnerChat: React.FC<EnhancedPartnerChatProps> = ({ onBack }) => 
   useEffect(() => {
     inputRef.current?.focus();
     
-    // Connect to socket if user is available
+    // Connect to socket with therapeutic error handling
     if (user?.id) {
-      socketService.connect(user.id);
-      console.log('Socket connected for user:', user.id);
+      try {
+        socketService.connect(user.id);
+        console.log('💚 Socket connected - Ready to connect with your partner');
+      } catch (error) {
+        console.error('💔 Connection challenge - We\'ll keep trying to reconnect you both', error);
+      }
       
-      // Listen for partner status changes
+      // Listen for partner status changes with error handling
       const unsubscribeStatus = socketService.onPartnerStatusChange((partnerId, isOnline) => {
-        if (chatData?.partner.id === partnerId) {
-          setPartnerOnlineStatus(isOnline);
-          if (!isOnline) {
-            setPartnerLastSeen(new Date());
+        try {
+          if (chatData?.partner.id === partnerId) {
+            setPartnerOnlineStatus(isOnline);
+            if (!isOnline) {
+              setPartnerLastSeen(new Date());
+            }
+            console.log(`💝 Partner ${isOnline ? 'joined' : 'stepped away'} - Connection updated`);
           }
+        } catch (error) {
+          console.error('🤗 Small hiccup with partner status, but your connection remains strong', error);
         }
       });
       
-      // Listen for new messages
+      // Listen for new messages with therapeutic error handling
       const unsubscribeMessages = socketService.onNewPartnerMessage((messageData) => {
-        // Update query data with new message
-        queryClient.setQueryData(['partner-chat'], (oldData: PartnerChatResponse | undefined) => {
-          if (!oldData || messageData.chatId !== oldData.chat.id) return oldData;
-          return {
-            ...oldData,
-            chat: {
-              ...oldData.chat,
-              messages: [...oldData.chat.messages, messageData.message],
-              totalMessages: oldData.chat.totalMessages + 1,
-              lastMessageAt: messageData.message.timestamp
-            }
-          };
-        });
+        try {
+          // Update query data with new message
+          queryClient.setQueryData(['partner-chat'], (oldData: PartnerChatResponse | undefined) => {
+            if (!oldData || messageData.chatId !== oldData.chat.id) return oldData;
+            return {
+              ...oldData,
+              chat: {
+                ...oldData.chat,
+                messages: [...oldData.chat.messages, messageData.message],
+                totalMessages: oldData.chat.totalMessages + 1,
+                lastMessageAt: messageData.message.timestamp
+              }
+            };
+          });
+          console.log('💌 New message from your partner received with love');
+        } catch (error) {
+          console.error('💙 Message received but we\'re having trouble displaying it - refreshing your chat', error);
+          // Graceful fallback - refetch chat data
+          queryClient.invalidateQueries({ queryKey: ['partner-chat'] });
+        }
       });
       
-      // Check initial partner status via API
+      // Check initial partner status via API with therapeutic error handling
       if (chatData?.partner.id) {
         const checkPresence = () => {
           checkPartnerPresence(chatData.partner.id).then((presence) => {
-            console.log('Partner presence:', presence);
+            console.log('💝 Partner presence updated - connection thriving');
             setPartnerOnlineStatus(presence.isOnline);
             setPartnerLastSeen(presence.lastSeen ? new Date(presence.lastSeen) : null);
-          }).catch(err => console.error('Presence check failed:', err));
+          }).catch(err => {
+            console.error('🤗 Having trouble checking if your partner is online, but your bond remains strong', err);
+            // Don't clear the status, keep the last known state for user comfort
+          });
         };
         
         checkPresence();

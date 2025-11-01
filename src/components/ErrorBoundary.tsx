@@ -58,24 +58,24 @@ const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> =
   error, 
   resetError 
 }) => {
-  const isDevelopment = import.meta.env.DEV;
+  const isDevelopment = (import.meta as any).env?.DEV;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
       <GlassmorphismCard className="max-w-md w-full">
         <GlassCardContent className="text-center space-y-6">
           <div className="flex justify-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-8 h-8 text-emerald-600" />
             </div>
           </div>
           
           <div>
             <h2 className="text-xl font-semibold text-gray-800 mb-2">
-              Something went wrong
+              Let's take a moment together 🤗
             </h2>
             <p className="text-gray-600 mb-4">
-              We encountered an unexpected error. Please try refreshing the page.
+              Something unexpected happened, but don't worry - these things are part of the journey. Your progress is safe, and we're here to help you get back on track. Take a deep breath with us. 💚
             </p>
             
             {isDevelopment && (
@@ -98,7 +98,7 @@ const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> =
               className="flex-1"
               leftIcon={<RefreshCw className="w-4 h-4" />}
             >
-              Try Again
+              Let's Try Again 💚
             </AnimatedButton>
             
             <AnimatedButton
@@ -106,14 +106,13 @@ const DefaultErrorFallback: React.FC<{ error: Error; resetError: () => void }> =
               variant="secondary"
               className="flex-1"
             >
-              Refresh Page
+              Fresh Start 🌱
             </AnimatedButton>
           </div>
 
           {isDevelopment && (
-            <p className="text-xs text-gray-500">
-              This error boundary is only shown in development. 
-              In production, users will see a more friendly error page.
+            <p className="text-xs text-emerald-600">
+              Development mode - helping you grow stronger 🌿
             </p>
           )}
         </GlassCardContent>
@@ -138,13 +137,13 @@ export const OnboardingErrorBoundary: React.FC<{ children: React.ReactNode }> = 
               
               <div>
                 <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                  Onboarding Error
+                  Let's pause and regroup 🤗
                 </h2>
                 <p className="text-gray-600 mb-4">
-                  There was an issue with the onboarding process. Let's get you back on track.
+                  Your onboarding journey hit a small bump, but that's okay - growth isn't always linear. Let's take a mindful moment and continue together. Your progress matters, and we're here to support you every step of the way. 💚
                 </p>
                 
-                {import.meta.env.DEV && (
+                {(import.meta as any).env?.DEV && (
                   <details className="text-left bg-gray-100 rounded-lg p-3 mb-4">
                     <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
                       Technical Details
@@ -162,14 +161,14 @@ export const OnboardingErrorBoundary: React.FC<{ children: React.ReactNode }> = 
                   variant="therapy"
                   leftIcon={<RefreshCw className="w-4 h-4" />}
                 >
-                  Restart Onboarding
+                  Continue Our Journey 🌱
                 </AnimatedButton>
                 
                 <AnimatedButton
                   onClick={() => window.location.href = '/'}
                   variant="secondary"
                 >
-                  Go to Dashboard
+                  Safe Harbor (Dashboard) 🏠
                 </AnimatedButton>
               </div>
             </GlassCardContent>

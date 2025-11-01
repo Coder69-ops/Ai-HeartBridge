@@ -49,7 +49,12 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
 }) => {
   const { showToast } = useToast();
   const [pairingCode, setPairingCode] = useState('');
-  const [showPairing, setShowPairing] = useState(!partner);
+  const [showPairing, setShowPairing] = useState(false);
+  
+  // Update pairing visibility when partner status changes
+  useEffect(() => {
+    setShowPairing(!partner);
+  }, [partner]);
   const [isPairing, setIsPairing] = useState(false);
   const [pairingError, setPairingError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -67,6 +72,22 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
   const loadDashboardData = async () => {
     try {
       setLoading(true);
+      
+      // Only load analytics data if user is paired
+      if (!partner || !user.coupleId) {
+        console.log('User not paired, skipping analytics data load');
+        setDashboardData({
+          healthScore: 0,
+          checkInCount: 0,
+          journalSessions: 0,
+          exerciseCount: 0,
+          daysActive: 0,
+          recentInsights: null,
+          relationshipTrends: null
+        });
+        setLoading(false);
+        return;
+      }
       
       // Load all dashboard data in parallel
       const [healthScore, journalSessions, checkInResponse, exerciseResponse, trends] = await Promise.all([
@@ -131,10 +152,10 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
     }
   };
 
-  // Load dashboard data
+  // Load dashboard data when component mounts or partner status changes
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [partner, user.coupleId]); // Reload when partner or couple status changes
 
   const getPartnerDisplayName = () => {
     if (!partner) return '';

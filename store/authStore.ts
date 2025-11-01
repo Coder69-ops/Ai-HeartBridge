@@ -67,13 +67,17 @@ export const useAuthStore = create<AuthState>()(
           localStorage.setItem('auth_token', token);
           localStorage.setItem('user_data', JSON.stringify(user));
           
-          // Get partner separately to avoid blocking login
-          try {
-            const partner = await getPartner(user);
-            set({ partner });
-          } catch (partnerError) {
-            console.warn('Failed to load partner:', partnerError);
-            // Don't fail login if partner loading fails
+          // Only try to get partner if user has a coupleId
+          if (user.coupleId) {
+            try {
+              const partner = await getPartner(user);
+              set({ partner });
+            } catch (partnerError) {
+              console.warn('Failed to load partner:', partnerError);
+              set({ partner: null });
+            }
+          } else {
+            // User is not paired, no partner to fetch
             set({ partner: null });
           }
           
@@ -129,7 +133,15 @@ export const useAuthStore = create<AuthState>()(
             }
           };
 
-          const partner = await authService.getPartner(user);
+          // Only try to get partner if user has a coupleId
+          let partner = null;
+          if (user.coupleId) {
+            try {
+              partner = await getPartner(user);
+            } catch (partnerError) {
+              console.warn('Failed to load partner during registration:', partnerError);
+            }
+          }
 
           set({
             user,
@@ -172,7 +184,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true, error: null });
           
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/profile`, {
+          const response = await fetch(`${(import.meta as any).env?.VITE_API_URL}/auth/profile`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -208,7 +220,7 @@ export const useAuthStore = create<AuthState>()(
         if (!user || !token) throw new Error('Not authenticated');
 
         try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/preferences`, {
+          const response = await fetch(`${(import.meta as any).env?.VITE_API_URL}/auth/preferences`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -254,7 +266,7 @@ export const useAuthStore = create<AuthState>()(
 
             // Fetch fresh user data from server to get current pairing status
             try {
-              const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+              const apiUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api';
               
               const response = await fetch(`${apiUrl}/auth/me`, {
                 headers: { 
@@ -269,7 +281,7 @@ export const useAuthStore = create<AuthState>()(
                 let partner = null;
                 let couple = null;
 
-                // If user has a couple, fetch partner data
+                // Only fetch partner data if user has a coupleId
                 if (freshUser.coupleId) {
                   try {
                     const partnerResponse = await fetch(`${apiUrl}/couples/info`, {
@@ -292,7 +304,12 @@ export const useAuthStore = create<AuthState>()(
                     }
                   } catch (partnerError) {
                     console.log('Could not fetch partner data:', partnerError);
+                    // Don't fail initialization for partner fetch errors
+                    partner = null;
+                    couple = null;
                   }
+                } else {
+                  console.log('User not paired, skipping partner data fetch');
                 }
 
                 // Update with fresh data
@@ -307,8 +324,22 @@ export const useAuthStore = create<AuthState>()(
 
                 // Update localStorage with fresh data
                 localStorage.setItem('user_data', JSON.stringify(freshUser));
+              } else if (response.status === 401) {
+                // Token is invalid, clear auth data
+                console.log('Token invalid, clearing auth data');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                set({ 
+                  isLoading: false, 
+                  isAuthenticated: false, 
+                  user: null, 
+                  partner: null, 
+                  couple: null, 
+                  token: null 
+                });
               } else {
-                // Token might be invalid, use cached data but mark as loaded
+                // Other error, use cached data but mark as loaded
+                console.log('Server error, using cached data');
                 set({ isLoading: false });
               }
             } catch (fetchError) {

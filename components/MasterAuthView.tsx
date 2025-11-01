@@ -20,9 +20,12 @@ import {
 import { Button } from './shared/Button';
 import { Card, CardContent } from './shared/Card';
 import Logo from './shared/Logo';
+import { useFormErrorHandler, authSchemas, getServerErrorMessage } from '../src/utils/formErrorHandler';
+import { z } from 'zod';
 
 const MasterAuthView: React.FC = () => {
   const { login, register, error, isLoading, clearError } = useAuthStore();
+  const { errors, handleZodError, handleServerError, clearErrors, clearFieldError } = useFormErrorHandler();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -32,54 +35,39 @@ const MasterAuthView: React.FC = () => {
     password: '',
     confirmPassword: ''
   });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  // Clear error when switching modes
+  // Clear errors when switching modes
   useEffect(() => {
     clearError();
-    setFormErrors({});
+    clearErrors();
     setTouched({});
-  }, [mode, clearError]);
+  }, [mode, clearError, clearErrors]);
 
-  // Validate form
+  // Validate form with therapeutic messaging
   const validate = (): boolean => {
-    const errors: Record<string, string> = {};
+    try {
+      const schema = z.object({
+        email: authSchemas.email,
+        password: mode === 'signup' ? authSchemas.password : z.string().min(1, "Please enter your password 💙"),
+        ...(mode === 'signup' && {
+          name: authSchemas.name,
+          confirmPassword: authSchemas.confirmPassword(formData.password)
+        })
+      });
 
-    // Email validation
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
-    }
-
-    // Password validation
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    } else if (mode === 'signup' && formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
-    }
-
-    // Signup-specific validation
-    if (mode === 'signup') {
-      if (!formData.name.trim()) {
-        errors.name = 'Name is required';
-      } else if (formData.name.trim().length < 2) {
-        errors.name = 'Name must be at least 2 characters';
+      schema.parse(formData);
+      clearErrors();
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        handleZodError(error);
       }
-      
-      if (!formData.confirmPassword) {
-        errors.confirmPassword = 'Please confirm your password';
-      } else if (formData.password !== formData.confirmPassword) {
-        errors.confirmPassword = 'Passwords do not match';
-      }
+      return false;
     }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
   };
 
-  // Handle submit
+  // Handle submit with enhanced error handling
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -103,22 +91,46 @@ const MasterAuthView: React.FC = () => {
           name: formData.name
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Auth error:', err);
+      // Use therapeutic error messaging from server
+      if (err.therapeuticMessage || err.response) {
+        handleServerError(err);
+      }
     }
   };
 
-  // Handle field blur
+  // Handle field blur with individual field validation
   const handleBlur = (field: string) => {
     setTouched({ ...touched, [field]: true });
-    validate();
+    
+    // Clear previous error for this field
+    clearFieldError(field);
+    
+    // Validate just this field for immediate feedback
+    try {
+      if (field === 'email') {
+        authSchemas.email.parse(formData.email);
+      } else if (field === 'password') {
+        const schema = mode === 'signup' ? authSchemas.password : z.string().min(1, "Please enter your password 💙");
+        schema.parse(formData.password);
+      } else if (field === 'name' && mode === 'signup') {
+        authSchemas.name.parse(formData.name);
+      } else if (field === 'confirmPassword' && mode === 'signup') {
+        authSchemas.confirmPassword(formData.password).parse(formData.confirmPassword);
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        handleZodError(error);
+      }
+    }
   };
 
-  // Switch mode
+  // Switch mode with clean slate
   const toggleMode = () => {
     setMode(mode === 'login' ? 'signup' : 'login');
     setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-    setFormErrors({});
+    clearErrors();
     setTouched({});
   };
 
@@ -186,17 +198,24 @@ const MasterAuthView: React.FC = () => {
           <Card className="shadow-2xl border-0 overflow-hidden">
             <CardContent className="p-4 sm:p-6 md:p-8">
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-                {/* Error Display */}
+                {/* Error Display - Therapeutic & Supportive */}
                 <AnimatePresence>
-                  {error && (
+                  {(error || errors.globalError) && (
                     <motion.div
                       initial={{ opacity: 0, y: -10, height: 0 }}
                       animate={{ opacity: 1, y: 0, height: 'auto' }}
                       exit={{ opacity: 0, y: -10, height: 0 }}
-                      className="p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start gap-3"
+                      className="p-4 bg-emerald-50 border-2 border-emerald-200 rounded-xl flex items-start gap-3"
                     >
-                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-red-800 font-medium">{error}</p>
+                      <Heart className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm text-emerald-800 font-medium mb-1">
+                          {errors.globalError || error}
+                        </p>
+                        <p className="text-xs text-emerald-600">
+                          We're here to help you through this. Take your time. 💚
+                        </p>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -225,22 +244,22 @@ const MasterAuthView: React.FC = () => {
                           placeholder="Enter your full name"
                           autoComplete="name"
                           className={`w-full h-11 sm:h-12 pl-10 sm:pl-12 pr-3 sm:pr-4 text-base border-2 rounded-xl bg-white focus:outline-none focus:ring-4 transition-all ${
-                            touched.name && formErrors.name
-                              ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                            touched.name && errors.fieldErrors.name
+                              ? 'border-emerald-300 focus:border-emerald-400 focus:ring-emerald-100'
                               : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-100'
                           }`}
                         />
                       </div>
                       <AnimatePresence>
-                        {touched.name && formErrors.name && (
+                        {touched.name && errors.fieldErrors.name && (
                           <motion.p 
                             initial={{ opacity: 0, y: -5 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -5 }}
-                            className="text-sm text-red-600 mt-1.5 flex items-center gap-1"
+                            className="text-sm text-emerald-600 mt-1.5 flex items-center gap-1"
                           >
-                            <AlertCircle className="w-3.5 h-3.5" />
-                            {formErrors.name}
+                            <Heart className="w-3.5 h-3.5" />
+                            {errors.fieldErrors.name}
                           </motion.p>
                         )}
                       </AnimatePresence>
@@ -266,22 +285,22 @@ const MasterAuthView: React.FC = () => {
                       placeholder="your@email.com"
                       autoComplete="email"
                       className={`w-full h-11 sm:h-12 pl-10 sm:pl-12 pr-3 sm:pr-4 text-base border-2 rounded-xl bg-white focus:outline-none focus:ring-4 transition-all ${
-                        touched.email && formErrors.email
-                          ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                        touched.email && errors.fieldErrors.email
+                          ? 'border-emerald-300 focus:border-emerald-400 focus:ring-emerald-100'
                           : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-100'
                       }`}
                     />
                   </div>
                   <AnimatePresence>
-                    {touched.email && formErrors.email && (
+                    {touched.email && errors.fieldErrors.email && (
                       <motion.p 
                         initial={{ opacity: 0, y: -5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className="text-sm text-red-600 mt-1.5 flex items-center gap-1"
+                        className="text-sm text-emerald-600 mt-1.5 flex items-center gap-1"
                       >
-                        <AlertCircle className="w-3.5 h-3.5" />
-                        {formErrors.email}
+                        <Heart className="w-3.5 h-3.5" />
+                        {errors.fieldErrors.email}
                       </motion.p>
                     )}
                   </AnimatePresence>
@@ -305,8 +324,8 @@ const MasterAuthView: React.FC = () => {
                       placeholder="••••••••"
                       autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                       className={`w-full h-11 sm:h-12 pl-10 sm:pl-12 pr-10 sm:pr-12 text-base border-2 rounded-xl bg-white focus:outline-none focus:ring-4 transition-all ${
-                        touched.password && formErrors.password
-                          ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                        touched.password && errors.fieldErrors.password
+                          ? 'border-emerald-300 focus:border-emerald-400 focus:ring-emerald-100'
                           : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-100'
                       }`}
                     />
@@ -320,15 +339,15 @@ const MasterAuthView: React.FC = () => {
                     </button>
                   </div>
                   <AnimatePresence>
-                    {touched.password && formErrors.password && (
+                    {touched.password && errors.fieldErrors.password && (
                       <motion.p 
                         initial={{ opacity: 0, y: -5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        className="text-sm text-red-600 mt-1.5 flex items-center gap-1"
+                        className="text-sm text-emerald-600 mt-1.5 flex items-center gap-1"
                       >
-                        <AlertCircle className="w-3.5 h-3.5" />
-                        {formErrors.password}
+                        <Heart className="w-3.5 h-3.5" />
+                        {errors.fieldErrors.password}
                       </motion.p>
                     )}
                   </AnimatePresence>
@@ -358,22 +377,22 @@ const MasterAuthView: React.FC = () => {
                           placeholder="••••••••"
                           autoComplete="new-password"
                           className={`w-full h-12 pl-12 pr-4 text-base border-2 rounded-xl bg-white focus:outline-none focus:ring-4 transition-all ${
-                            touched.confirmPassword && formErrors.confirmPassword
-                              ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                            touched.confirmPassword && errors.fieldErrors.confirmPassword
+                              ? 'border-emerald-300 focus:border-emerald-400 focus:ring-emerald-100'
                               : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-100'
                           }`}
                         />
                       </div>
                       <AnimatePresence>
-                        {touched.confirmPassword && formErrors.confirmPassword && (
+                        {touched.confirmPassword && errors.fieldErrors.confirmPassword && (
                           <motion.p 
                             initial={{ opacity: 0, y: -5 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -5 }}
-                            className="text-sm text-red-600 mt-1.5 flex items-center gap-1"
+                            className="text-sm text-emerald-600 mt-1.5 flex items-center gap-1"
                           >
-                            <AlertCircle className="w-3.5 h-3.5" />
-                            {formErrors.confirmPassword}
+                            <Heart className="w-3.5 h-3.5" />
+                            {errors.fieldErrors.confirmPassword}
                           </motion.p>
                         )}
                       </AnimatePresence>
