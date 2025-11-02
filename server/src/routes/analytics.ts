@@ -36,14 +36,35 @@ router.get('/trends', async (req: AuthRequest, res) => {
         startDate.setMonth(startDate.getMonth() - 6);
     }
 
-    // Get CSI scores over time
+    // Get CSI scores over time (include partially completed for single-partner testing)
     const csiScores = await CheckIn.find({
       coupleId: user.coupleId,
-      isCompleted: true,
+      $or: [
+        { isCompleted: true }, // Fully completed by both partners
+        { completedBy: { $size: 1 } } // Completed by at least one partner
+      ],
       createdAt: { $gte: startDate }
     })
-    .select('type averageScore partner1Score partner2Score createdAt')
+    .select('type averageScore partner1Score partner2Score createdAt completedBy')
     .sort({ createdAt: 1 });
+
+    // Calculate scores for partially completed check-ins
+    const processedScores = csiScores.map(checkIn => {
+      let score = checkIn.averageScore;
+      
+      // If not fully completed, use available partner score
+      if (!checkIn.averageScore && checkIn.completedBy.length === 1) {
+        score = checkIn.partner1Score || checkIn.partner2Score || 0;
+      }
+      
+      return {
+        type: checkIn.type,
+        averageScore: score,
+        partner1Score: checkIn.partner1Score || 0,
+        partner2Score: checkIn.partner2Score || 0,
+        createdAt: checkIn.createdAt
+      };
+    }).filter(score => score.averageScore > 0); // Only include scores that have actual data
 
     // Get journaling frequency
     const journalEntries = await JournalSession.find({
@@ -105,7 +126,7 @@ router.get('/trends', async (req: AuthRequest, res) => {
 
     res.json({
       timeframe,
-      csiScores,
+      csiScores: processedScores,
       journalEntries: journalEntries.map(entry => ({
         date: entry.createdAt,
         themes: entry.themes || [],
@@ -115,9 +136,9 @@ router.get('/trends', async (req: AuthRequest, res) => {
       exerciseStats,
       summary: {
         totalJournals: journalEntries.length,
-        totalCheckIns: csiScores.length,
+        totalCheckIns: processedScores.length,
         totalExercises: exerciseProgress.length,
-        latestCSI: csiScores.length > 0 ? csiScores[csiScores.length - 1] : null
+        latestCSI: processedScores.length > 0 ? processedScores[processedScores.length - 1] : null
       }
     });
 
@@ -136,10 +157,13 @@ router.get('/health-score', async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'Must be paired to view health score' });
     }
 
-    // Get latest CSI score
+    // Get latest CSI score (include partially completed for single-partner testing)
     const latestCheckIn = await CheckIn.findOne({
       coupleId: user.coupleId,
-      isCompleted: true
+      $or: [
+        { isCompleted: true }, // Fully completed by both partners
+        { completedBy: { $size: 1 } } // Completed by at least one partner
+      ]
     }).sort({ createdAt: -1 });
 
     // Get recent journal activity (last 30 days)
@@ -166,9 +190,18 @@ router.get('/health-score', async (req: AuthRequest, res) => {
     };
 
     // Satisfaction component (40% of score)
-    if (latestCheckIn?.averageScore) {
+    if (latestCheckIn) {
       const maxCSI = latestCheckIn.type === 'CSI-4' ? 24 : 96;
-      scoreComponents.satisfaction = Math.round((latestCheckIn.averageScore / maxCSI) * 40);
+      let scoreToUse = latestCheckIn.averageScore;
+      
+      // If no average score (single partner), use individual score
+      if (!scoreToUse && latestCheckIn.completedBy.length === 1) {
+        scoreToUse = latestCheckIn.partner1Score || latestCheckIn.partner2Score;
+      }
+      
+      if (scoreToUse) {
+        scoreComponents.satisfaction = Math.round((scoreToUse / maxCSI) * 40);
+      }
     }
 
     // Engagement component (30% of score)
