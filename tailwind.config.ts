@@ -240,7 +240,7 @@ const config: Config = {
     require('@tailwindcss/typography'),
     
     // Custom plugin for therapy-specific utilities
-    function({ addUtilities, theme }) {
+    function({ addUtilities, theme }: { addUtilities: any; theme: any }) {
       const newUtilities = {
         // Therapy-focused utility classes
         '.therapy-focus': {

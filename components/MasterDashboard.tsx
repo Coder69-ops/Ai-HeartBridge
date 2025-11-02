@@ -63,6 +63,25 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
   onPairingSuccess,
   onStartJournaling,
 }) => {
+  // Helper function to format time ago
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 60) {
+      return minutes < 1 ? 'Just now' : `${minutes}m ago`;
+    } else if (hours < 24) {
+      return `${hours}h ago`;
+    } else if (days < 7) {
+      return `${days}d ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
   const { showToast } = useToast();
   const [pairingCode, setPairingCode] = useState('');
   const [showPairing, setShowPairing] = useState(false);
@@ -372,29 +391,10 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
     return <ContextualLoader type="dashboard" message="Loading your relationship dashboard..." />;
   }
 
-  // Helper function to format time ago
-  const getTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (minutes < 60) {
-      return minutes < 1 ? 'Just now' : `${minutes}m ago`;
-    } else if (hours < 24) {
-      return `${hours}h ago`;
-    } else if (days < 7) {
-      return `${days}d ago`;
-    } else {
-      return date.toLocaleDateString();
-    }
-  };
-
   return (
-    <div className="h-screen overflow-y-auto pt-16">
+    <div className="h-screen overflow-y-auto overflow-x-hidden pt-16 pb-safe">
       {/* Mobile-First Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6 space-y-3 sm:space-y-6">
         
         {/* Welcome Header - Mobile Optimized */}
         <motion.div
@@ -462,12 +462,12 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Your Pairing Code
                         </label>
-                        <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
                           <input
                             type="text"
                             value={user.pairingCode}
                             readOnly
-                            className="flex-1 px-3 sm:px-4 py-2 text-center text-lg sm:text-2xl font-mono font-bold bg-gray-50 border-2 border-gray-200 rounded-lg"
+                            className="flex-1 px-4 sm:px-4 py-3 sm:py-2 text-center text-xl sm:text-2xl font-mono font-bold bg-gray-50 border-2 border-gray-200 rounded-lg touch-manipulation"
                           />
                           <Button
                             onClick={() => navigator.clipboard.writeText(user.pairingCode)}
@@ -485,13 +485,13 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Enter Partner's Code
                         </label>
-                        <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
                           <input
                             type="text"
                             value={pairingCode}
                             onChange={(e) => setPairingCode(e.target.value.toUpperCase())}
                             placeholder="ABC123"
-                            className="flex-1 px-3 sm:px-4 py-2 text-center text-base sm:text-lg font-mono font-bold border-2 border-purple-200 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200"
+                            className="flex-1 px-4 sm:px-4 py-3 sm:py-2 text-center text-lg sm:text-lg font-mono font-bold border-2 border-purple-200 rounded-lg focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-200 touch-manipulation"
                           />
                           <Button 
                             disabled={pairingCode.length < 6 || isPairing}
@@ -588,7 +588,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
         </motion.div>
 
         {/* Quick Stats Grid - Mobile Responsive */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -678,8 +678,8 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
           </CardContent>
         </Card>
 
-        {/* Mobile Bottom Spacing */}
-        <div className="h-16 sm:h-20" />
+        {/* Mobile Bottom Safe Area */}
+        <div className="h-20 sm:h-16 pb-safe" />
       </div>
     </div>
   );
