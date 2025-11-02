@@ -205,7 +205,12 @@ app.use('/api/analytics', authenticateToken, analyticsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ status: 'OK', timestamp: new Date().toISOString(), version: '1.1.0-auth-fix' });
+});
+
+// Test endpoint to verify deployment
+app.get('/api/test/public', (req, res) => {
+  res.json({ message: 'Public endpoint working', timestamp: new Date().toISOString() });
 });
 
 // Error handling
