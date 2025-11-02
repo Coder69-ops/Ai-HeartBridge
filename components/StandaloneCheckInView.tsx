@@ -285,8 +285,7 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
                     Question {currentQuestion + 1} of {checkIn.questions.length}
                   </CardTitle>
                   <div className="text-sm">
-                    {/* Use a 0-6 scale to match backend scoring (per-item max = 6). -1 is used as unanswered sentinel */}
-                    {[0, 1, 2, 3, 4, 5, 6].map((value) => (
+                    {Math.round(((currentQuestion + 1) / checkIn.questions.length) * 100)}%
                   </div>
                 </div>
                 <div className="w-full bg-white/20 rounded-full h-2 mt-2">
@@ -303,13 +302,12 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
                     {checkIn.questions[currentQuestion]}
                   </h3>
-                          {value === 0 && 'Not at all'}
-                          {value === 1 && 'Rarely'}
-                          {value === 2 && 'Sometimes'}
-                          {value === 3 && 'Neutral'}
-                          {value === 4 && 'Often'}
-                          {value === 5 && 'Very Often'}
-                          {value === 6 && 'Extremely'}
+                  
+                  <div className="space-y-3">
+                    {/* Use a 0-6 scale to match backend scoring (per-item max = 6). -1 is used as unanswered sentinel */}
+                    {[0, 1, 2, 3, 4, 5, 6].map((value) => (
+                      <label
+                        key={value}
                         className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                           responses[currentQuestion] === value
                             ? 'border-emerald-500 bg-emerald-50'
@@ -325,11 +323,13 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
                           className="w-4 h-4 text-emerald-600"
                         />
                         <span className="text-gray-700 font-medium">
-                          {value === 1 && 'Strongly Disagree'}
-                          {value === 2 && 'Disagree'}
+                          {value === 0 && 'Not at all'}
+                          {value === 1 && 'Rarely'}
+                          {value === 2 && 'Sometimes'}
                           {value === 3 && 'Neutral'}
-                          {value === 4 && 'Agree'}
-                          {value === 5 && 'Strongly Agree'}
+                          {value === 4 && 'Often'}
+                          {value === 5 && 'Very Often'}
+                          {value === 6 && 'Extremely'}
                         </span>
                       </label>
                     ))}
