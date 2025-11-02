@@ -41,13 +41,47 @@ const MasterTrendsView: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const [trendsData, healthData, sessionsData] = await Promise.all([
-        getRelationshipTrends(timeframe),
-        getHealthScore(),
-        getJournalSessionHistory().catch(() => [])
+      // Import check-in service for fallback data
+      const { getCoupleCheckInHistory } = await import('../services/checkInService');
+      
+      const [trendsData, healthData, sessionsData, checkInData] = await Promise.all([
+        getRelationshipTrends(timeframe).catch(() => null),
+        getHealthScore().catch(() => null),
+        getJournalSessionHistory().catch(() => []),
+        getCoupleCheckInHistory().catch(() => ({ checkIns: [] }))
       ]);
       
-      setTrends(trendsData);
+      // If trends data is empty but we have check-ins, create fallback trends
+      let finalTrendsData = trendsData;
+      if ((!trendsData || !trendsData.csiScores || trendsData.csiScores.length === 0) && checkInData?.checkIns) {
+        const completedCheckIns = checkInData.checkIns.filter((checkIn: any) => 
+          checkIn.isCompleted && checkIn.averageScore !== undefined
+        );
+        
+        if (completedCheckIns.length > 0) {
+          finalTrendsData = {
+            timeframe,
+            csiScores: completedCheckIns.map((checkIn: any) => ({
+              type: checkIn.type,
+              averageScore: checkIn.averageScore,
+              partner1Score: checkIn.partner1Score || 0,
+              partner2Score: checkIn.partner2Score || 0,
+              createdAt: checkIn.createdAt
+            })),
+            journalEntries: [],
+            fourHorsemenStats: { criticism: 0, contempt: 0, defensiveness: 0, stonewalling: 0, total: 0 },
+            exerciseStats: {},
+            summary: {
+              totalJournals: sessionsData.length,
+              totalCheckIns: completedCheckIns.length,
+              totalExercises: 0,
+              latestCSI: completedCheckIns[completedCheckIns.length - 1]
+            }
+          };
+        }
+      }
+      
+      setTrends(finalTrendsData);
       setHealthScore(healthData);
       setJournalSessions(sessionsData);
     } catch (err) {
@@ -101,7 +135,15 @@ const MasterTrendsView: React.FC = () => {
     { name: 'Stonewalling', count: trends.fourHorsemenStats.stonewalling, color: '#8b5cf6' }
   ] : [];
 
-  const healthScoreValue = healthScore?.overallScore || 0;
+  // Fix health score property and add fallback calculation
+  let healthScoreValue = healthScore?.healthScore || 0;
+  
+  // If no health score from analytics, calculate from latest check-in
+  if (!healthScoreValue && trends?.csiScores && trends.csiScores.length > 0) {
+    const latestScore = trends.csiScores[trends.csiScores.length - 1];
+    const maxScore = latestScore.type === 'CSI-4' ? 24 : 96;
+    healthScoreValue = Math.round((latestScore.averageScore / maxScore) * 100);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-cyan-50 to-blue-50">
@@ -175,9 +217,9 @@ const MasterTrendsView: React.FC = () => {
               </div>
 
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {healthScore && healthScore.categoryScores && Object.entries(healthScore.categoryScores).map(([key, value], index) => (
+                {healthScore && healthScore.scoreComponents && Object.entries(healthScore.scoreComponents).map(([key, value]) => (
                   <div key={key} className="text-center">
-                    <div className="text-2xl font-bold text-gray-800">{value}</div>
+                    <div className="text-2xl font-bold text-gray-800">{value as number}</div>
                     <div className="text-xs text-gray-600 capitalize">{key}</div>
                   </div>
                 ))}
@@ -314,13 +356,13 @@ const MasterTrendsView: React.FC = () => {
                   </div>
                 )}
 
-                {trends && trends.checkInStreak && trends.checkInStreak > 7 && (
+                {trends && trends.summary && trends.summary.totalCheckIns > 5 && (
                   <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl flex items-start gap-3">
                     <TrendingUp className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium text-purple-900">Amazing Streak!</p>
+                      <p className="font-medium text-purple-900">Great Progress!</p>
                       <p className="text-sm text-purple-700">
-                        You've maintained a {trends.checkInStreak}-day check-in streak. Consistency is key!
+                        You've completed {trends.summary.totalCheckIns} check-ins. Keep up the consistency!
                       </p>
                     </div>
                   </div>

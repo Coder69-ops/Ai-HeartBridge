@@ -90,7 +90,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       }
       
       // Load all dashboard data in parallel
-      const [healthScore, journalSessions, checkInResponse, exerciseResponse, trends] = await Promise.all([
+      const [healthScoreData, journalSessions, checkInResponse, exerciseResponse, trends] = await Promise.all([
         getHealthScore().catch(() => null),
         getJournalSessionHistory().catch(() => []),
         getCoupleCheckInHistory().catch(() => ({ checkIns: [] })),
@@ -100,6 +100,20 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       
       const checkInHistory = checkInResponse?.checkIns || [];
       const exerciseProgress = { progress: exerciseResponse?.progress || [] };
+
+      // Calculate basic health score from check-in data if analytics service fails
+      let calculatedHealthScore = 0;
+      if (!healthScoreData && checkInHistory.length > 0) {
+        const completedCheckIns = checkInHistory.filter((checkIn: any) => checkIn.isCompleted && checkIn.averageScore);
+        if (completedCheckIns.length > 0) {
+          const latestCheckIn = completedCheckIns[completedCheckIns.length - 1];
+          // Convert CSI score to 0-100 scale
+          if (latestCheckIn.averageScore !== undefined) {
+            const maxScore = latestCheckIn.type === 'CSI-4' ? 24 : 96;
+            calculatedHealthScore = Math.round((latestCheckIn.averageScore / maxScore) * 100);
+          }
+        }
+      }
 
       // Calculate days active (last 30 days)
       const thirtyDaysAgo = new Date();
@@ -132,7 +146,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       });
 
       setDashboardData({
-        healthScore: healthScore?.healthScore || 0,
+        healthScore: healthScoreData?.healthScore || calculatedHealthScore || 0,
         checkInCount: (checkIns || []).length,
         journalSessions: (journalSessions || []).length,
         exerciseCount: (exercises || []).length,
