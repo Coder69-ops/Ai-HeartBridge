@@ -122,7 +122,8 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
       // Create check-in and get questions
       const newCheckIn = await createCheckIn(type);
       setCheckIn(newCheckIn);
-      setResponses(new Array(newCheckIn.questions.length).fill(0));
+        // Use -1 as the sentinel for "unanswered" so 0 is a valid response on the 0-6 scale
+        setResponses(new Array(newCheckIn.questions.length).fill(-1));
       setCurrentQuestion(0);
       setCurrentStep('questions');
     } catch (error: any) {
@@ -156,7 +157,8 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
     if (!checkIn) return;
 
     // Check if all questions are answered
-    if (responses.some((r: number) => r === 0)) {
+    // Check if all questions are answered (use -1 sentinel for unanswered)
+    if (responses.some((r: number) => r === -1)) {
       setError('Please answer all questions before submitting.');
       return;
     }
@@ -283,7 +285,8 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
                     Question {currentQuestion + 1} of {checkIn.questions.length}
                   </CardTitle>
                   <div className="text-sm">
-                    {Math.round(((currentQuestion + 1) / checkIn.questions.length) * 100)}%
+                    {/* Use a 0-6 scale to match backend scoring (per-item max = 6). -1 is used as unanswered sentinel */}
+                    {[0, 1, 2, 3, 4, 5, 6].map((value) => (
                   </div>
                 </div>
                 <div className="w-full bg-white/20 rounded-full h-2 mt-2">
@@ -300,11 +303,13 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
                     {checkIn.questions[currentQuestion]}
                   </h3>
-                  
-                  <div className="space-y-3">
-                    {[1, 2, 3, 4, 5].map((value) => (
-                      <label
-                        key={value}
+                          {value === 0 && 'Not at all'}
+                          {value === 1 && 'Rarely'}
+                          {value === 2 && 'Sometimes'}
+                          {value === 3 && 'Neutral'}
+                          {value === 4 && 'Often'}
+                          {value === 5 && 'Very Often'}
+                          {value === 6 && 'Extremely'}
                         className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                           responses[currentQuestion] === value
                             ? 'border-emerald-500 bg-emerald-50'
@@ -353,7 +358,7 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
                   ) : (
                     <Button
                       onClick={handleNextQuestion}
-                      disabled={responses[currentQuestion] === 0}
+                        disabled={responses[currentQuestion] === -1}
                       className="w-full sm:w-auto"
                     >
                       Next
