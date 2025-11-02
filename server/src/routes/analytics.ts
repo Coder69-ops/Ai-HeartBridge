@@ -64,7 +64,7 @@ router.get('/trends', async (req: AuthRequest, res) => {
         partner2Score: checkIn.partner2Score || 0,
         createdAt: checkIn.createdAt
       };
-    }).filter(score => score.averageScore > 0); // Only include scores that have actual data
+    }).filter(score => score.averageScore && score.averageScore > 0); // Only include scores that have actual data
 
     // Get journaling frequency
     const journalEntries = await JournalSession.find({
