@@ -19,14 +19,20 @@ import {
   Award,
   Sparkles
 } from 'lucide-react';
-import { createCheckIn, submitCheckInResponses, CheckInWithQuestions } from '../services/checkInService';
+import { 
+  createCheckIn, 
+  submitCheckInResponses, 
+  getCheckInTypes,
+  CheckInWithQuestions, 
+  CheckInType as ServiceCheckInType 
+} from '../services/checkInService';
 
 interface StandaloneCheckInViewProps {
   coupleId: string;
   onNavigate: (view: string) => void;
 }
 
-type CheckInType = 'CSI-4' | 'CSI-16' | 'weekly' | 'monthly';
+type CheckInTypeId = 'CSI-4' | 'CSI-16' | 'weekly' | 'monthly';
 type CheckInStep = 'selection' | 'questions' | 'results';
 
 const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({ 
@@ -34,7 +40,7 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
   onNavigate 
 }) => {
   const [currentStep, setCurrentStep] = useState<CheckInStep>('selection');
-  const [selectedType, setSelectedType] = useState<CheckInType | null>(null);
+  const [selectedType, setSelectedType] = useState<CheckInTypeId | null>(null);
   const [checkIn, setCheckIn] = useState<CheckInWithQuestions | null>(null);
   const [responses, setResponses] = useState<number[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -42,11 +48,32 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [score, setScore] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
+  const [availableTypes, setAvailableTypes] = useState<ServiceCheckInType[]>([]);
+  const [loadingTypes, setLoadingTypes] = useState(true);
+
+  // Load available check-in types on component mount
+  useEffect(() => {
+    const loadCheckInTypes = async () => {
+      try {
+        setLoadingTypes(true);
+        const types = await getCheckInTypes();
+        setAvailableTypes(types);
+      } catch (err) {
+        console.error('Error loading check-in types:', err);
+        // Fallback to default types if API fails
+        setAvailableTypes([]);
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+
+    loadCheckInTypes();
+  }, []);
 
   const checkInTypes = [
     {
-      id: 'CSI-4' as CheckInType,
-      name: 'Quick Check-in',
+      id: 'CSI-4' as CheckInTypeId,
+      name: 'Quick Assessment',
       description: '4 questions, 2 minutes',
       icon: Zap,
       color: 'from-emerald-500 to-teal-500',
@@ -55,85 +82,94 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
       time: '2 min'
     },
     {
-      id: 'CSI-16' as CheckInType,
-      name: 'Deep Assessment',
-      description: '16 questions, 10 minutes',
+      id: 'CSI-16' as CheckInTypeId,
+      name: 'Comprehensive Assessment',
+      description: '16 questions, 8 minutes',
       icon: Target,
       color: 'from-blue-500 to-indigo-500',
       bgColor: 'from-blue-50 to-indigo-50',
       questions: 16,
-      time: '10 min'
-    },
-    {
-      id: 'weekly' as CheckInType,
-      name: 'Weekly Review',
-      description: 'Weekly relationship check',
-      icon: Calendar,
-      color: 'from-purple-500 to-pink-500',
-      bgColor: 'from-purple-50 to-pink-50',
-      questions: 8,
-      time: '5 min'
-    },
-    {
-      id: 'monthly' as CheckInType,
-      name: 'Monthly Review',
-      description: 'Comprehensive monthly assessment',
-      icon: BarChart3,
-      color: 'from-orange-500 to-amber-500',
-      bgColor: 'from-orange-50 to-amber-50',
-      questions: 12,
       time: '8 min'
     }
   ];
 
-  const handleTypeSelection = async (type: CheckInType) => {
+  // Get enhanced type info from API or fallback to default
+  const getTypeInfo = (typeId: CheckInTypeId) => {
+    const apiType = availableTypes.find(t => t.id === typeId);
+    const defaultType = checkInTypes.find(t => t.id === typeId);
+    
+    return {
+      ...defaultType,
+      ...(apiType && {
+        name: apiType.name,
+        description: `${apiType.questionCount} questions, ${apiType.estimatedTime}`,
+        questions: apiType.questionCount,
+        scoring: apiType.scoring
+      })
+    };
+  };
+
+  // Only show supported types for now
+  const supportedTypes = checkInTypes.filter(type => ['CSI-4', 'CSI-16'].includes(type.id));
+
+  const handleTypeSelection = async (type: CheckInTypeId) => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      setError(null);
       setSelectedType(type);
       
+      // Create check-in and get questions
       const newCheckIn = await createCheckIn(type);
       setCheckIn(newCheckIn);
       setResponses(new Array(newCheckIn.questions.length).fill(0));
+      setCurrentQuestion(0);
       setCurrentStep('questions');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create check-in');
+    } catch (error: any) {
+      setError(error.message || 'Failed to start check-in. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResponseChange = (questionIndex: number, response: number) => {
-    const newResponses = [...responses];
-    newResponses[questionIndex] = response;
-    setResponses(newResponses);
+  const handleNextQuestion = () => {
+    if (currentQuestion < (checkIn?.questions.length || 0) - 1) {
+      setCurrentQuestion(current => current + 1);
+    } else {
+      handleSubmitCheckIn();
+    }
   };
 
-  const handleNextQuestion = () => {
-    if (currentQuestion < checkIn!.questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-    }
+  const handleResponseChange = (questionIndex: number, value: number) => {
+    const newResponses = [...responses];
+    newResponses[questionIndex] = value;
+    setResponses(newResponses);
   };
 
   const handlePreviousQuestion = () => {
     if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
+      setCurrentQuestion(current => current - 1);
     }
   };
 
-  const handleSubmit = async () => {
-    if (!checkIn || responses.some(r => r === 0)) {
-      setError('Please answer all questions');
+  const handleSubmitCheckIn = async () => {
+    if (!checkIn) return;
+
+    // Check if all questions are answered
+    if (responses.some((r: number) => r === 0)) {
+      setError('Please answer all questions before submitting.');
       return;
     }
 
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
       const result = await submitCheckInResponses(checkIn.id, responses, notes);
       setScore(result.score);
       setCurrentStep('results');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit check-in');
+    } catch (error: any) {
+      setError(error.message || 'Failed to submit check-in. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -308,7 +344,7 @@ const StandaloneCheckInView: React.FC<StandaloneCheckInViewProps> = ({
                   
                   {currentQuestion === checkIn.questions.length - 1 ? (
                     <Button
-                      onClick={handleSubmit}
+                      onClick={handleSubmitCheckIn}
                       className="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />

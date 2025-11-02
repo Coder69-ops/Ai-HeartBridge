@@ -15,7 +15,7 @@ const CSI_4_QUESTIONS = [
   "My relationship with my partner makes me happy."
 ];
 
-// CSI-16 Questions (Couple Satisfaction Index - Extended Form)
+// CSI-16 Questions (Couple Satisfaction Index - Extended Form)  
 const CSI_16_QUESTIONS = [
   "Please indicate the degree of happiness, all things considered, of your relationship.",
   "In general, how often do you think that things between you and your partner are going well?",
@@ -45,7 +45,72 @@ const createCheckInSchema = z.object({
   privateThoughts: z.string().optional(),
 });
 
-// Create a new check-in
+const createSimpleCheckInSchema = z.object({
+  type: z.enum(['CSI-4', 'CSI-16', 'weekly', 'monthly']),
+});
+
+// Create a new check-in (simplified for assessment)
+router.post('/create', async (req: AuthRequest, res: Response) => {
+  try {
+    const { type } = createSimpleCheckInSchema.parse(req.body);
+    const user = req.user!;
+    
+    if (!user.coupleId) {
+      return res.status(400).json({ 
+        error: 'You must be paired with a partner to create a check-in assessment' 
+      });
+    }
+
+    const couple = await Couple.findById(user.coupleId);
+    if (!couple) {
+      return res.status(404).json({ error: 'Couple relationship not found' });
+    }
+
+    // Create new check-in document
+    const checkIn = new CheckIn({
+      coupleId: user.coupleId,
+      partner1Id: couple.partner1Id,
+      partner2Id: couple.partner2Id,
+      type,
+      partner1Responses: [],
+      partner2Responses: [],
+      isCompleted: false,
+      completedBy: []
+    });
+
+    await checkIn.save();
+
+    // Get appropriate questions based on type
+    const questions = type === 'CSI-4' ? CSI_4_QUESTIONS : CSI_16_QUESTIONS;
+
+    res.status(201).json({ 
+      message: 'Check-in assessment created successfully',
+      checkIn: {
+        id: checkIn._id,
+        type: checkIn.type,
+        questions,
+        partner1Responses: checkIn.partner1Responses,
+        partner2Responses: checkIn.partner2Responses,
+        isCompleted: checkIn.isCompleted,
+        completedBy: checkIn.completedBy,
+        createdAt: checkIn.createdAt,
+        updatedAt: checkIn.updatedAt
+      }
+    });
+
+  } catch (error) {
+    console.error('Create check-in error:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        error: 'Invalid check-in type', 
+        details: error.issues 
+      });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Create a new check-in (legacy/complex format)
 router.post('/', async (req: AuthRequest, res: Response) => {
   try {
     const checkInData = createCheckInSchema.parse(req.body);
@@ -221,6 +286,98 @@ router.get('/couple/history', async (req: AuthRequest, res) => {
     });
 
   } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get available check-in types and their details
+router.get('/types', async (req: AuthRequest, res: Response) => {
+  try {
+    const checkInTypes = [
+      {
+        id: 'CSI-4',
+        name: 'Quick Assessment',
+        description: 'A brief 4-question relationship satisfaction assessment',
+        questionCount: 4,
+        estimatedTime: '2 minutes',
+        questions: CSI_4_QUESTIONS,
+        scoring: {
+          min: 0,
+          max: 24,
+          interpretation: {
+            high: { min: 20, label: 'High Satisfaction', description: 'Your relationship shows strong satisfaction indicators' },
+            moderate: { min: 12, max: 19, label: 'Moderate Satisfaction', description: 'Your relationship has good foundations with room for growth' },
+            low: { max: 11, label: 'Areas for Improvement', description: 'Your relationship could benefit from focused attention and support' }
+          }
+        }
+      },
+      {
+        id: 'CSI-16',
+        name: 'Comprehensive Assessment',
+        description: 'A thorough 16-question relationship satisfaction assessment',
+        questionCount: 16,
+        estimatedTime: '8 minutes',
+        questions: CSI_16_QUESTIONS,
+        scoring: {
+          min: 0,
+          max: 96,
+          interpretation: {
+            high: { min: 75, label: 'High Satisfaction', description: 'Your relationship demonstrates excellent satisfaction across multiple dimensions' },
+            moderate: { min: 45, max: 74, label: 'Moderate Satisfaction', description: 'Your relationship shows positive indicators with opportunities for enhancement' },
+            low: { max: 44, label: 'Growth Opportunities', description: 'Your relationship would benefit from dedicated focus and professional guidance' }
+          }
+        }
+      }
+    ];
+
+    res.json({
+      message: 'Available check-in assessment types',
+      types: checkInTypes
+    });
+
+  } catch (error) {
+    console.error('Get check-in types error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get check-in statistics for couple
+router.get('/stats', async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user!;
+    
+    if (!user.coupleId) {
+      return res.status(400).json({ error: 'Must be paired to view statistics' });
+    }
+
+    const stats = await CheckIn.aggregate([
+      { $match: { coupleId: user.coupleId } },
+      {
+        $group: {
+          _id: '$type',
+          count: { $sum: 1 },
+          completed: { $sum: { $cond: ['$isCompleted', 1, 0] } },
+          averageScore: { $avg: '$averageScore' },
+          lastCompleted: { $max: { $cond: ['$isCompleted', '$updatedAt', null] } }
+        }
+      }
+    ]);
+
+    const totalCheckIns = await CheckIn.countDocuments({ coupleId: user.coupleId });
+    const completedCheckIns = await CheckIn.countDocuments({ 
+      coupleId: user.coupleId, 
+      isCompleted: true 
+    });
+
+    res.json({
+      totalCheckIns,
+      completedCheckIns,
+      completionRate: totalCheckIns > 0 ? (completedCheckIns / totalCheckIns) * 100 : 0,
+      byType: stats
+    });
+
+  } catch (error) {
+    console.error('Get check-in stats error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
