@@ -147,6 +147,7 @@ export enum View {
   CheckIn = 'CHECK_IN',
   Exercises = 'EXERCISES',
   ExerciseDetail = 'EXERCISE_DETAIL',
+  PersonalizedBridges = 'PERSONALIZED_BRIDGES',
   Trends = 'TRENDS',
   Profile = 'PROFILE',
   Chat = 'CHAT',

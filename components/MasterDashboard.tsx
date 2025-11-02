@@ -344,6 +344,13 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       action: () => onNavigate('exercises'),
     },
     {
+      icon: <Sparkles className="w-6 h-6" />,
+      title: 'AI Bridges',
+      description: 'Personalized recommendations',
+      color: 'from-purple-500 to-violet-500',
+      action: () => onNavigate('personalized-bridges'),
+    },
+    {
       icon: <BarChart3 className="w-6 h-6" />,
       title: 'Insights',
       description: 'View your analytics',
@@ -655,6 +662,48 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
             ))}
           </div>
         </div>
+
+        {/* AI Recommendations Preview */}
+        {partner && (
+          <Card className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-violet-500/5" />
+            <CardHeader className="p-4 sm:p-6 relative">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                AI Bridge Recommendations
+                <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse ml-2" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0 relative">
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600">
+                  Get personalized exercise recommendations based on your relationship data, health scores, and activity patterns.
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                    <span className="flex items-center">
+                      <Activity className="w-3 h-3 mr-1" />
+                      AI-Powered Analysis
+                    </span>
+                    <span className="flex items-center">
+                      <Target className="w-3 h-3 mr-1" />
+                      Personalized for You
+                    </span>
+                  </div>
+                  <Button 
+                    onClick={() => onNavigate('personalized-bridges')}
+                    variant="default"
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600"
+                  >
+                    View Recommendations
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Activity - Mobile Friendly */}
         <Card>
