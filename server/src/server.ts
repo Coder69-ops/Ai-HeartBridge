@@ -197,7 +197,9 @@ app.use('/api/journal-sessions', (req, res, next) => {
 app.use('/api/chat-sessions', authenticateToken, chatSessionRoutes);
 app.use('/api/partner-chat', authenticateToken, partnerChatRoutes);
 app.use('/api/exercises', authenticateToken, exerciseRoutes); // Protected endpoint - auth required for exercises
-app.use('/api/checkins', authenticateToken, checkInRoutes);
+// Public check-in routes (no auth required)
+app.use('/api/checkIns', checkInRoutes);
+// Protected check-in routes will be handled within the router
 app.use('/api/analytics', authenticateToken, analyticsRoutes);
 
 // Health check

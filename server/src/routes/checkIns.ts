@@ -1,7 +1,7 @@
 import express, { Response } from 'express';
 import { z } from 'zod';
 import { body, validationResult } from 'express-validator';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest, authenticateToken } from '../middleware/auth';
 import { CheckIn } from '../models/CheckIn';
 import { Couple } from '../models/Couple';
 
@@ -50,7 +50,7 @@ const createSimpleCheckInSchema = z.object({
 });
 
 // Create a new check-in (simplified for assessment)
-router.post('/create', async (req: AuthRequest, res: Response) => {
+router.post('/create', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const { type } = createSimpleCheckInSchema.parse(req.body);
     const user = req.user!;
@@ -111,7 +111,7 @@ router.post('/create', async (req: AuthRequest, res: Response) => {
 });
 
 // Create a new check-in (legacy/complex format)
-router.post('/', async (req: AuthRequest, res: Response) => {
+router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const checkInData = createCheckInSchema.parse(req.body);
     const user = req.user!;
@@ -142,7 +142,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 });
 
 // Submit check-in responses
-router.put('/:checkInId/submit', [
+router.put('/:checkInId/submit', authenticateToken, [
   body('responses').isArray().withMessage('Responses must be an array'),
   body('responses.*').isInt({ min: 0, max: 6 }).withMessage('Each response must be between 0 and 6'),
   body('notes').optional().isLength({ max: 1000 }).withMessage('Notes must be under 1000 characters')
@@ -220,7 +220,7 @@ router.put('/:checkInId/submit', [
 });
 
 // Get check-in details
-router.get('/:checkInId', async (req: AuthRequest, res) => {
+router.get('/:checkInId', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const { checkInId } = req.params;
     const user = req.user!;
@@ -249,7 +249,7 @@ router.get('/:checkInId', async (req: AuthRequest, res) => {
 });
 
 // Get couple's check-in history
-router.get('/couple/history', async (req: AuthRequest, res) => {
+router.get('/couple/history', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const user = req.user!;
     
@@ -342,7 +342,7 @@ router.get('/types', async (req, res: Response) => {
 });
 
 // Get check-in statistics for couple
-router.get('/stats', async (req: AuthRequest, res: Response) => {
+router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const user = req.user!;
     
