@@ -1,13 +1,16 @@
-# 🎓 CSE FEST Presentation Checklist - AI HeartBridge
+# AI HeartBridge - CSE Fest Presentation Checklist
+## Hardware, Software & Backup Plan
 
-## 📋 **Pre-Presentation Setup (Day Before)**
+---
 
-### **✅ Technical Preparation**
-- [ ] **Test live demo** - Ensure all features work smoothly
-- [ ] **Backup plans ready** - Video demos, screenshots, offline materials
-- [ ] **Internet backup** - Mobile hotspot, different networks
-- [ ] **Browser preparation** - Clear cache, disable extensions
-- [ ] **Account setup** - Demo accounts ready with sample data
+## 📋 **PRE-EVENT CHECKLIST** (Complete 24 hours before)
+
+### **Hardware Requirements**
+- [ ] **Primary Laptop** - Fully charged + power adapter
+- [ ] **HDMI Adapter/Cable** - For projector connection (USB-C to HDMI if needed)
+- [ ] **USB Drive** - Backup files, slides, screenshots
+- [ ] **Mobile Phone** - Backup demo video, hotspot capability
+- [ ] **Power Bank** - Emergency charging for devices
 
 ### **✅ Demo Environment**
 - [ ] **Fresh browser session** - Clean state for demo
