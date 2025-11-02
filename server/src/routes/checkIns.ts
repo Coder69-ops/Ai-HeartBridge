@@ -290,8 +290,8 @@ router.get('/couple/history', async (req: AuthRequest, res) => {
   }
 });
 
-// Get available check-in types and their details
-router.get('/types', async (req: AuthRequest, res: Response) => {
+// Get available check-in types and their details (public endpoint)
+router.get('/types', async (req, res: Response) => {
   try {
     const checkInTypes = [
       {

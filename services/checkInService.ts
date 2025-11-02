@@ -53,7 +53,7 @@ export interface CheckInStats {
 // Get available check-in types
 export const getCheckInTypes = async (): Promise<CheckInType[]> => {
   try {
-    const response = await api.get('/checkins/types');
+    const response = await api.get('/checkIns/types');
     return response.data.types;
   } catch (error: any) {
     console.error('Failed to fetch check-in types:', error);
@@ -64,7 +64,7 @@ export const getCheckInTypes = async (): Promise<CheckInType[]> => {
 // Create new check-in
 export const createCheckIn = async (type: 'CSI-4' | 'CSI-16' | 'weekly' | 'monthly'): Promise<CheckInWithQuestions> => {
   try {
-    const response = await api.post('/checkins/create', { type });
+    const response = await api.post('/checkIns/create', { type });
     return response.data.checkIn;
   } catch (error: any) {
     console.error('Failed to create check-in:', error);
@@ -87,7 +87,7 @@ export const submitCheckInResponses = async (
   notes?: string
 ): Promise<{ score: number; isCompleted: boolean }> => {
   try {
-    const response = await api.put(`/checkins/${checkInId}/submit`, {
+    const response = await api.put(`/checkIns/${checkInId}/submit`, {
       responses,
       notes
     });
@@ -118,7 +118,7 @@ export const submitCheckInResponses = async (
 // Get check-in details
 export const getCheckIn = async (checkInId: string): Promise<CheckInWithQuestions> => {
   try {
-    const response = await api.get(`/checkins/${checkInId}`);
+    const response = await api.get(`/checkIns/${checkInId}`);
     return { ...response.data.checkIn, questions: response.data.questions };
   } catch (error: any) {
     throw new Error(error.response?.data?.error || 'Failed to fetch check-in');
@@ -143,7 +143,7 @@ export const getCoupleCheckInHistory = async (
     const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
     if (type) params.append('type', type);
 
-    const response = await api.get(`/checkins/couple/history?${params}`);
+    const response = await api.get(`/checkIns/couple/history?${params}`);
     return response.data;
   } catch (error: any) {
     console.error('Failed to fetch check-in history:', error);
@@ -154,7 +154,7 @@ export const getCoupleCheckInHistory = async (
 // Get check-in statistics
 export const getCheckInStats = async (): Promise<CheckInStats> => {
   try {
-    const response = await api.get('/checkins/stats');
+    const response = await api.get('/checkIns/stats');
     return response.data;
   } catch (error: any) {
     console.error('Failed to fetch check-in stats:', error);
