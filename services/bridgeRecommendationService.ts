@@ -95,8 +95,9 @@ class BridgeRecommendationEngine {
       recommendations.push(...this.getFourHorsemenRecommendations());
     }
 
-    // Remove duplicates and sort by priority and match score
-    const uniqueRecommendations = this.deduplicateRecommendations(recommendations);
+    // Filter out null recommendations and remove duplicates
+    const validRecommendations = recommendations.filter(rec => rec !== null) as BridgeRecommendation[];
+    const uniqueRecommendations = this.deduplicateRecommendations(validRecommendations);
     const sortedRecommendations = uniqueRecommendations
       .sort((a, b) => {
         const priorityOrder = { high: 3, medium: 2, low: 1 };
@@ -122,105 +123,121 @@ class BridgeRecommendationEngine {
 
     // Critical health score - immediate intervention needed
     if (healthScore < 40) {
-      recommendations.push(
-        this.createRecommendation('e2', 'high', 'urgent', 95, [
-          'Your relationship health score is critically low',
-          'Gentle communication is essential for immediate improvement',
-        ], [
-          'Reduces defensiveness and criticism',
-          'Creates safer space for difficult conversations',
-          'Immediate improvement in communication quality',
-        ])
-      );
+      const gentleStartup = this.findExerciseByTitle('Gentle Start') || this.findExerciseByCategory('Conflict');
+      if (gentleStartup) {
+        const recommendation = this.createRecommendation(gentleStartup.id, 'high', 'urgent', 95, [
+            'Your relationship health score is critically low',
+            'Gentle communication is essential for immediate improvement',
+          ], [
+            'Reduces defensiveness and criticism',
+            'Creates safer space for difficult conversations',
+            'Immediate improvement in communication quality',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
 
-      recommendations.push(
-        this.createRecommendation('e6', 'high', 'urgent', 90, [
-          'Frequent conflicts may be escalating destructively',
-          'Learning to pause prevents relationship damage',
-        ], [
-          'Prevents destructive argument patterns',
-          'Allows emotions to regulate before discussion',
-          'Protects relationship during high stress',
-        ])
-      );
+      const pauseTechnique = this.findExerciseByTitle('Pause') || this.findExerciseByCategory('Conflict');
+      if (pauseTechnique) {
+        const recommendation = this.createRecommendation(pauseTechnique.id, 'high', 'urgent', 90, [
+            'Frequent conflicts may be escalating destructively',
+            'Learning to pause prevents relationship damage',
+          ], [
+            'Prevents destructive argument patterns',
+            'Allows emotions to regulate before discussion',
+            'Protects relationship during high stress',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
     // Low satisfaction component
     if (scoreComponents.satisfaction < 50) {
-      recommendations.push(
-        this.createRecommendation('e1', 'high', 'improvement', 85, [
-          'Satisfaction scores indicate need for more positive interactions',
-          'Daily appreciation can quickly improve relationship sentiment',
-        ], [
-          'Builds positive sentiment override',
-          'Increases daily connection moments',
-          'Counters negativity bias in relationships',
-        ])
-      );
+      const appreciationExercise = this.findExerciseByTitle('Appreciation') || this.findExerciseByCategory('Connection');
+      if (appreciationExercise) {
+        const recommendation = this.createRecommendation(appreciationExercise.id, 'high', 'improvement', 85, [
+            'Satisfaction scores indicate need for more positive interactions',
+            'Daily appreciation can quickly improve relationship sentiment',
+          ], [
+            'Builds positive sentiment override',
+            'Increases daily connection moments',
+            'Counters negativity bias in relationships',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
 
-      recommendations.push(
-        this.createRecommendation('e25', 'medium', 'improvement', 75, [
-          'Creating more positive shared experiences needed',
-          'Celebrating together builds relationship joy',
-        ], [
-          'Increases positive shared memories',
-          'Builds culture of appreciation',
-          'Enhances relationship satisfaction',
-        ])
-      );
+      const celebrationExercise = this.findExerciseByTitle('Celebration') || this.findExerciseByCategory('Fun');
+      if (celebrationExercise) {
+        const recommendation = this.createRecommendation(celebrationExercise.id, 'medium', 'improvement', 75, [
+            'Creating more positive shared experiences needed',
+            'Celebrating together builds relationship joy',
+          ], [
+            'Increases positive shared memories',
+            'Builds culture of appreciation',
+            'Enhances relationship satisfaction',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
     // Low engagement component
     if (scoreComponents.engagement < 50) {
-      recommendations.push(
-        this.createRecommendation('e4', 'high', 'improvement', 80, [
-          'Low engagement suggests disconnection from partner\'s inner world',
-          'Rebuilding love maps essential for intimacy',
-        ], [
-          'Deepens emotional intimacy',
-          'Increases understanding of partner',
-          'Builds foundation for stronger connection',
-        ])
-      );
+      const loveMapExercise = this.findExerciseByTitle('Love Map') || this.findExerciseByCategory('Intimacy');
+      if (loveMapExercise) {
+        const recommendation = this.createRecommendation(loveMapExercise.id, 'high', 'improvement', 80, [
+            'Low engagement suggests disconnection from partner\'s inner world',
+            'Rebuilding love maps essential for intimacy',
+          ], [
+            'Deepens emotional intimacy',
+            'Increases understanding of partner',
+            'Builds foundation for stronger connection',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
 
-      recommendations.push(
-        this.createRecommendation('e10', 'medium', 'growth', 70, [
-          'Need for more shared novel experiences',
-          'Adventure planning increases engagement and excitement',
-        ], [
-          'Creates new shared memories',
-          'Increases relationship excitement',
-          'Strengthens partnership bond',
-        ])
-      );
+      const adventureExercise = this.findExerciseByTitle('Adventure') || this.findExerciseByCategory('Fun');
+      if (adventureExercise) {
+        const recommendation = this.createRecommendation(adventureExercise.id, 'medium', 'growth', 70, [
+            'Need for more shared novel experiences',
+            'Adventure planning increases engagement and excitement',
+          ], [
+            'Creates new shared memories',
+            'Increases relationship excitement',
+            'Strengthens partnership bond',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
     // Low communication component
     if (scoreComponents.communication < 50) {
-      recommendations.push(
-        this.createRecommendation('e5', 'high', 'improvement', 85, [
-          'Communication scores indicate need for daily connection',
-          'Structured daily sharing improves communication patterns',
-        ], [
-          'Establishes daily communication ritual',
-          'Improves listening and sharing skills',
-          'Prevents issues from building up',
-        ])
-      );
+      const dailySharingExercise = this.findExerciseByTitle('Daily Sharing') || this.findExerciseByCategory('Communication');
+      if (dailySharingExercise) {
+        const recommendation = this.createRecommendation(dailySharingExercise.id, 'high', 'improvement', 85, [
+            'Communication scores indicate need for daily connection',
+            'Structured daily sharing improves communication patterns',
+          ], [
+            'Establishes daily communication ritual',
+            'Improves listening and sharing skills',
+            'Prevents issues from building up',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
 
-      recommendations.push(
-        this.createRecommendation('e9', 'medium', 'improvement', 75, [
-          'Emotional awareness and sharing needs development',
-          'Regular emotion check-ins build intimacy',
-        ], [
-          'Increases emotional intelligence',
-          'Builds empathy and understanding',
-          'Prevents emotional disconnection',
-        ])
-      );
+      const emotionCheckExercise = this.findExerciseByTitle('Emotion Check') || this.findExerciseByCategory('Communication');
+      if (emotionCheckExercise) {
+        const recommendation = this.createRecommendation(emotionCheckExercise.id, 'medium', 'improvement', 75, [
+            'Emotional awareness and sharing needs development',
+            'Regular emotion check-ins build intimacy',
+          ], [
+            'Increases emotional intelligence',
+            'Builds empathy and understanding',
+            'Prevents emotional disconnection',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
-    return recommendations;
+    return recommendations.filter(rec => rec !== null) as BridgeRecommendation[];
   }
 
   private getTrendBasedRecommendations(): BridgeRecommendation[] {
@@ -234,53 +251,59 @@ class BridgeRecommendationEngine {
       const previous = this.trends.csiScores[1];
       
       if (recent.averageScore < previous.averageScore) {
-        recommendations.push(
-          this.createRecommendation('e3', 'high', 'urgent', 88, [
-            'CSI scores showing declining trend',
-            'Weekly relationship meetings can address issues early',
-          ], [
-            'Provides structured problem-solving',
-            'Prevents issues from escalating',
-            'Builds collaborative partnership',
-          ])
-        );
+        const weeklyMeetingExercise = this.findExerciseByTitle('Weekly Meeting') || this.findExerciseByCategory('Communication');
+        if (weeklyMeetingExercise) {
+          const recommendation = this.createRecommendation(weeklyMeetingExercise.id, 'high', 'urgent', 88, [
+              'CSI scores showing declining trend',
+              'Weekly relationship meetings can address issues early',
+            ], [
+              'Provides structured problem-solving',
+              'Prevents issues from escalating',
+              'Builds collaborative partnership',
+            ]);
+          if (recommendation) recommendations.push(recommendation);
+        }
       }
     }
 
     // Analyze exercise engagement patterns
     const exerciseStats = this.trends.exerciseStats;
     if (Object.keys(exerciseStats).length === 0) {
-      recommendations.push(
-        this.createRecommendation('e21', 'medium', 'growth', 80, [
-          'No recent exercise engagement detected',
-          'Starting with love languages provides foundation',
-        ], [
-          'Establishes exercise routine',
-          'Improves how love is expressed and received',
-          'Creates positive relationship momentum',
-        ])
-      );
+      const loveLanguageExercise = this.findExerciseByTitle('Love Languages') || this.findExerciseByCategory('Connection');
+      if (loveLanguageExercise) {
+        const recommendation = this.createRecommendation(loveLanguageExercise.id, 'medium', 'growth', 80, [
+            'No recent exercise engagement detected',
+            'Starting with love languages provides foundation',
+          ], [
+            'Establishes exercise routine',
+            'Improves how love is expressed and received',
+            'Creates positive relationship momentum',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     } else {
       // Find categories with low ratings
       Object.entries(exerciseStats).forEach(([category, stats]) => {
         if (stats.averageRating < 3) {
           if (category === 'Conflict') {
-            recommendations.push(
-              this.createRecommendation('e11', 'high', 'improvement', 85, [
-                'Conflict resolution exercises showing low satisfaction',
-                'Learning repair attempts can improve conflict outcomes',
-              ], [
-                'Reduces conflict escalation',
-                'Improves relationship repair skills',
-                'Builds conflict resilience',
-              ])
-            );
+            const repairExercise = this.findExerciseByTitle('Repair') || this.findExerciseByCategory('Conflict');
+            if (repairExercise) {
+              const recommendation = this.createRecommendation(repairExercise.id, 'high', 'improvement', 85, [
+                  'Conflict resolution exercises showing low satisfaction',
+                  'Learning repair attempts can improve conflict outcomes',
+                ], [
+                  'Reduces conflict escalation',
+                  'Improves relationship repair skills',
+                  'Builds conflict resilience',
+                ]);
+              if (recommendation) recommendations.push(recommendation);
+            }
           }
         }
       });
     }
 
-    return recommendations;
+    return recommendations.filter(rec => rec !== null) as BridgeRecommendation[];
   }
 
   private getFourHorsemenRecommendations(): BridgeRecommendation[] {
@@ -290,58 +313,66 @@ class BridgeRecommendationEngine {
     const { criticism, contempt, defensiveness, stonewalling } = this.trends.fourHorsemenStats;
 
     if (criticism > 2) {
-      recommendations.push(
-        this.createRecommendation('e2', 'high', 'urgent', 95, [
-          `Criticism detected in ${criticism} recent journal entries`,
-          'Gentle start-up technique essential for reducing criticism',
-        ], [
-          'Eliminates criticism from communication',
-          'Improves partner receptivity',
-          'Creates safer emotional environment',
-        ])
-      );
+      const gentleStartExercise = this.findExerciseByTitle('Gentle Start-up') || this.findExerciseByCategory('Communication');
+      if (gentleStartExercise) {
+        const recommendation = this.createRecommendation(gentleStartExercise.id, 'high', 'urgent', 95, [
+            `Criticism detected in ${criticism} recent journal entries`,
+            'Gentle start-up technique essential for reducing criticism',
+          ], [
+            'Eliminates criticism from communication',
+            'Improves partner receptivity',
+            'Creates safer emotional environment',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
     if (contempt > 1) {
-      recommendations.push(
-        this.createRecommendation('e1', 'high', 'urgent', 90, [
-          `Contempt detected - most destructive relationship pattern`,
-          'Building appreciation culture counters contempt',
-        ], [
-          'Actively counters contempt with positivity',
-          'Rebuilds respect and admiration',
-          'Creates positive sentiment override',
-        ])
-      );
+      const appreciationExercise = this.findExerciseByTitle('Appreciation') || this.findExerciseByCategory('Connection');
+      if (appreciationExercise) {
+        const recommendation = this.createRecommendation(appreciationExercise.id, 'high', 'urgent', 90, [
+            `Contempt detected - most destructive relationship pattern`,
+            'Building appreciation culture counters contempt',
+          ], [
+            'Actively counters contempt with positivity',
+            'Rebuilds respect and admiration',
+            'Creates positive sentiment override',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
     if (defensiveness > 2) {
-      recommendations.push(
-        this.createRecommendation('e12', 'high', 'improvement', 85, [
-          'Defensiveness patterns suggest need for better support',
-          'Stress-reducing connection helps reduce defensiveness',
-        ], [
-          'Reduces defensive reactions',
-          'Increases emotional safety',
-          'Improves conflict resolution',
-        ])
-      );
+      const supportExercise = this.findExerciseByTitle('Support') || this.findExerciseByCategory('Support');
+      if (supportExercise) {
+        const recommendation = this.createRecommendation(supportExercise.id, 'high', 'improvement', 85, [
+            'Defensiveness patterns suggest need for better support',
+            'Stress-reducing connection helps reduce defensiveness',
+          ], [
+            'Reduces defensive reactions',
+            'Increases emotional safety',
+            'Improves conflict resolution',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
     if (stonewalling > 1) {
-      recommendations.push(
-        this.createRecommendation('e6', 'high', 'urgent', 90, [
-          'Stonewalling detected - indicates emotional overwhelm',
-          'Pause technique prevents stonewalling damage',
-        ], [
-          'Prevents emotional flooding',
-          'Maintains connection during conflict',
-          'Reduces stonewalling patterns',
-        ])
-      );
+      const pauseExercise = this.findExerciseByTitle('Pause') || this.findExerciseByCategory('Conflict');
+      if (pauseExercise) {
+        const recommendation = this.createRecommendation(pauseExercise.id, 'high', 'urgent', 90, [
+            'Stonewalling detected - indicates emotional overwhelm',
+            'Pause technique prevents stonewalling damage',
+          ], [
+            'Prevents emotional flooding',
+            'Maintains connection during conflict',
+            'Reduces stonewalling patterns',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
-    return recommendations;
+    return recommendations.filter(rec => rec !== null) as BridgeRecommendation[];
   }
 
   private getActivityBasedRecommendations(): BridgeRecommendation[] {
@@ -349,47 +380,53 @@ class BridgeRecommendationEngine {
 
     // Analyze check-in frequency
     if (this.recentCheckIns.length === 0) {
-      recommendations.push(
-        this.createRecommendation('e15', 'medium', 'maintenance', 70, [
-          'No recent check-ins detected',
-          'Daily temperature readings maintain relationship health',
-        ], [
-          'Establishes regular check-in routine',
-          'Prevents issues from building up',
-          'Maintains emotional connection',
-        ])
-      );
+      const temperatureExercise = this.findExerciseByTitle('Temperature Reading') || this.findExerciseByCategory('Communication');
+      if (temperatureExercise) {
+        const recommendation = this.createRecommendation(temperatureExercise.id, 'medium', 'maintenance', 70, [
+            'No recent check-ins detected',
+            'Daily temperature readings maintain relationship health',
+          ], [
+            'Establishes regular check-in routine',
+            'Prevents issues from building up',
+            'Maintains emotional connection',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
     // Analyze journal frequency
     if (this.recentJournals.length === 0) {
-      recommendations.push(
-        this.createRecommendation('e32', 'medium', 'maintenance', 65, [
-          'No recent journaling activity',
-          'Weekly weather reports maintain emotional awareness',
-        ], [
-          'Increases emotional awareness',
-          'Provides gentle entry to deeper sharing',
-          'Builds emotional vocabulary',
-        ])
-      );
+      const weatherReportExercise = this.findExerciseByTitle('Weather Report') || this.findExerciseByCategory('Communication');
+      if (weatherReportExercise) {
+        const recommendation = this.createRecommendation(weatherReportExercise.id, 'medium', 'maintenance', 65, [
+            'No recent journaling activity',
+            'Weekly weather reports maintain emotional awareness',
+          ], [
+            'Increases emotional awareness',
+            'Provides gentle entry to deeper sharing',
+            'Builds emotional vocabulary',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
     // If both are active, suggest growth activities
     if (this.recentCheckIns.length > 0 && this.recentJournals.length > 0) {
-      recommendations.push(
-        this.createRecommendation('e17', 'medium', 'growth', 75, [
-          'Good activity engagement - ready for future planning',
-          'Vision sessions strengthen long-term partnership',
-        ], [
-          'Aligns future goals and dreams',
-          'Strengthens partnership vision',
-          'Increases relationship commitment',
-        ])
-      );
+      const visionExercise = this.findExerciseByTitle('Vision') || this.findExerciseByCategory('Planning');
+      if (visionExercise) {
+        const recommendation = this.createRecommendation(visionExercise.id, 'medium', 'growth', 75, [
+            'Good activity engagement - ready for future planning',
+            'Vision sessions strengthen long-term partnership',
+          ], [
+            'Aligns future goals and dreams',
+            'Strengthens partnership vision',
+            'Increases relationship commitment',
+          ]);
+        if (recommendation) recommendations.push(recommendation);
+      }
     }
 
-    return recommendations;
+    return recommendations.filter(rec => rec !== null) as BridgeRecommendation[];
   }
 
   private createRecommendation(
@@ -399,10 +436,11 @@ class BridgeRecommendationEngine {
     matchScore: number,
     insights: string[],
     benefits: string[]
-  ): BridgeRecommendation {
+  ): BridgeRecommendation | null {
     const exercise = this.exercises.find(e => e.id === exerciseId);
     if (!exercise) {
-      throw new Error(`Exercise ${exerciseId} not found`);
+      console.warn(`Exercise ${exerciseId} not found, skipping recommendation`);
+      return null;
     }
 
     return {
@@ -414,6 +452,18 @@ class BridgeRecommendationEngine {
       insights,
       benefits,
     };
+  }
+
+  private findExerciseByTitle(title: string): Exercise | null {
+    return this.exercises.find(e => 
+      e.title.toLowerCase().includes(title.toLowerCase())
+    ) || null;
+  }
+
+  private findExerciseByCategory(category: string): Exercise | null {
+    return this.exercises.find(e => 
+      e.category.toLowerCase() === category.toLowerCase()
+    ) || null;
   }
 
   private generateReason(
