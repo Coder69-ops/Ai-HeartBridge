@@ -219,6 +219,98 @@ router.put('/:checkInId/submit', authenticateToken, [
   }
 });
 
+// Get available check-in types and their details (public endpoint)
+router.get('/types', async (req, res: Response) => {
+  try {
+    const checkInTypes = [
+      {
+        id: 'CSI-4',
+        name: 'Quick Assessment',
+        description: 'A brief 4-question relationship satisfaction assessment',
+        questionCount: 4,
+        estimatedTime: '2 minutes',
+        questions: CSI_4_QUESTIONS,
+        scoring: {
+          min: 0,
+          max: 24,
+          interpretation: {
+            high: { min: 20, label: 'High Satisfaction', description: 'Your relationship shows strong satisfaction indicators' },
+            moderate: { min: 12, max: 19, label: 'Moderate Satisfaction', description: 'Your relationship has good foundations with room for growth' },
+            low: { max: 11, label: 'Areas for Improvement', description: 'Your relationship could benefit from focused attention and support' }
+          }
+        }
+      },
+      {
+        id: 'CSI-16',
+        name: 'Comprehensive Assessment',
+        description: 'A thorough 16-question relationship satisfaction assessment',
+        questionCount: 16,
+        estimatedTime: '8 minutes',
+        questions: CSI_16_QUESTIONS,
+        scoring: {
+          min: 0,
+          max: 96,
+          interpretation: {
+            high: { min: 75, label: 'High Satisfaction', description: 'Your relationship demonstrates strong satisfaction levels' },
+            moderate: { min: 45, max: 74, label: 'Moderate Satisfaction', description: 'Your relationship shows good potential with opportunities for enhancement' },
+            low: { max: 44, label: 'Growth Opportunity', description: 'Your relationship would benefit from focused support and attention' }
+          }
+        }
+      }
+    ];
+
+    res.json({
+      success: true,
+      types: checkInTypes
+    });
+
+  } catch (error) {
+    console.error('Get check-in types error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get check-in statistics for couple
+router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user!;
+    
+    if (!user.coupleId) {
+      return res.status(400).json({ error: 'Must be paired to view statistics' });
+    }
+
+    const stats = await CheckIn.aggregate([
+      { $match: { coupleId: user.coupleId } },
+      {
+        $group: {
+          _id: '$type',
+          count: { $sum: 1 },
+          completed: { $sum: { $cond: ['$isCompleted', 1, 0] } },
+          averageScore: { $avg: '$averageScore' },
+          lastCompleted: { $max: { $cond: ['$isCompleted', '$updatedAt', null] } }
+        }
+      }
+    ]);
+
+    const totalCheckIns = await CheckIn.countDocuments({ coupleId: user.coupleId });
+    const completedCheckIns = await CheckIn.countDocuments({ 
+      coupleId: user.coupleId, 
+      isCompleted: true 
+    });
+
+    res.json({
+      totalCheckIns,
+      completedCheckIns,
+      completionRate: totalCheckIns > 0 ? (completedCheckIns / totalCheckIns) * 100 : 0,
+      byType: stats
+    });
+
+  } catch (error) {
+    console.error('Get check-in stats error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get check-in details
 router.get('/:checkInId', authenticateToken, async (req: AuthRequest, res) => {
   try {
@@ -286,98 +378,6 @@ router.get('/couple/history', authenticateToken, async (req: AuthRequest, res) =
     });
 
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Get available check-in types and their details (public endpoint)
-router.get('/types', async (req, res: Response) => {
-  try {
-    const checkInTypes = [
-      {
-        id: 'CSI-4',
-        name: 'Quick Assessment',
-        description: 'A brief 4-question relationship satisfaction assessment',
-        questionCount: 4,
-        estimatedTime: '2 minutes',
-        questions: CSI_4_QUESTIONS,
-        scoring: {
-          min: 0,
-          max: 24,
-          interpretation: {
-            high: { min: 20, label: 'High Satisfaction', description: 'Your relationship shows strong satisfaction indicators' },
-            moderate: { min: 12, max: 19, label: 'Moderate Satisfaction', description: 'Your relationship has good foundations with room for growth' },
-            low: { max: 11, label: 'Areas for Improvement', description: 'Your relationship could benefit from focused attention and support' }
-          }
-        }
-      },
-      {
-        id: 'CSI-16',
-        name: 'Comprehensive Assessment',
-        description: 'A thorough 16-question relationship satisfaction assessment',
-        questionCount: 16,
-        estimatedTime: '8 minutes',
-        questions: CSI_16_QUESTIONS,
-        scoring: {
-          min: 0,
-          max: 96,
-          interpretation: {
-            high: { min: 75, label: 'High Satisfaction', description: 'Your relationship demonstrates excellent satisfaction across multiple dimensions' },
-            moderate: { min: 45, max: 74, label: 'Moderate Satisfaction', description: 'Your relationship shows positive indicators with opportunities for enhancement' },
-            low: { max: 44, label: 'Growth Opportunities', description: 'Your relationship would benefit from dedicated focus and professional guidance' }
-          }
-        }
-      }
-    ];
-
-    res.json({
-      message: 'Available check-in assessment types',
-      types: checkInTypes
-    });
-
-  } catch (error) {
-    console.error('Get check-in types error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Get check-in statistics for couple
-router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) => {
-  try {
-    const user = req.user!;
-    
-    if (!user.coupleId) {
-      return res.status(400).json({ error: 'Must be paired to view statistics' });
-    }
-
-    const stats = await CheckIn.aggregate([
-      { $match: { coupleId: user.coupleId } },
-      {
-        $group: {
-          _id: '$type',
-          count: { $sum: 1 },
-          completed: { $sum: { $cond: ['$isCompleted', 1, 0] } },
-          averageScore: { $avg: '$averageScore' },
-          lastCompleted: { $max: { $cond: ['$isCompleted', '$updatedAt', null] } }
-        }
-      }
-    ]);
-
-    const totalCheckIns = await CheckIn.countDocuments({ coupleId: user.coupleId });
-    const completedCheckIns = await CheckIn.countDocuments({ 
-      coupleId: user.coupleId, 
-      isCompleted: true 
-    });
-
-    res.json({
-      totalCheckIns,
-      completedCheckIns,
-      completionRate: totalCheckIns > 0 ? (completedCheckIns / totalCheckIns) * 100 : 0,
-      byType: stats
-    });
-
-  } catch (error) {
-    console.error('Get check-in stats error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
