@@ -679,8 +679,8 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                 <p className="text-sm text-gray-600">
                   Get personalized exercise recommendations based on your relationship data, health scores, and activity patterns.
                 </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                     <span className="flex items-center">
                       <Activity className="w-3 h-3 mr-1" />
                       AI-Powered Analysis
@@ -694,10 +694,10 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
                     onClick={() => onNavigate('personalized-bridges')}
                     variant="default"
                     size="sm"
-                    className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600"
+                    className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 w-full sm:w-auto touch-manipulation"
                   >
-                    View Recommendations
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    <span className="text-xs sm:text-sm">View Recommendations</span>
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
                   </Button>
                 </div>
               </div>

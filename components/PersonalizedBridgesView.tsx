@@ -183,18 +183,18 @@ export const PersonalizedBridgesView: React.FC<PersonalizedBridgesViewProps> = (
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+    <div className="max-w-6xl mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
             Your Personalized Bridges
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             AI-powered exercise recommendations based on your relationship data
           </p>
         </div>
-        <Button onClick={onBack} variant="secondary" size="sm">
+        <Button onClick={onBack} variant="secondary" size="sm" className="self-start sm:self-auto">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
@@ -202,7 +202,7 @@ export const PersonalizedBridgesView: React.FC<PersonalizedBridgesViewProps> = (
 
       {/* User Insights Summary */}
       <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Health Status</h3>
             <p className="text-sm text-gray-600">{analysis.userInsights.healthStatus}</p>
@@ -250,12 +250,12 @@ export const PersonalizedBridgesView: React.FC<PersonalizedBridgesViewProps> = (
       </Card>
 
       {/* Category Filter */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 sm:gap-3">
         {categories.map((category) => (
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-3 py-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-colors touch-manipulation ${
               selectedCategory === category
                 ? 'bg-therapy-calm text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -271,7 +271,7 @@ export const PersonalizedBridgesView: React.FC<PersonalizedBridgesViewProps> = (
       </div>
 
       {/* Recommendations Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <AnimatePresence mode="wait">
           {filteredRecommendations.map((recommendation, index) => (
             <motion.div
@@ -334,24 +334,24 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
   };
 
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow">
-      <div className="space-y-4">
+    <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow">
+      <div className="space-y-3 sm:space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
             {React.createElement(getExerciseIcon(recommendation.exercise.icon), {
-              className: "w-8 h-8 text-therapy-calm"
+              className: "w-6 h-6 sm:w-8 sm:h-8 text-therapy-calm flex-shrink-0"
             })}
-            <div>
-              <h3 className="font-semibold text-gray-900">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate">
                 {recommendation.exercise.title}
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 {recommendation.exercise.category}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(recommendation.priority)}`}>
               {recommendation.priority}
             </span>
@@ -369,13 +369,13 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
               style={{ width: `${recommendation.matchScore}%` }}
             />
           </div>
-          <span className="text-sm font-medium text-therapy-calm">
+          <span className="text-xs sm:text-sm font-medium text-therapy-calm whitespace-nowrap">
             {recommendation.matchScore}% match
           </span>
         </div>
 
         {/* Reason */}
-        <p className="text-sm text-gray-700 leading-relaxed">
+        <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
           {recommendation.reason}
         </p>
 
@@ -384,11 +384,11 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
           <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">
             Why This Helps
           </h4>
-          <ul className="text-sm text-gray-600 space-y-1">
+          <ul className="text-xs sm:text-sm text-gray-600 space-y-1">
             {recommendation.insights.slice(0, 2).map((insight, index) => (
               <li key={index} className="flex items-start">
-                <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
-                {insight}
+                <Lightbulb className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
+                <span className="leading-relaxed">{insight}</span>
               </li>
             ))}
           </ul>
@@ -432,17 +432,17 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
         </AnimatePresence>
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="text-sm text-therapy-calm font-medium hover:text-therapy-calm/80 transition-colors"
+            className="text-xs sm:text-sm text-therapy-calm font-medium hover:text-therapy-calm/80 transition-colors self-start touch-manipulation"
           >
             {showDetails ? 'Show Less' : 'Show Details'}
           </button>
           
-          <Button onClick={onSelect} variant="default" size="sm">
-            Start Exercise
-            <ArrowRight className="w-4 h-4 ml-2" />
+          <Button onClick={onSelect} variant="default" size="sm" className="w-full sm:w-auto touch-manipulation">
+            <span className="text-xs sm:text-sm">Start Exercise</span>
+            <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
           </Button>
         </div>
       </div>
