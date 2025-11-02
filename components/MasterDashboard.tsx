@@ -35,6 +35,19 @@ import { getCoupleCheckInHistory, CheckIn } from '../services/checkInService';
 import { getCoupleExerciseProgress, ExerciseProgress } from '../services/exerciseService';
 import ContextualLoader from './shared/ContextualLoader';
 
+// Activity type for recent activities
+type ActivityItem = {
+  id: string;
+  type: 'checkin' | 'journal' | 'exercise' | 'chat';
+  title: string;
+  description: string;
+  timestamp: Date;
+  icon: any;
+  color: string;
+  bgColor: string;
+  emoji: string;
+};
+
 interface MasterDashboardProps {
   user: User;
   partner: User | null;
@@ -69,17 +82,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
     daysActive: 0,
     recentInsights: null as any,
     relationshipTrends: null as any,
-    recentActivities: [] as Array<{
-      id: string;
-      type: 'checkin' | 'journal' | 'exercise' | 'chat';
-      title: string;
-      description: string;
-      timestamp: Date;
-      icon: any;
-      color: string;
-      bgColor: string;
-      emoji: string;
-    }>
+    recentActivities: [] as ActivityItem[]
   });
 
   // Load dashboard data
@@ -88,7 +91,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       setLoading(true);
       
       // Only load analytics data if user is paired
-      } else {
+      if (!partner || !user.coupleId) {
         console.log('User not paired, skipping analytics data load');
         setDashboardData({
           healthScore: 0,
@@ -161,7 +164,7 @@ const MasterDashboard: React.FC<MasterDashboardProps> = ({
       });
 
       // Collect recent activities from all sources
-      const recentActivities = [];
+      const recentActivities: ActivityItem[] = [];
 
       // Add recent check-ins
       const recentCheckIns = (checkIns || [])
@@ -690,17 +693,7 @@ interface ProgressSectionProps {
   exerciseCount: number;
   daysActive: number;
   recentInsights: any;
-  recentActivities: Array<{
-    id: string;
-    type: 'checkin' | 'journal' | 'exercise' | 'chat';
-    title: string;
-    description: string;
-    timestamp: Date;
-    icon: any;
-    color: string;
-    bgColor: string;
-    emoji: string;
-  }>;
+  recentActivities: ActivityItem[];
   onNavigate: (view: string) => void;
 }
 
