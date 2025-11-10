@@ -19,6 +19,7 @@ import StandaloneCheckInView from './components/StandaloneCheckInView';
 
 
 import EnhancedExercisesView from './components/EnhancedExercisesView';
+import { PersonalizedBridgesView } from './components/PersonalizedBridgesView';
 import MasterTrendsView from './components/MasterTrendsView';
 import MasterProfileView from './components/MasterProfileView';
 import EnhancedProfileView from './components/EnhancedProfileView';
@@ -139,7 +140,7 @@ const AppContentInner: React.FC = () => {
     
     const handleNavigate = (newView: string) => {
         // Ensure the view is a valid string-based view
-        const validViews = ['dashboard', 'journal', 'checkin', 'exercises', 'trends', 'profile', 'chat', 'partner-chat', 'pairing', 'safety'];
+        const validViews = ['dashboard', 'journal', 'checkin', 'exercises', 'personalized-bridges', 'trends', 'profile', 'chat', 'partner-chat', 'pairing', 'safety'];
         if (validViews.includes(newView)) {
             setCurrentView(newView as any);
         } else {
@@ -292,6 +293,16 @@ const AppContentInner: React.FC = () => {
             case 'exercises':
                 return (
                     <EnhancedExercisesView 
+                        onBack={() => setCurrentView('dashboard')} 
+                    />
+                );
+            case 'personalized-bridges':
+                return (
+                    <PersonalizedBridgesView 
+                        onSelectExercise={(exerciseId) => {
+                            // Navigate to exercise detail view
+                            setCurrentView('exercises');
+                        }}
                         onBack={() => setCurrentView('dashboard')} 
                     />
                 );
